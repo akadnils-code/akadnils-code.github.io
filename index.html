@@ -5,6 +5,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#ffffff">
 <link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
 <style>
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f6f7f9;--card:#fff;--tx:#14181f;--mut:#6b7280;--br:#e3e6ea;--ac:#1f3a5f;--acx:#fff;--ok:#15803d;--okbg:#dcfce7;--ko:#b91c1c;--kobg:#fee2e2;--wa:#92400e;--wabg:#fef3c7}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1319;--card:#1a2029;--tx:#eef1f5;--mut:#9aa4b2;--br:#2b3340;--ac:#7aa7e0;--acx:#0f1319;--ok:#4ade80;--okbg:#14532d;--ko:#fca5a5;--kobg:#7f1d1d;--wa:#fcd34d;--wabg:#78350f}}
@@ -249,7 +250,7 @@ body.solo.wtrk{padding-left:var(--pl)}
 <script>
 var KEY='cod_v1';
 var DEF_TPL='Bonjour 👋 [boutique] a essayé de vous joindre pour confirmer votre commande de [produit]. Répondez OUI pour confirmer, ou dites-nous à quelle heure vous rappeler. Merci !';
-var VER='2.1.2';
+var VER='3.0.0';
 var S={orders:[],set:{price:12,free:0,fee:350,basis:'Livré',vend:[],tpl:DEF_TPL,before:{},insta:'',phone:'',pin:'',net:[],deals:[]},vendor:'',tab:'calls',msg:'',del:'',locked:false,match:''};
 try{var r=localStorage.getItem(KEY);if(r){var d=JSON.parse(r);S.orders=d.orders||[];S.set=Object.assign(S.set,d.set||{});}}catch(e){}
 if(!S.set.m3){S.set.price=12;S.set.free=0;S.set.m3=1;}
