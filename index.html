@@ -94,7 +94,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#3b82f6;box-sh
 .pb .b{min-width:0;padding:8px 4px}
 .ic-wallet{background:linear-gradient(145deg,#4f8dff,#0b1f5c)}
 .ic-calc{background:linear-gradient(145deg,#3a3a3c,#0c0c0c);color:#f6dc85!important}
-#splash{display:none;position:fixed;inset:0;z-index:99;background:radial-gradient(circle at 50% 30%,#12306b,#05070d 72%);align-items:center;justify-content:center;transition:opacity .45s}#splash img{width:min(92vw,480px);height:auto;border-radius:22px;border:1px solid rgba(212,175,55,.5);box-shadow:0 12px 40px rgba(0,0,0,.6)}
+#splash{display:none;position:fixed;inset:0;z-index:99;background:linear-gradient(180deg,#fff 0%,#f4f7fc 100%);flex-direction:column;align-items:center;justify-content:center;gap:16px;transition:opacity .4s}#splash img{width:112px;height:112px;border-radius:26px;box-shadow:0 14px 34px rgba(20,33,61,.25)}#splash b{font:800 20px -apple-system,"Segoe UI",system-ui,sans-serif;color:#14213d;letter-spacing:-.3px}#splash i{display:block;width:120px;height:4px;border-radius:4px;background:#e8ebf2;overflow:hidden}#splash i::after{content:"";display:block;height:100%;width:40%;border-radius:4px;background:linear-gradient(90deg,#f6dc85,#b8921f);animation:spl 1s ease-in-out infinite}@keyframes spl{0%{transform:translateX(-100%)}100%{transform:translateX(300%)}}
 .ic-bag{background:linear-gradient(145deg,#ffb066,#d9480f)}
 .pc{position:relative}.bd{position:absolute;top:6px;left:6px;background:#dc2626;color:#fff;font-size:11px;font-weight:700;padding:2px 6px;border-radius:6px}
 .chips{display:flex;gap:6px;overflow-x:auto;margin:8px 0}.chip{flex:0 0 auto;border:1px solid rgba(212,175,55,.35);background:var(--card);color:var(--tx);border-radius:99px;padding:6px 12px;font:inherit;font-size:13px;cursor:pointer}.chip.on{background:linear-gradient(135deg,#f6dc85,#d4af37);color:#0a0a0a;border-color:transparent}
@@ -213,15 +213,43 @@ body.wtrk{background:transparent!important;min-height:100vh}
 .lpin{position:relative}.lpin .pin{width:18px;height:18px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.45);margin:-20px 0 0 -9px}
 .lpin span{position:absolute;left:12px;top:-30px;white-space:nowrap;background:#fff;border:1px solid #e3e8f2;border-radius:8px;padding:2px 7px;font:700 11px system-ui,sans-serif;color:#14213d;box-shadow:0 1px 5px rgba(0,0,0,.25)}
 .lsc{background:none;border:0;filter:drop-shadow(0 3px 4px rgba(0,0,0,.35))}.lbtns .b{min-width:130px}
+
+/* ===== Menu à gauche (barre latérale verticale) ===== */
+body.wtrk{padding-left:calc(84px + 10px + env(safe-area-inset-left,0px));padding-right:var(--pr)}
+body.solo.wtrk{padding-left:var(--pl)}
+.wtrk .nav{position:fixed!important;top:0;left:0;bottom:0;right:auto;width:84px;height:auto;margin:0;padding:calc(10px + env(safe-area-inset-top,0px)) 6px calc(14px + env(safe-area-inset-bottom,0px)) calc(6px + env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:4px;background:#fff;backdrop-filter:none;-webkit-backdrop-filter:none;border:0;border-right:1px solid #e8ebf2;box-shadow:6px 0 24px rgba(20,33,61,.06);overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch;z-index:30;scrollbar-width:thin}
+.wtrk .nav .brand{display:none}
+.wtrk .nav>button{display:flex;flex-direction:column;align-items:center;gap:3px;flex:0 0 auto;width:100%;min-height:0;padding:8px 2px;border:0;background:transparent;color:#33415c;font:inherit;font-size:10.5px;font-weight:600;line-height:1.15;text-align:center;border-radius:14px;box-shadow:none;cursor:pointer;white-space:normal}
+.wtrk .nav>button.on{background:#fff8e1;box-shadow:inset 0 0 0 1.5px #d4af37;color:#14213d}
+.wtrk .nav .ic{width:38px;height:38px;margin:0;border-radius:50%;box-shadow:0 3px 8px rgba(20,33,61,.25)}
+.wtrk .nav .ic .i{width:20px;height:20px}
+.wtrk .nav>button.on .ic{box-shadow:0 0 0 2px #fff,0 0 0 3.5px #d4af37}
+.wtrk .nav .chv{display:block;margin:0;font-size:10px;opacity:.55}
+.wtrk .nav .nsb{display:flex;flex-direction:column;gap:4px;padding:0 0 6px}
+.wtrk .nav .nsb .sub{display:block;width:100%;margin:0;padding:8px 3px;border:0;border-radius:10px;background:#f4f7fc;color:#33415c;font:inherit;font-size:10.5px;font-weight:600;line-height:1.15;text-align:center;white-space:normal;cursor:pointer;min-height:0}
+.wtrk .nav .nsb .sub.on{background:#14213d;color:#f6dc85;box-shadow:0 4px 10px rgba(20,33,61,.25)}
+@media (hover:hover){.wtrk .nav>button:hover{background:#f4f7fc}.wtrk .nav>button.on:hover{background:#fff8e1}.wtrk .nav .nsb .sub:hover{background:#e8eefb}.wtrk .nav .nsb .sub.on:hover{background:#14213d}}
+@media (max-width:480px){.wtrk .g4{grid-template-columns:repeat(2,1fr)}}
+@media (min-width:700px){
+  body.wtrk{padding-left:calc(228px + 20px + env(safe-area-inset-left,0px))}
+  .wtrk .nav{width:228px;padding:calc(16px + env(safe-area-inset-top,0px)) 12px 18px calc(12px + env(safe-area-inset-left,0px));gap:3px}
+  .wtrk .nav .brand{display:flex;align-items:center;padding:0 6px 14px}.wtrk .nav .brand img{width:46px;height:46px;border-radius:12px;box-shadow:0 4px 12px rgba(20,33,61,.25)}
+  .wtrk .nav>button{flex-direction:row;gap:11px;padding:9px 11px;font-size:14.5px;text-align:left}
+  .wtrk .nav .ic{width:34px;height:34px}.wtrk .nav .ic .i{width:18px;height:18px}
+  .wtrk .nav .chv{margin-left:auto;font-size:11px}
+  .wtrk .nav .nsb{margin:0 0 6px 28px;padding:2px 0 2px 12px;border-left:2px solid #eee3b8;gap:3px}
+  .wtrk .nav .nsb .sub{padding:9px 12px;font-size:13.5px;text-align:left}
+}
+@media (orientation:landscape) and (max-height:480px){.wtrk .nav>button{padding:5px 2px}.wtrk .nav .ic{width:30px;height:30px}}
 </style></head>
 <body>
-<div id="splash"><img src="poignee.webp" alt=""></div>
+<div id="splash"><img src="icon-512.png" alt="" onerror="this.style.display='none'"><b>Confirmation des commandes</b></div>
 <nav class="nav" id="nav"></nav>
 <div id="app"></div>
 <script>
 var KEY='cod_v1';
 var DEF_TPL='Bonjour 👋 [boutique] a essayé de vous joindre pour confirmer votre commande de [produit]. Répondez OUI pour confirmer, ou dites-nous à quelle heure vous rappeler. Merci !';
-var VER='2.0.1';
+var VER='2.1.2';
 var S={orders:[],set:{price:12,free:0,fee:350,basis:'Livré',vend:[],tpl:DEF_TPL,before:{},insta:'',phone:'',pin:'',net:[],deals:[]},vendor:'',tab:'calls',msg:'',del:'',locked:false,match:''};
 try{var r=localStorage.getItem(KEY);if(r){var d=JSON.parse(r);S.orders=d.orders||[];S.set=Object.assign(S.set,d.set||{});}}catch(e){}
 if(!S.set.m3){S.set.price=12;S.set.free=0;S.set.m3=1;}
@@ -329,7 +357,7 @@ function setv(){
    +'<div class="card"><h2>Mes contacts</h2><label>Instagram (pseudo)</label><input data-set="insta" value="'+esc(S.set.insta)+'" placeholder="@ton_compte"><label>Téléphone / WhatsApp (les commandes arrivent ici)</label><input inputmode="tel" data-set="phone" value="'+esc(S.set.phone)+'" placeholder="0612345678"><label>Nom du bénéficiaire (pour tes paiements)</label><input data-set="holder" value="'+esc(S.set.holder||'')+'"><label>Ton RIB</label><input data-set="rib" inputmode="numeric" value="'+esc(S.set.rib||'')+'"><p class="mut">Version '+VER+'.</p></div>'
    +'<div class="card"><h2>Tarifs</h2><label>Ta commission par commande (dh)</label><input type="number" min="0" data-set="price" value="'+S.set.price+'"><label>Frais d’inscription vendeur (dh)</label><input type="number" min="0" data-set="fee" value="'+S.set.fee+'"><label>Commission due quand la commande est</label><select data-set="basis"><option value="Confirmé"'+(S.set.basis==='Confirmé'?' selected':'')+'>confirmée</option><option value="Livré"'+(S.set.basis!=='Confirmé'?' selected':'')+'>confirmée et livrée</option></select></div>'
    +'<div class="card"><h2>Message WhatsApp de relance</h2><textarea data-set="tpl">'+esc(S.set.tpl)+'</textarea><p class="mut">[boutique] et [produit] sont remplacés automatiquement.</p></div>'
-   +'<div class="card"><h2>Suivi en direct (Firebase)</h2><label>Adresse de ta base Realtime Database</label><input data-set="db" value="'+esc(S.set.db||'')+'" placeholder="https://ton-projet-default-rtdb.europe-west1.firebasedatabase.app"><p class="mut">'+(S.set.db?'Suivi en direct activé : le client, le livreur et toi voient les mêmes étapes en temps réel.':'Sans cette adresse, le suivi marche par liens et messages. Voir le guide, section 13.')+'</p></div>'
+   +'<div class="card"><h2>Suivi en direct (Firebase)</h2><label>Adresse de ta base Realtime Database</label><input data-set="db" value="'+esc(S.set.db||'')+'" placeholder="https://ton-projet-default-rtdb.europe-west1.firebasedatabase.app"><p class="mut">'+(S.set.db?'Suivi en direct activé : le client, le livreur et toi voient les mêmes étapes en temps réel.':'Sans cette adresse, le suivi marche par liens et messages. Voir le guide, section 13.')+'</p>'+(S.set.db?'<button class="b" data-act="dbtest">Tester la connexion</button><p class="mut">'+esc(S.dbt||'')+'</p>':'')+'</div>'
    +'<div class="card"><h2>Fond de carte (facultatif)</h2><label>Adresse des tuiles (modèle)</label><input data-set="tiles" value="'+esc(S.set.tiles||'')+'" placeholder="https://…/{z}/{x}/{y}.png"><label>Clé CARTO gratuite (pour le style Voyager)</label><input data-set="ckey" value="'+esc(S.set.ckey||'')+'" placeholder="Demande-la sur carto.com/basemaps/apikey"><p class="mut">Par défaut la carte OpenStreetMap est utilisée, sans clé. Pour vendre l’application, mets ici ton fournisseur de cartes (MapTiler, Stadia, Mapbox…). Recharge l’application après un changement.</p></div>';
 }
 function secv(){
@@ -563,7 +591,7 @@ function renderCourier(){
    +'<div class="card"><h2>1. Retrait chez le vendeur</h2><div>'+esc(d.v)+'</div><div class="mut">'+esc([d.va,d.vc].filter(Boolean).join(', '))+'</div><div class="btns">'+(d.vp?'<a class="b" href="tel:'+esc(d.vp)+'">'+ico('phone')+' Appeler</a>':'')+'<a class="b" target="_blank" rel="noopener" href="'+gm([d.va,d.vc,'Maroc'].filter(Boolean).join(', '))+'">'+ico('pin')+' Itinéraire</a>'+st('En cours','Récupéré ✓','pri')+'</div></div>'
    +'<div class="card"><h2>2. Livraison au client</h2><div>'+esc(d.n)+'</div><div class="mut">'+esc([d.ca,d.cc].filter(Boolean).join(', '))+(kmc?' · ~'+kmc+' km':'')+'</div><div class="btns"><a class="b" href="tel:'+esc(d.cp)+'">'+ico('phone')+' Appeler</a><a class="b" target="_blank" rel="noopener" href="'+gm([d.ca,d.cc,'Maroc'].filter(Boolean).join(', '))+'">'+ico('pin')+' Itinéraire</a></div><div class="btns">'+st('Livré','Livré ✓','ok')+st('Refusé','Refusé','ko')+'</div></div>'
    +mapView({vc:d.vc,cc:d.cc,s:cs===-1?0:(CS.gps&&cs<3?Math.max(2,cs):cs),gps:CS.gps,live:CS.gps,aq:d.va,bq:d.ca})
-   +'<div class="card" style="margin-top:10px"><h2>Mon GPS</h2><p class="mut">'+esc(CS.err||(CS.gps?(lv?'Position partagée en direct avec le client et le vendeur.':'Position active (point bleu sur la carte).'):'Active le GPS pour partager ta position. Garde l’écran allumé.'))+'</p><div class="btns"><button class="b pri" data-act="cgps">'+ico('pin')+' Activer mon GPS</button>'+(pos&&!lv?'<a class="b" target="_blank" rel="noopener" href="'+wa(d.cp,'Votre livreur est ici : '+pos)+'">Envoyer au client</a>':'')+'</div></div>');
+   +'<div class="card" style="margin-top:10px"><h2>Mon GPS</h2><p class="mut">'+esc(CS.err||(CS.gps?(lv?'Position partagée en direct avec le client et le vendeur.'+(CS.acc?' Précision ±'+CS.acc+' m.':''):'Position active (point bleu sur la carte).'):'Active le GPS pour partager ta position. Garde l’écran allumé.'))+'</p><div class="btns"><button class="b pri" data-act="cgps">'+ico('pin')+' Activer mon GPS</button>'+(pos&&!lv?'<a class="b" target="_blank" rel="noopener" href="'+wa(d.cp,'Votre livreur est ici : '+pos)+'">Envoyer au client</a>':'')+'</div></div>');
 }
 function commcard(){
   var V=S.set.vend,tot=0,fm2=function(x){return Math.round(x).toLocaleString('fr-FR')};
@@ -697,14 +725,14 @@ function render(){
   document.body.className='wtrk';
   var pe=S.orders.filter(function(o){return o.status==='En attente'}).length;
   var MENU=[['box','Commandes',[['calls','À appeler'+(pe?' ('+pe+')':'')],['add','Ajouter'],['hist','Liste']]],['pin','Suivi',[['trk','Livraisons']]],['wallet','Portefeuille',[['wl','Historique'],['wn','Nouveau']]],['chart','Bilan',[['bil','Bilan'],['pro','Société livraison']]],['net','Réseau',[['net','Contacts'],['deals','Affaires']]],['store','Vendeurs',[['vend','Vendeurs']]],['bag','Catalogue',[['cat','Produits']]],['calc','Calcul',[['calc','Calculatrice'],['sim','Simulation']]],['sliders','Réglages',[['set','Général'],['sec','Sécurité'],['bak','Données']]]];
-  var nav='',subn='';
+  var nav='';
   if(S.open===undefined){var ag=MENU.filter(function(g){return g[2].some(function(x){return x[0]===S.tab})})[0];S.open=ag?ag[0]:''}
   MENU.forEach(function(g){var on=g[2].some(function(x){return x[0]===S.tab}),multi=g[2].length>1,op=S.open===g[0];
     nav+='<button data-act="'+(multi?'grp':'tab')+'" data-v="'+(multi?g[0]:g[2][0][0])+'" class="'+(on?'on':'')+'"><span class="ic ic-'+g[0]+'">'+ico(g[0])+'</span>'+g[1]+(g[1]==='Commandes'&&pe?' ('+pe+')':'')+(multi?'<span class="chv">'+(op?'▴':'▾')+'</span>':'')+'</button>';
-    if(multi&&op)g[2].forEach(function(x){subn+='<button data-act="tab" data-v="'+x[0]+'" class="sub'+(S.tab===x[0]?' on':'')+'">'+x[1]+'</button>'});
+    if(multi&&op){var sb='';g[2].forEach(function(x){sb+='<button data-act="tab" data-v="'+x[0]+'" class="sub'+(S.tab===x[0]?' on':'')+'">'+x[1]+'</button>'});nav+='<div class="nsb">'+sb+'</div>'}
   });
-  document.getElementById('nav').innerHTML='<div class="nrow">'+nav+'</div>'+(subn?'<div class="nsub">'+subn+'</div>':'');
-  if(document.querySelectorAll)Array.prototype.forEach.call(document.querySelectorAll('#nav .nrow .on,#nav .nsub .on'),function(b){var r=b.parentNode;r.scrollLeft=b.offsetLeft-(r.clientWidth-b.offsetWidth)/2});
+  var nvEl=document.getElementById('nav');nvEl.innerHTML='<div class="brand"><img src="icon-192.png" alt="" onerror="this.style.display=\'none\'"></div>'+nav;
+  var an=nvEl.querySelector&&nvEl.querySelector('.sub.on,button.on');if(an)nvEl.scrollTop=Math.max(0,an.offsetTop-nvEl.clientHeight/3);
   var v={calls:calls,add:add,hist:hist,bil:bil,net:net,deals:dealsv,vend:vendv,set:setv,sec:secv,bak:bakv,wl:wlist,wn:wnew,calc:calcv,sim:simv,pro:prov,cat:catv,trk:suiv}[S.tab]();
   document.getElementById('app').innerHTML='<h1>Confirmation des commandes <small style="font-size:11px;font-weight:400">v'+VER+'</small></h1>'+cbar()+v+'<datalist id="mc">'+MCN.map(function(c){return '<option value="'+c+'">'}).join('')+'</datalist>';
   lmFlush();
@@ -718,6 +746,7 @@ document.addEventListener('click',function(e){
   else if(a==='pubo'){if(o&&S.set.db)pub(o);return;}
   else if(a==='mz'){var zv=t.getAttribute('data-v');if(zv==='+')S.mz=Math.min(4,(S.mz||1)*1.6);else if(zv==='-')S.mz=Math.max(.5,(S.mz||1)*.6);else{S.full=!S.full;S.mz=1}rr();return;}
   else if(a==='cst'){var cd=dec('l');if(cd&&cd.db){var cv2=t.getAttribute('data-v'),nw=Date.now(),bb={t:nw};if(cv2==='En cours'){bb.s=2;CS.s=2;bb['ev/e'+nw]={t:nw,x:'Colis récupéré, le livreur est en route'}}else if(cv2==='Livré'){bb.s=3;CS.s=3;bb['ev/e'+nw]={t:nw,x:'Colis livré'}}else{bb.bad=1;bb.r='Refusé';CS.s=-1;bb['ev/e'+nw]={t:nw,x:'Livraison refusée par le client'}}fbp(cd.db,cd.tid,bb);CS.ok='Statut envoyé ✓';renderCourier();return;}}
+  else if(a==='dbtest'){var du=S.set.db;if(!du){S.dbt='Aucune adresse enregistrée.';}else{S.dbt='Test en cours…';var dk='test'+Date.now();fetch(dbu(du,dk),{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({t:Date.now()})}).then(function(r){if(!r.ok){S.dbt='Refusé (code '+r.status+'). Vérifie les règles Firebase (guide, section 13) et l’adresse.';return}return fetch(dbu(du,dk)).then(function(x){return x.json()}).then(function(j){S.dbt=(j&&j.t)?'✓ Connexion réussie : le suivi en direct est prêt.':'Réponse inattendue : vérifie l’adresse.';fetch(dbu(du,dk),{method:'DELETE'}).catch(function(){})})}).catch(function(){S.dbt='Impossible de joindre Firebase : vérifie l’adresse et ta connexion.'}).then(function(){render()})}}
   else if(a==='lfit'){LM.key='';LM.fitN++;rr();return;}
   else if(a==='lmaroc'){if(LM.map)LM.map.setView([31.8,-7.1],5);return;}
   else if(a==='grp'){var gv=t.getAttribute('data-v');S.open=(S.open===gv)?'':gv;}
@@ -728,7 +757,7 @@ document.addEventListener('click',function(e){
   else if(a==='trk'){S.trk=S.trk===id?'':id;}
   else if(a==='flat'){S.flat=!S.flat;}
   else if(a==='applyst'){var c3=0;g('f-st').value.replace(/SUIVI\s+(\S+)\s+(Livré|Refusé|En cours)/gi,function(m,i,v){var q=byId(i);if(q){q.delivery=v.charAt(0).toUpperCase()+v.slice(1).toLowerCase().replace('livre','livré').replace('refuse','refusé');c3++}return m});S.msg=c3?c3+' statut(s) appliqué(s).':'Aucun statut reconnu. Colle le message du livreur en entier.';}
-  else if(a==='cgps'){CS.t=0;if(!navigator.geolocation){CS.err='GPS indisponible sur cet appareil.';renderCourier();return;}if(CS.w==null)CS.w=navigator.geolocation.watchPosition(function(p){CS.gps=[p.coords.latitude,p.coords.longitude];CS.err='';var dd=dec('l');if(dd&&dd.db&&Date.now()-(CS.pp||0)>5000){CS.pp=Date.now();fbp(dd.db,dd.tid,{pos:CS.gps,pt:Date.now()})}if(Date.now()-CS.t>6000){CS.t=Date.now();renderCourier()}},function(){CS.err='GPS refusé : autorise la localisation dans ton navigateur.';renderCourier()},{enableHighAccuracy:true,maximumAge:3000});CS.err='Recherche de ta position…';renderCourier();return;}
+  else if(a==='cgps'){CS.t=0;if(!navigator.geolocation){CS.err='GPS indisponible sur cet appareil.';renderCourier();return;}if(CS.w==null)CS.w=navigator.geolocation.watchPosition(function(p){CS.gps=[p.coords.latitude,p.coords.longitude];CS.acc=Math.round(p.coords.accuracy||0);CS.err='';var dd=dec('l');if(dd&&dd.db&&Date.now()-(CS.pp||0)>5000){CS.pp=Date.now();fbp(dd.db,dd.tid,{pos:CS.gps,pt:Date.now()})}if(Date.now()-CS.t>6000){CS.t=Date.now();renderCourier()}},function(){CS.err='GPS refusé : autorise la localisation dans ton navigateur.';renderCourier()},{enableHighAccuracy:true,maximumAge:3000});CS.err='Recherche de ta position…';renderCourier();return;}
   else if(a==='tab'){S.tab=t.getAttribute('data-v');S.msg='';S.del='';S.pview='';S.pform=false;}
   else if(a==='pform'){S.pform=!S.pform;S.msg='';}
   else if(a==='pnew'){S.tab='cat';S.pform=true;S.pv=id;S.pview='';S.msg='';}
@@ -795,5 +824,5 @@ document.addEventListener('change',function(e){
 });
 if(Q.get('t'))renderClient();else if(Q.get('l'))renderCourier();else if(Q.get('v'))renderBuyer();else render();
 </script>
-<script>(function(){var d=document.getElementById('splash');if(!d||/[?&][vtl]=/.test(location.search))return;d.style.display='flex';setTimeout(function(){d.style.opacity='0';setTimeout(function(){d.style.display='none'},450)},2600)})();if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){})})}</script>
+<script>(function(){var d=document.getElementById('splash');if(!d||/[?&][vtl]=/.test(location.search))return;d.style.display='flex';setTimeout(function(){d.style.opacity='0';setTimeout(function(){d.style.display='none'},400)},1300)})();if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){})})}</script>
 </body></html>
