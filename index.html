@@ -221,7 +221,7 @@ body.wtrk{background:transparent!important;min-height:100vh}
 <script>
 var KEY='cod_v1';
 var DEF_TPL='Bonjour 👋 [boutique] a essayé de vous joindre pour confirmer votre commande de [produit]. Répondez OUI pour confirmer, ou dites-nous à quelle heure vous rappeler. Merci !';
-var VER='2.0.0';
+var VER='2.0.1';
 var S={orders:[],set:{price:12,free:0,fee:350,basis:'Livré',vend:[],tpl:DEF_TPL,before:{},insta:'',phone:'',pin:'',net:[],deals:[]},vendor:'',tab:'calls',msg:'',del:'',locked:false,match:''};
 try{var r=localStorage.getItem(KEY);if(r){var d=JSON.parse(r);S.orders=d.orders||[];S.set=Object.assign(S.set,d.set||{});}}catch(e){}
 if(!S.set.m3){S.set.price=12;S.set.free=0;S.set.m3=1;}
@@ -330,7 +330,7 @@ function setv(){
    +'<div class="card"><h2>Tarifs</h2><label>Ta commission par commande (dh)</label><input type="number" min="0" data-set="price" value="'+S.set.price+'"><label>Frais d’inscription vendeur (dh)</label><input type="number" min="0" data-set="fee" value="'+S.set.fee+'"><label>Commission due quand la commande est</label><select data-set="basis"><option value="Confirmé"'+(S.set.basis==='Confirmé'?' selected':'')+'>confirmée</option><option value="Livré"'+(S.set.basis!=='Confirmé'?' selected':'')+'>confirmée et livrée</option></select></div>'
    +'<div class="card"><h2>Message WhatsApp de relance</h2><textarea data-set="tpl">'+esc(S.set.tpl)+'</textarea><p class="mut">[boutique] et [produit] sont remplacés automatiquement.</p></div>'
    +'<div class="card"><h2>Suivi en direct (Firebase)</h2><label>Adresse de ta base Realtime Database</label><input data-set="db" value="'+esc(S.set.db||'')+'" placeholder="https://ton-projet-default-rtdb.europe-west1.firebasedatabase.app"><p class="mut">'+(S.set.db?'Suivi en direct activé : le client, le livreur et toi voient les mêmes étapes en temps réel.':'Sans cette adresse, le suivi marche par liens et messages. Voir le guide, section 13.')+'</p></div>'
-   +'<div class="card"><h2>Fond de carte (facultatif)</h2><label>Adresse des tuiles (modèle)</label><input data-set="tiles" value="'+esc(S.set.tiles||'')+'" placeholder="https://…/{z}/{x}/{y}.png"><p class="mut">Vide = carte gratuite par défaut. Pour vendre l’application, mets ici ton fournisseur de cartes (MapTiler, Stadia, Mapbox…). Recharge l’application après un changement.</p></div>';
+   +'<div class="card"><h2>Fond de carte (facultatif)</h2><label>Adresse des tuiles (modèle)</label><input data-set="tiles" value="'+esc(S.set.tiles||'')+'" placeholder="https://…/{z}/{x}/{y}.png"><label>Clé CARTO gratuite (pour le style Voyager)</label><input data-set="ckey" value="'+esc(S.set.ckey||'')+'" placeholder="Demande-la sur carto.com/basemaps/apikey"><p class="mut">Par défaut la carte OpenStreetMap est utilisée, sans clé. Pour vendre l’application, mets ici ton fournisseur de cartes (MapTiler, Stadia, Mapbox…). Recharge l’application après un changement.</p></div>';
 }
 function secv(){
   return (S.msg?'<div class="msg">'+esc(S.msg)+'</div>':'')
@@ -477,12 +477,13 @@ function lmDraw(){
   if(LM.key!==sp.key){LM.key=sp.key;if(all.length)LM.map.fitBounds(all,{padding:[50,50],maxZoom:13});else LM.map.setView([31.8,-7.1],5)}
   if(LM.anims.length)LM.anim=requestAnimationFrame(lstep);
 }
+function tileUrl(){if(S.set.tiles)return S.set.tiles;if(S.set.ckey)return 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?key='+encodeURIComponent(S.set.ckey);return 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'}
 function lmFlush(){
   var slot=document.querySelector&&document.querySelector('.lslot');if(!slot||!LOK()||!LM.spec||LM.bad)return;
   try{
     if(!LM.el){LM.el=document.createElement('div');LM.el.className='lmap'}
     slot.appendChild(LM.el);
-    if(!LM.map){LM.map=L.map(LM.el,{zoomControl:true,minZoom:4,maxZoom:18}).setView([31.8,-7.1],5);L.tileLayer(S.set.tiles||'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{subdomains:'abcd',maxZoom:19,attribution:'© OpenStreetMap © CARTO'}).addTo(LM.map);LM.g=L.layerGroup().addTo(LM.map)}
+    if(!LM.map){LM.map=L.map(LM.el,{zoomControl:true,minZoom:4,maxZoom:18}).setView([31.8,-7.1],5);L.tileLayer(tileUrl(),{subdomains:'abcd',maxZoom:19,attribution:'© OpenStreetMap contributors'+(S.set.ckey&&!S.set.tiles?' © CARTO':'')}).addTo(LM.map);LM.g=L.layerGroup().addTo(LM.map)}
     LM.map.invalidateSize();lmDraw();
   }catch(e){LM.bad=1;rr()}
 }
@@ -786,7 +787,7 @@ document.addEventListener('change',function(e){
   if(t.getAttribute('data-wst')){var wx=S.set.wallet.filter(function(x){return x.id===id})[0];if(wx)wx.st=t.value;save();render();return;}
   if(t.getAttribute('data-sim')){S.set.sim[t.getAttribute('data-sim')]=parseFloat(t.value)||0;save();render();return;}
   if(t.getAttribute('data-ch')&&o){o[t.getAttribute('data-ch')]=t.value;}
-  else if(t.getAttribute('data-set')){var k=t.getAttribute('data-set');S.set[k]=k==='tpl'?(t.value||DEF_TPL):(k==='insta'||k==='phone'||k==='basis'||k==='rib'||k==='holder'||k==='db'||k==='tiles')?t.value.trim():(parseFloat(t.value)||0);}
+  else if(t.getAttribute('data-set')){var k=t.getAttribute('data-set');S.set[k]=k==='tpl'?(t.value||DEF_TPL):(k==='insta'||k==='phone'||k==='basis'||k==='rib'||k==='holder'||k==='db'||k==='tiles'||k==='ckey')?t.value.trim():(parseFloat(t.value)||0);}
   else if(t.getAttribute('data-before')&&S.vendor){S.set.before[S.vendor]=t.value===''?null:parseFloat(t.value);}
   else if(t.getAttribute('data-dst')){var dd=S.set.deals.filter(function(x){return x.id===id})[0];if(dd)dd.status=t.value;}
   else return;
