@@ -127,10 +127,10 @@ details.fq{border-top:1px solid var(--br);padding:8px 0}details.fq summary{curso
 <div id="app"></div><div id="dl"></div>
 <nav id="nav"></nav>
 <script>
-var KEY='cod_v4',OLDKEY='cod_v1',VER='7.0.0',IT=200000;
+var KEY='cod_v4',OLDKEY='cod_v1',VER='7.1.0',IT=200000;
 var DEFTPL='Bonjour 👋 [boutique] a essayé de vous joindre pour confirmer votre commande de [produit]. Répondez OUI pour confirmer, ou dites-nous à quelle heure vous rappeler. Merci !';
 var DEFSCRIPT='1) Se présenter : « Bonjour, je vous appelle de la part de [boutique]. »\n2) Confirmer le produit, la quantité, le prix et la livraison.\n3) Confirmer la ville et l’adresse exacte (quartier, repère).\n4) Proposer un produit complémentaire ou un pack.\n5) Rappeler : paiement à la livraison, merci de préparer le montant.';
-var DEFSET={fee:0,db:'',tiles:'',ckey:'',net:[],deals:[],wallet:[],sim:{cpw:200,tc:70,td:80,nv:5,pa:60,pv:90,q:100},cf:5,bn:6,up:12,trial:30,dth:500,dpc:20,minc:100,phone:'',rib:'',holder:'',insta:'',tpl:DEFTPL,script:DEFSCRIPT,lang:'fr',lastBackup:0};
+var DEFSET={rc:0,db:'',tiles:'',ckey:'',net:[],deals:[],wallet:[],sim:{cpw:200,tc:70,td:80,nv:5,pa:60,pv:90,q:100},cf:5,bn:6,up:12,trial:30,dth:500,dpc:20,minc:100,phone:'',rib:'',holder:'',insta:'',tpl:DEFTPL,script:DEFSCRIPT,lang:'fr',lastBackup:0};
 var DB=null,K=null,SALT=null,ST=null,seq=0,hiddenAt=0;
 var S={tab:'home',sub:'list',msg:'',err:false,del:'',locked:false,vendor:'',sf:'',q:'',cx:'',edit:'',vsel:'',vform:false,inv:'',csvx:'',lk:null};
 var Q=new URLSearchParams(location.search);
@@ -207,7 +207,7 @@ function migrate(){
 /* ---------- métier ---------- *//* ---------- métier ---------- */
 var vget=function(n){return DB.vend.filter(function(v){return v.name===n})[0]};
 var vid=function(i){return DB.vend.filter(function(v){return v.id===i})[0]};
-function ensureV(n){var v=vget(n);if(!v){v={id:uid(),name:n,phone:'',city:'',insta:'',tiktok:'',fb:'',cat:'',notes:'',ver:false,fees:null,reg:DB.set.fee||0,arts:[]};DB.vend.push(v)}return v}
+function ensureV(n){var v=vget(n);if(!v){v={id:uid(),name:n,phone:'',city:'',insta:'',tiktok:'',fb:'',cat:'',notes:'',ver:false,fees:null,reg:0,arts:[]};DB.vend.push(v)}return v}
 var byId=function(i){return DB.orders.filter(function(o){return o.id===i})[0]};
 var open_=function(o){return o.status==='En attente'||(o.status==='Confirmé'&&!o.delivery||o.status==='Confirmé'&&o.delivery==='En cours')};
 function stage(o){return o.status!=='Confirmé'?0:o.delivery==='Livré'?3:o.delivery==='En cours'?2:1}
@@ -232,7 +232,7 @@ function setStatus(o,s){
   else{if(o.delivery==='Livré'||o.delivery==='En cours')o.delivery='';o.fd=0}
 }
 function setDel(o,d){if(o.status!=='Confirmé')return;o.delivery=d;o.fd=d==='Livré'?(o.bd||0):0}
-function vbal(v){var got=DB.pay.filter(function(p){return p.vid===v.id}).reduce(function(a,p){return a+p.amount},0),ea=DB.orders.filter(function(o){return o.vendor===v.name}).reduce(function(a,o){return a+earned(o)},0)+(+v.reg||0);return{got:got,ea:ea,bal:r1(got-ea)}}
+function vbal(v){var got=DB.pay.filter(function(p){return p.vid===v.id}).reduce(function(a,p){return a+p.amount},0),ea=DB.orders.filter(function(o){return o.vendor===v.name}).reduce(function(a,o){return a+earned(o)},0)  ;return{got:got,ea:ea,bal:r1(got-ea)}}
 function hist(ph,id){return DB.orders.filter(function(o){return o.phone===ph&&o.id!==id})}
 function risk(o){
   var h=hist(o.phone,o.id),rf=h.filter(function(x){return x.delivery==='Refusé'}).length,cx=h.filter(function(x){return x.status==='Annulé'&&x.reason==='Fausse commande'}).length,t=[];
@@ -351,7 +351,7 @@ function vendv(){
   return h+DB.vend.map(function(v){var b=vbal(v),n=DB.orders.filter(function(o){return o.vendor===v.name}).length;
     return '<div class="card vc" data-act="vopen" data-id="'+v.id+'">'+avatar(v,52)+'<div class="vi"><div class="row"><b>'+e(v.name)+(v.ver?' ✔':'')+'</b><span class="tag '+(b.bal<0?'ko':'ok')+'">'+(b.bal<0?'dû '+fm(-b.bal):'crédit '+fm(b.bal))+' dh</span></div><div class="mut">'+e([v.cat,v.city].filter(Boolean).join(' · ')||v.phone||'')+'</div><div class="mut">'+n+' commande(s) · '+(v.arts||[]).length+' article(s) · '+e(ratesTxt(v))+'</div></div></div>'}).join('');
 }
-var VF=[['name','Boutique'],['resp','Responsable (prénom et nom)'],['phone','Téléphone / WhatsApp'],['email','E-mail'],['city','Ville'],['addr','Adresse'],['cat','Catégorie (mode, beauté, high-tech…)'],['insta','Instagram (pseudo)'],['tiktok','TikTok (pseudo)'],['fb','Page Facebook ou Marketplace (lien)'],['site','Autre lien (Jumia, site…)'],['zones','Villes desservies'],['ice','ICE / RC (société)'],['rib','RIB (reversement)'],['reg','Frais d’inscription (dh)']];
+var VF=[['name','Boutique'],['resp','Responsable (prénom et nom)'],['phone','Téléphone / WhatsApp'],['email','E-mail'],['city','Ville'],['addr','Adresse'],['cat','Catégorie (mode, beauté, high-tech…)'],['insta','Instagram (pseudo)'],['tiktok','TikTok (pseudo)'],['fb','Page Facebook ou Marketplace (lien)'],['site','Autre lien (Jumia, site…)'],['zones','Villes desservies'],['ice','ICE / RC (société)'],['rib','RIB (reversement)']];
 function fiche(v){
   v.arts=v.arts||[];
   var b=vbal(v),os=DB.orders.filter(function(o){return o.vendor===v.name}),s=stats(os),ps=DB.pay.filter(function(p){return p.vid===v.id}).slice().reverse(),tn=DB.orders.filter(function(o){return o.vendor===v.name&&o.fc!==undefined}).length;
@@ -359,7 +359,7 @@ function fiche(v){
   var h=mb()+'<button class="b full" data-act="vback" style="margin-bottom:10px">← Tous les vendeurs</button><div class="cover"></div><div class="vhead">'+avatar(v,88)+'<div><h2 style="margin:0">'+e(v.name)+'</h2><div class="mut">'+e([v.resp,v.city,v.cat].filter(Boolean).join(' · '))+'</div>'+(v.ver?'<span class="tag ok">✔ Vérifié</span>':'')+'</div></div>';
   h+=vlinks(v)+'<div class="btns"><button class="b pri" data-act="pnew" data-id="'+v.id+'">'+ico('camera')+' Ajouter un produit avec photo</button><button class="b pri" data-act="vlink" data-id="'+v.id+'">'+ico('link','s')+' Lien de commande</button></div>'+lk;
   h+='<div class="grid" style="margin-top:10px">'+kp('Commandes',s.n)+kp('Confirmées',pct(s.ok,s.n-s.pe))+kp('Livrées',pct(s.liv,s.liv+s.ref))+kp(b.bal<0?'Dû par le vendeur':'Crédit restant',fm(Math.abs(b.bal))+' dh',b.bal<0?'r':'g')+'</div>'
-   +'<div class="mut">Essai gratuit : '+Math.max(0,DB.set.trial-tn)+' commande(s) restante(s) · Tarif : '+e(ratesTxt(v))+(v.reg?' · inscription '+fm(v.reg)+' dh':'')+'</div>';
+   +'<div class="mut">Essai gratuit : '+Math.max(0,DB.set.trial-tn)+' commande(s) restante(s) · Tarif : '+e(ratesTxt(v))+(DB.set.rc&&os.some(function(o){return o.delivery==='Refusé'})?' · '+os.filter(function(o){return o.delivery==='Refusé'}).length+' colis refusé(s) = '+fm(os.filter(function(o){return o.delivery==='Refusé'}).length*DB.set.rc)+' dh perdus':'')+'</div>';
   h+='<div class="card" style="margin-top:10px"><h2>Paiements reçus</h2><p class="mut">Le vendeur paie à l’avance (crédit) ou après relevé. Chaque commande consomme son crédit automatiquement.</p><label>Montant reçu (dh)</label><input id="p-a" type="number" min="0" inputmode="decimal" placeholder="'+(b.bal<0?Math.ceil(-b.bal):DB.set.minc)+'"><label>Note (virement, espèces…)</label><input id="p-n"><button class="b pri full" data-act="padd" data-id="'+v.id+'">Enregistrer le paiement</button>'
    +(ps.length?'<div class="wrap"><table><tr><th>Date</th><th class="n">Montant</th><th>Note</th><th></th></tr>'+ps.map(function(p){return '<tr><td>'+e(p.date)+'</td><td class="n">'+fm(p.amount)+' dh</td><td>'+e(p.note||'')+'</td><td><button class="b sm" data-act="pdel" data-id="'+p.id+'">'+(S.del===p.id?'Sûr ?':'✕')+'</button></td></tr>'}).join('')+'</table></div>':'')+'</div>'
    +'<div class="btns"><a class="b" target="_blank" rel="noopener" href="'+wa(v.phone,statement(v))+'">'+ico('chat','s')+' Relevé</a><a class="b" target="_blank" rel="noopener" href="'+wa(v.phone,repV(v))+'">'+ico('chat','s')+' Bilan</a><button class="b" data-act="inv" data-id="'+v.id+'">Facture / PDF</button></div>';
@@ -397,7 +397,7 @@ function setv(){
   var s=DB.set,f=function(k,l,t,x){return '<label>'+l+'</label><input '+(t==='n'?'type="number" min="0" step="0.5" inputmode="decimal"':'')+' data-set="'+k+'" value="'+e(s[k])+'" '+(x||'')+'>'};
   var ex=function(){return s.cf+s.bn};
   return mb()+'<div class="card"><h2>Mes coordonnées</h2>'+f('holder','Nom (pour les relevés)')+f('phone','Téléphone / WhatsApp')+f('insta','Instagram')+f('rib','RIB pour les virements')+'</div>'
-   +'<div class="card"><h2>Tarifs</h2>'+f('cf','Par commande confirmée (dh)','n')+f('bn','Bonus par commande livrée (dh)','n')+f('up','Commission sur vente additionnelle (%)','n')+f('trial','Commandes d’essai gratuites par vendeur','n')+f('dth','Remise de volume à partir de (confirmations / mois)','n')+f('dpc','Remise de volume (%)','n')+f('minc','Crédit minimum conseillé (dh)','n')+f('fee','Frais d’inscription vendeur (dh, 0 par défaut)','n')
+   +'<div class="card"><h2>Tarifs</h2>'+f('cf','Par commande confirmée (dh)','n')+f('bn','Bonus par commande livrée (dh)','n')+f('up','Commission sur vente additionnelle (%)','n')+f('trial','Commandes d’essai gratuites par vendeur','n')+f('dth','Remise de volume à partir de (confirmations / mois)','n')+f('dpc','Remise de volume (%)','n')+f('minc','Crédit minimum conseillé (dh)','n')+f('rc','Coût d’un colis refusé (dh) : livraison aller + retour','n')
    +'<p class="mut">Une commande livrée rapporte '+ex()+' dh ('+s.cf+' + '+s.bn+'). Tu es payé pour ton travail même si le colis est refusé. Le tarif est figé à la confirmation : changer ces valeurs n’affecte jamais les commandes passées.</p></div>'
    +setExtra()+'<div class="card"><h2>Messages</h2><label>Relance WhatsApp</label><textarea data-set="tpl">'+e(s.tpl)+'</textarea><p class="mut">[boutique] et [produit] sont remplacés.</p><label>Script d’appel</label><textarea data-set="script">'+e(s.script)+'</textarea></div>'
    +'<div class="card"><h2>Livreurs</h2>'+DB.cour.map(function(c){return '<div class="row" style="margin-bottom:6px"><span>'+e(c.name)+' <span class="mut">'+e(c.phone)+'</span></span><button class="b sm" style="flex:none" data-act="cdel" data-id="'+c.id+'">'+(S.del===c.id?'Sûr ?':'✕')+'</button></div>'}).join('')+'<label>Nom de la société / du livreur</label><input id="c-n"><label>Téléphone</label><input id="c-p" inputmode="tel"><button class="b pri full" data-act="cadd">Ajouter le livreur</button></div>'
@@ -434,7 +434,7 @@ function sheetsData(){
   var pa=[['Date','Vendeur','Montant (dh)','Note']].concat(DB.pay.map(function(p){var v=vid(p.vid);return [p.date,v?v.name:'?',p.amount,p.note||'']}));
   var li=[['Livreur','Téléphone','Commandes','Livrées','Refusées','Taux livraison (%)']].concat(DB.cour.map(function(c){var s=stats(O.filter(function(o){return o.courier===c.name}));return [c.name,c.phone||'',s.n,s.liv,s.ref,rp(s.liv,s.liv+s.ref)]}));
   var wl=[['Date','Prénom','Nom','Contact','Adresse','Commande','Statut']].concat(DB.set.wallet.map(function(x){return [x.d,x.pr,x.n,x.t,x.a,x.c,x.st]}));
-  var ve=[['Boutique','Responsable','Téléphone','E-mail','Ville','Adresse','Catégorie','Instagram','TikTok','Facebook','Autre lien','Frais d’inscription','Articles']].concat(DB.vend.map(function(x){return [x.name,x.resp||'',x.phone||'',x.email||'',x.city||'',x.addr||'',x.cat||'',x.insta||'',x.tiktok||'',x.fb||'',x.site||'',x.reg||0,(x.arts||[]).length]}));
+  var ve=[['Boutique','Responsable','Téléphone','E-mail','Ville','Adresse','Catégorie','Instagram','TikTok','Facebook','Autre lien','Articles']].concat(DB.vend.map(function(x){return [x.name,x.resp||'',x.phone||'',x.email||'',x.city||'',x.addr||'',x.cat||'',x.insta||'',x.tiktok||'',x.fb||'',x.site||'',(x.arts||[]).length]}));
   return [{name:'Résumé',rows:res},{name:'Commandes',rows:od},{name:'Villes',rows:vi},{name:'Paiements',rows:pa},{name:'Portefeuille',rows:wl},{name:'Vendeurs',rows:ve},{name:'Livreurs',rows:li}];
 }
 
@@ -727,11 +727,11 @@ function prov(){
    +'<div class="card"><h2>Argumentaire société de livraison</h2><p class="mut">'+e(pitch)+'</p><div class="btns"><a class="b pri" target="_blank" rel="noopener" href="'+wa('',pitch)+'">'+ico('chat','s')+' Envoyer</a><button class="b" data-act="xls">'+ico('dl','s')+' Rapport Excel</button></div></div>';
 }
 function simv(){
-  var m=DB.set.sim,cf=DB.set.cf,bn=DB.set.bn,conf=m.cpw*m.tc/100,liv=conf*m.td/100,wk=conf*cf+liv*bn,mo=wk*52/12,ins=m.nv*(DB.set.fee||0),mg=(m.pv-m.pa)*m.q;
+  var m=DB.set.sim,cf=DB.set.cf,bn=DB.set.bn,conf=m.cpw*m.tc/100,liv=conf*m.td/100,wk=conf*cf+liv*bn,mo=wk*52/12,ins=0,mg=(m.pv-m.pa)*m.q;
   var inp=function(k,l){return '<label>'+l+'</label><input type="number" min="0" data-sim="'+k+'" value="'+m[k]+'">'};
-  return '<div class="card"><h2>Simulation de revenus</h2>'+inp('cpw','Commandes par semaine (tous vendeurs)')+inp('tc','Taux de confirmation (%)')+inp('td','Taux de livraison (%)')+inp('nv','Nouveaux vendeurs par mois')+'<p class="mut">Tarif : '+cf+' dh par confirmation + '+bn+' dh par livraison · Inscription : '+(DB.set.fee||0)+' dh (réglages).</p></div>'
-   +'<div class="grid">'+kp('Commandes confirmées / semaine',fm(conf))+kp('Commandes livrées / semaine',fm(liv))+kp('Commissions / semaine',fm(wk)+' dh')+kp('Commissions / mois',fm(mo)+' dh')+kp('Inscriptions / mois',fm(ins)+' dh')+'</div>'
-   +'<div class="kpi" style="margin-top:8px"><span class="mut">Total estimé par mois</span><b>'+fm(mo+ins)+' dh</b></div>'
+  return '<div class="card"><h2>Simulation de revenus</h2>'+inp('cpw','Commandes par semaine (tous vendeurs)')+inp('tc','Taux de confirmation (%)')+inp('td','Taux de livraison (%)')+'<p class="mut">Tarif : '+cf+' dh par confirmation + '+bn+' dh par livraison'+(DB.set.rc?' · Un colis refusé coûte '+DB.set.rc+' dh au vendeur.':'')+'</p></div>'
+   +'<div class="grid">'+kp('Commandes confirmées / semaine',fm(conf))+kp('Commandes livrées / semaine',fm(liv))+kp('Commissions / semaine',fm(wk)+' dh')+kp('Commissions / mois',fm(mo)+' dh')+'</div>'
+   +'<div class="kpi" style="margin-top:8px"><span class="mut">Total estimé par mois</span><b>'+fm(mo)+' dh</b></div>'
    +'<div class="card" style="margin-top:10px"><h2>Marge d’intermédiaire</h2>'+inp('pa','Prix d’achat unitaire (dh)')+inp('pv','Prix de vente unitaire (dh)')+inp('q','Quantité')+'<div class="kpi"><span class="mut">Marge estimée</span><b>'+fm(mg)+' dh</b></div></div><p class="mut">Estimation indicative : elle ne garantit aucun revenu.</p>';
 }
 function morev(){
