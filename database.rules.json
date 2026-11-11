@@ -1,0 +1,26 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "track": {
+      "$id": {
+        ".read": true,
+        ".write": "$id.matches(/^[a-z0-9]{24,48}$/)",
+        ".validate": "newData.hasChildren()",
+        "v":   {".validate": "newData.isString() && newData.val().length <= 80"},
+        "vc":  {".validate": "newData.isString() && newData.val().length <= 60"},
+        "cc":  {".validate": "newData.isString() && newData.val().length <= 60"},
+        "p":   {".validate": "newData.isString() && newData.val().length <= 160"},
+        "c":   {".validate": "newData.isString() && newData.val().length <= 80"},
+        "r":   {".validate": "newData.isString() && newData.val().length <= 40"},
+        "s":   {".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 3"},
+        "bad": {".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1"},
+        "t":   {".validate": "newData.isNumber()"},
+        "pt":  {".validate": "newData.isNumber()"},
+        "pos": {"0": {".validate": "newData.isNumber()"}, "1": {".validate": "newData.isNumber()"}, "$o": {".validate": false}},
+        "ev":  {"$e": {"t": {".validate": "newData.isNumber()"}, "x": {".validate": "newData.isString() && newData.val().length <= 120"}, "$o": {".validate": false}}},
+        "$other": {".validate": false}
+      }
+    }
+  }
+}
