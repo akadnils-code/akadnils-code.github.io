@@ -1,0 +1,38 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "secret": {
+      "$id": {
+        ".read": false,
+        ".write": "$id.matches(/^[a-z0-9]{24,48}$/) && !data.exists()",
+        "ck": {".validate": "newData.isString() && newData.val().matches(/^[0-9]{6}$/)"},
+        "$other": {".validate": false}
+      }
+    },
+    "track": {
+      "$id": {
+        ".read": true,
+        ".write": "$id.matches(/^[a-z0-9]{24,48}$/)",
+        ".validate": "newData.hasChildren()",
+        "v":   {".validate": "newData.isString() && newData.val().length <= 80"},
+        "vc":  {".validate": "newData.isString() && newData.val().length <= 60"},
+        "cc":  {".validate": "newData.isString() && newData.val().length <= 60"},
+        "p":   {".validate": "newData.isString() && newData.val().length <= 160"},
+        "c":   {".validate": "newData.isString() && newData.val().length <= 80"},
+        "r":   {".validate": "newData.isString() && newData.val().length <= 40"},
+        "rq":  {".validate": "newData.isString() && newData.val().length <= 120"},
+        "fb":  {".validate": "newData.isString() && newData.val().length <= 120"},
+        "rt":  {".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 5"},
+        "dc":  {".validate": "newData.isString() && newData.val().length == 6"},
+        "s":   {".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 3 && (data.val() != 3 || newData.val() == 3) && (newData.val() != 3 || (root.child('secret').child($id).child('ck').exists() && newData.parent().child('dc').val() === root.child('secret').child($id).child('ck').val()))"},
+        "bad": {".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1"},
+        "t":   {".validate": "newData.isNumber()"},
+        "pt":  {".validate": "newData.isNumber()"},
+        "pos": {"0": {".validate": "newData.isNumber()"}, "1": {".validate": "newData.isNumber()"}, "$o": {".validate": false}},
+        "ev":  {"$e": {"t": {".validate": "newData.isNumber()"}, "x": {".validate": "newData.isString() && newData.val().length <= 120"}, "$o": {".validate": false}}},
+        "$other": {".validate": false}
+      }
+    }
+  }
+}

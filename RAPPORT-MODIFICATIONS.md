@@ -1,3 +1,25 @@
+
+# Version 7.6.0 : structure des fichiers
+`index.html` (page), `styles.css` (styles), `app.js` (logique), `sw.js` (cache cod-v13, liste mise à jour), `manifest.webmanifest`, `privacy.html`, `database_rules.json`. Logique inchangée : le code a seulement été déplacé. Syntaxe JS vérifiée ; aucun navigateur disponible ici, donc affichage non testé.
+
+# Version 7.5.0 : code de livraison vérifié par le serveur
+
+- Code de livraison : 6 chiffres ALÉATOIRES (plus calculé à partir de l'identifiant). Il n'est que dans le lien client.
+- Le vendeur publie le code dans `/secret/<id>/ck` (illisible par tout le monde, écriture unique).
+- Le livreur envoie le code saisi (`dc`) avec `s=3` : les règles Firebase comparent au secret. Mauvais code = écriture refusée.
+- Une livraison validée ne peut plus être remise à un statut inférieur.
+- Règles : ajout des champs `rt`, `fb`, `rq` (avis/demandes client, bloqués avant).
+
+## NON testé / limites
+- Règles jamais exécutées (émulateur ou console Firebase > Règles > Simulateur à faire).
+- Pas de limitation de tentatives côté serveur (6 chiffres = 1 000 000 essais).
+- Sans Firebase activé, la validation par code est refusée (plus de contrôle local).
+- Anciennes commandes déjà liées : renvoyer le lien client pour publier leur secret.
+- Le secret est publié à la création du lien : le générer avant de donner le lien livreur.
+
+
+---
+# Historique 7.1.0 → 7.4.0
 # Rapport de modifications – Confirmation COD 7.1.0 → 7.4.0
 
 Originaux conservés : `sauvegarde-originale/`. Diffs complets : `modifications-index.diff`, `modifications-sw.diff`.
