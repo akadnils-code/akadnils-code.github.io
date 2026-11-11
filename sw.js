@@ -1,4 +1,4 @@
-var V='cod-v6',T='cod-tiles-v3',F=['./','index.html','manifest.webmanifest','icon-192.png','icon-512.png','icon-512-maskable.png','privacy.html'];
+var V='cod-v9',T='cod-tiles-v3',F=['./','index.html','manifest.webmanifest','icon-192.png','icon-512.png','icon-512-maskable.png','privacy.html'];
 var API=/firebaseio\.com|router\.project-osrm\.org|nominatim\.openstreetmap\.org/;
 var TILE=/basemaps\.cartocdn\.com|tile\.openstreetmap\.org|cdnjs\.cloudflare\.com/;
 self.addEventListener('install',function(e){e.waitUntil(caches.open(V).then(function(c){return Promise.all(F.map(function(u){return c.add(u).catch(function(){})}))}).then(function(){return self.skipWaiting()}))});

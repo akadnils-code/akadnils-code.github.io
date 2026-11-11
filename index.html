@@ -98,13 +98,36 @@ nav .bd{position:absolute;top:2px;left:calc(50% + 6px);background:#dc2626;color:
 .k{aspect-ratio:1;border:0;border-radius:50%;background:#333;color:#fff;font:inherit;font-size:28px;cursor:pointer}.k:active{filter:brightness(1.5)}
 .k.f{background:#a5a5a5;color:#000}.k.o{background:linear-gradient(145deg,#f6dc85,#c9a227);color:#111;font-size:34px}.k.o.act{background:#fff;color:#c9a227}
 .k.z{grid-column:span 2;aspect-ratio:auto;border-radius:999px;text-align:left;padding-left:9%}
+
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes pls{0%{box-shadow:0 0 0 0 rgba(212,175,55,.65)}100%{box-shadow:0 0 0 12px rgba(212,175,55,0)}}
+@keyframes shk{20%,60%{transform:translateX(-7px)}40%,80%{transform:translateX(7px)}}
+@keyframes fal{to{transform:translateY(105vh) rotate(540deg)}}
+@keyframes drw{to{stroke-dashoffset:0}}
+@keyframes grw{from{width:0}}
+#app.tin{animation:rise .28s ease-out}
+.b{transition:transform .12s}.b:active{transform:scale(.96)}
+.st.on:not(:has(~.st.on)) i{animation:pls 1.6s infinite}
+.pbar i{animation:grw .9s ease-out}
+.cc{border-color:var(--gold)}
+.code{display:flex;gap:8px;justify-content:center;margin:10px 0}
+.code i{font:700 28px/1 ui-monospace,Menlo,monospace;font-style:normal;background:var(--in);border:1px solid var(--gold);border-radius:12px;padding:12px 0;width:52px;text-align:center}
+.stars{display:flex;gap:6px;justify-content:center;margin:6px 0}
+.stars button{border:0;background:none;font-size:36px;line-height:1;color:var(--br);cursor:pointer;transition:transform .15s,color .15s;min-width:44px;min-height:44px}
+.stars button.on,.stars button:hover{color:var(--gold);transform:scale(1.12)}
+details.fq{border-top:1px solid var(--br);padding:8px 0}details.fq summary{cursor:pointer;font-weight:600;min-height:32px}details.fq p{margin:6px 0 0}
+.cf{position:fixed;top:-16px;width:9px;height:14px;z-index:99;pointer-events:none;animation:fal 2.4s ease-in forwards}
+.tst{position:fixed;left:12px;right:12px;bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:60;background:var(--ac);color:var(--card);border-radius:14px;padding:12px;text-align:center;animation:rise .25s}
+.shake{animation:shk .4s}
+.chk{stroke:var(--ok);stroke-width:4;fill:none;stroke-linecap:round;stroke-dasharray:60;stroke-dashoffset:60;animation:drw .5s .1s forwards}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style></head>
 <body>
 <header><h1>Confirmation COD <small id="ver"></small></h1><button id="hl" data-act="lang" aria-label="Langue">FR</button><button data-act="tab" data-v="set" aria-label="Réglages" id="hs"></button></header>
 <div id="app"></div><div id="dl"></div>
 <nav id="nav"></nav>
 <script>
-var KEY='cod_v4',OLDKEY='cod_v1',VER='4.0.0',IT=200000;
+var KEY='cod_v4',OLDKEY='cod_v1',VER='7.0.0',IT=200000;
 var DEFTPL='Bonjour 👋 [boutique] a essayé de vous joindre pour confirmer votre commande de [produit]. Répondez OUI pour confirmer, ou dites-nous à quelle heure vous rappeler. Merci !';
 var DEFSCRIPT='1) Se présenter : « Bonjour, je vous appelle de la part de [boutique]. »\n2) Confirmer le produit, la quantité, le prix et la livraison.\n3) Confirmer la ville et l’adresse exacte (quartier, repère).\n4) Proposer un produit complémentaire ou un pack.\n5) Rappeler : paiement à la livraison, merci de préparer le montant.';
 var DEFSET={fee:0,db:'',tiles:'',ckey:'',net:[],deals:[],wallet:[],sim:{cpw:200,tc:70,td:80,nv:5,pa:60,pv:90,q:100},cf:5,bn:6,up:12,trial:30,dth:500,dpc:20,minc:100,phone:'',rib:'',holder:'',insta:'',tpl:DEFTPL,script:DEFSCRIPT,lang:'fr',lastBackup:0};
@@ -584,12 +607,12 @@ function dbu(db,id){return db.replace(/\/$/,'')+'/track/'+id+'.json'}
 function fbp(db,id,b){try{fetch(dbu(db,id),{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}).catch(function(){})}catch(e){}}
 function fbg(db,id,cb){try{fetch(dbu(db,id)).then(function(r){return r.json()}).then(cb).catch(function(){})}catch(e){}}
 function pub(o){var n=Date.now(),st=stage(o),b={v:o.vendor,vc:vcity(o),cc:o.city||'',p:o.product,s:st,bad:bad(o)?1:0,c:o.courier||'',t:n};b['ev/e'+n]={t:n,x:bad(o)?'Commande annulée ou refusée':EVT[st]};fbp(DB.set.db,tid(o),b)}
-function poll(){
+function poll(){PT++;
   if(!DB||!DB.set.db||S.locked||Q.get('t')||Q.get('l')||Q.get('v'))return;
-  DB.orders.filter(function(o){return o.tid&&!bad(o)&&stage(o)>=1&&stage(o)<3}).forEach(function(o){fbg(DB.set.db,o.tid,function(r){
+  DB.orders.filter(function(o){return o.tid&&!bad(o)&&stage(o)>=1&&(stage(o)<3||(stage(o)===3&&!o.rt&&PT%12===0))}).slice(-25).forEach(function(o){fbg(DB.set.db,o.tid,function(r){
     if(!r)return;var ch=false;
     if(r.bad&&!bad(o)){setDel(o,'Refusé');ch=true}else if(r.s===3&&stage(o)<3){setDel(o,'Livré');ch=true}else if(r.s===2&&stage(o)<2){setDel(o,'En cours');ch=true}
-    if(r.pos&&o.pt!==r.pt){o.pos=r.pos;o.pt=r.pt;ch=true}
+    if(r.pos&&o.pt!==r.pt){o.pos=r.pos;o.pt=r.pt;ch=true}if(r.rt&&o.rt!==r.rt){o.rt=r.rt;o.fb=r.fb||'';ch=true}if(r.rq&&o.rq!==r.rq){o.rq=r.rq;ch=true}
     if(ch){save();var ae=document.activeElement;if(S.tab==='trk'&&!(ae&&/INPUT|TEXTAREA|SELECT/.test(ae.tagName)))render()}})});
 }
 setInterval(poll,5000);
@@ -818,7 +841,7 @@ document.addEventListener('click',function(ev){
   else if(a==='vback'){S.vsel='';S.lk=null}
   else if(a==='vver'){var vv=vid(id);if(vv)vv.ver=!vv.ver}
   else if(a==='vdel'){if(S.del===id){var vd=vid(id);if(vd&&DB.orders.some(function(x){return x.vendor===vd.name}))mk('Ce vendeur a des commandes : supprime-les d’abord ou garde la fiche.',1);else{DB.vend=DB.vend.filter(function(x){return x.id!==id});DB.pay=DB.pay.filter(function(p){return p.vid!==id});S.vsel=''}S.del=''}else S.del=id}
-  else if(a==='vlink'){var vl=vid(id);if(!DB.set.phone)mk('Renseigne ton numéro dans Réglages avant de créer un lien.',1);else if(vl){S.lk={id:vl.id,url:location.origin+location.pathname+'?v='+encodeURIComponent(vl.name)+'&w='+encodeURIComponent(waNum(DB.set.phone))}}}
+  else if(a==='vlink'){var vl=vid(id);if(!DB.set.phone)mk('Renseigne ton numéro dans Réglages avant de créer un lien.',1);else if(vl){S.lk={id:vl.id,url:location.origin+location.pathname+'?v='+encodeURIComponent(vl.name)+'&w='+encodeURIComponent(waNum(DB.set.phone))+(vl.arts&&vl.arts.length?'&c='+encq(vl.arts.slice(0,12).map(function(x){return{n:String(x.name).slice(0,40),p:x.price,o:x.old||0}})):'')}}}
   else if(a==='lcopy'){var lk=g('lk');lk.select();try{navigator.clipboard.writeText(lk.value)}catch(x){try{document.execCommand('copy')}catch(y){}}t.textContent='Copié ✓';return}
   else if(a==='padd'){var am=parseFloat(g('p-a').value);if(!am){mk('Indique un montant.',1)}else{DB.pay.push({id:uid(),vid:id,amount:am,date:today(),note:g('p-n').value.trim()});mk('Paiement enregistré.')}}
   else if(a==='pdel'){if(S.del===id){DB.pay=DB.pay.filter(function(p){return p.id!==id});S.del=''}else S.del=id}
@@ -882,6 +905,136 @@ function boot(){
   });
   try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(x){}
 }
+/* ===== v5 : code de livraison, avis, demandes, motifs livreur, satisfaction vendeur ===== */
+var RS={n:0},LK='',PT=0,LT='',IP=null;
+function dcode(t){var h=7;for(var i=0;i<t.length;i++)h=(h*31+t.charCodeAt(i))>>>0;return String(1000+h%9000)}
+function toast(m){var x=document.createElement('div');x.className='tst';x.textContent=m;document.body.appendChild(x);setTimeout(function(){x.remove()},3200)}
+function conf(){var c=['#d4af37','#15803d','#1d4ed8','#dc2626','#f6dc85'];for(var i=0;i<26;i++){var p=document.createElement('i');p.className='cf';p.style.cssText='left:'+Math.random()*100+'vw;background:'+c[i%5]+';animation-delay:'+Math.random()*.6+'s';document.body.appendChild(p);setTimeout(function(q){q.remove()},3400,p)}}
+function snd(d,b,msg){if(d.db&&d.tid)fbp(d.db,d.tid,b);else if(d.w)window.open(wa(d.w,msg),'_blank')}
+function cfire(v){var b=document.createElement('button');b.setAttribute('data-act','cst');b.setAttribute('data-v',v);b.hidden=true;document.body.appendChild(b);b.click();b.remove()}
+function cash(){try{var l=JSON.parse(localStorage.getItem('cod_cr')||'[]').filter(function(x){return x.d===today()});return{n:l.length,m:l.reduce(function(a,x){return a+x.m},0)}}catch(x){return{n:0,m:0}}}
+function btn(l,a,v,x,c){return '<button class="b sm'+(c?' '+c:'')+'" data-act="'+a+'" data-v="'+l+'"'+(x||'')+'>'+l+'</button>'}
+/* client */
+var _rc=renderClient;
+renderClient=function(){
+  var d=decq('t');if(!d)return _rc();
+  var m=Object.assign({},d,CL),k=JSON.stringify([m,RS.n]);
+  if(k===LK&&$('app').children.length)return;LK=k;_rc();
+  var s=m.bad?-1:Math.max(0,m.s||0),h='',st=[1,2,3,4,5];
+  if(s===2)h+='<div class="card cc"><h2>Code de livraison</h2><div class="code">'+dcode(d.tid||'').split('').map(function(c){return '<i>'+c+'</i>'}).join('')+'</div><p class="mut">Donne ce code au livreur seulement après avoir vérifié ton colis. Il doit le saisir pour valider la livraison.</p></div>';
+  if(s>=0&&s<3)h+='<div class="card"><h2>Un souci ?</h2><div class="btns">'+['Reporter la livraison','Changer l’adresse','Livreur injoignable','Autre problème'].map(function(x){return btn(x,'rq',x)}).join('')+'</div></div>';
+  if(s===3){
+    if(m.rt)h+='<div class="card cc"><h2>Merci pour ton avis</h2><div class="stars">'+st.map(function(i){return '<button class="'+(i<=m.rt?'on':'')+'" disabled>★</button>'}).join('')+'</div></div>';
+    else h+='<div class="card cc"><h2>Comment s’est passée la livraison ?</h2><div class="stars">'+st.map(function(i){return '<button class="'+(i<=RS.n?'on':'')+'" data-act="rate" data-v="'+i+'" aria-label="'+i+' sur 5">★</button>'}).join('')+'</div>'+(RS.n&&RS.n<4?'<p class="mut">Qu’est-ce qui n’a pas marché ?</p><div class="btns">'+['Retard','Colis abîmé','Mauvais produit','Livreur injoignable','Autre'].map(function(x){return btn(x,'rtag',x)}).join('')+'</div>':'')+'</div>';
+    try{if(!sessionStorage['cf'+d.tid]){sessionStorage['cf'+d.tid]=1;conf()}}catch(x){}
+  }
+  h+='<div class="card"><h2>Bon à savoir</h2>'+[['Puis-je vérifier le colis avant de payer ?','Oui. Ouvre le colis devant le livreur. Si ce n’est pas le bon produit, refuse la livraison : tu ne paies rien.'],['Combien dois-je payer ?','Le montant annoncé par le vendeur, en espèces à la réception. Aucun autre frais ne doit t’être demandé.'],['Le livreur n’est pas venu ?','Utilise « Un souci ? » ou « Contacter le service ». Ta demande apparaît dans les étapes.'],['Retour ou échange ?','Contacte le service avec ce lien de suivi : ta demande est transmise au vendeur.']].map(function(f){return '<details class="fq"><summary>'+f[0]+'</summary><p class="mut">'+f[1]+'</p></details>'}).join('')+'</div><button class="b full" data-act="shr">Partager ce suivi</button>';
+  $('app').insertAdjacentHTML('beforeend',h);
+};
+/* livreur */
+var _rl=renderCourier;
+renderCourier=function(){
+  _rl();var d=decq('l');if(!d)return;var A=$('app'),b=A.querySelector('[data-act=cst][data-v="Livré"]'),r=A.querySelector('[data-act=cst][data-v="Refusé"]'),h='',c=cash();
+  if(b)b.setAttribute('data-act','cgo');if(r)r.setAttribute('data-act','crf');
+  if(CS.ac)h+='<div class="card cc'+(CS.sh?' shake':'')+'"><h2>Code du client</h2><p class="mut">Demande le code à 4 chiffres affiché sur son suivi.</p><input id="cdin" inputmode="numeric" maxlength="4" autocomplete="one-time-code" placeholder="••••" style="text-align:center;font-size:26px;letter-spacing:10px"><button class="b ok full" data-act="cok">Valider la livraison</button>'+(CS.cm?'<p class="s-Annulé">'+CS.cm+'</p>':'')+'</div>';
+  if(CS.rf)h+='<div class="card cc"><h2>Pourquoi ?</h2><div class="btns">'+[['Client absent','a'],['Report demandé','a'],['Colis refusé','r'],['Adresse introuvable','r']].map(function(x){return btn(x[0],'crs',x[0],' data-k="'+x[1]+'"')}).join('')+'</div></div>';
+  if(CS.dn)h+='<div class="card cc" style="text-align:center"><svg width="64" height="64" viewBox="0 0 64 64"><circle cx="32" cy="32" r="28" fill="none" stroke="var(--okbg)" stroke-width="4"/><path class="chk" d="M18 33l10 10 18-20"/></svg><h2>Livraison validée</h2></div>';
+  if(c.n)h+='<div class="kpi" style="margin-bottom:10px"><span class="mut">Encaissé aujourd’hui</span><b>'+fm(c.m)+' dh · '+c.n+' colis</b></div>';
+  A.insertAdjacentHTML('afterbegin',h);
+};
+/* actions v5 */
+document.addEventListener('click',function(ev){
+  var t=ev.target.closest('[data-act]');if(!t)return;
+  var a=t.getAttribute('data-act'),v=t.getAttribute('data-v'),n=Date.now(),dc=decq('t'),dk=decq('l');
+  if(a==='rate'&&dc){RS.n=+v;if(RS.n>=4){var b={rt:RS.n,t:n};b['ev/e'+n]={t:n,x:'Avis client : '+RS.n+'/5'};snd(dc,b,'Mon avis sur la commande « '+dc.p+' » : '+RS.n+'/5');CL.rt=RS.n;toast('Merci !');conf()}renderClient()}
+  else if(a==='rtag'&&dc){var b2={rt:RS.n,fb:v,t:n};b2['ev/e'+n]={t:n,x:'Avis client : '+RS.n+'/5 · '+v};snd(dc,b2,'Mon avis sur la commande « '+dc.p+' » : '+RS.n+'/5 ('+v+')');CL.rt=RS.n;CL.fb=v;toast('Merci, on s’en occupe.');renderClient()}
+  else if(a==='rq'&&dc){var b3={rq:v,t:n};b3['ev/e'+n]={t:n,x:'Demande client : '+v};snd(dc,b3,'Bonjour, concernant ma commande « '+dc.p+' » : '+v+'.');toast('Demande envoyée')}
+  else if(a==='shr'){if(navigator.share)navigator.share({title:'Suivi de commande',url:location.href}).catch(function(){});else if(navigator.clipboard){navigator.clipboard.writeText(location.href);toast('Lien copié')}}
+  else if(a==='cgo'&&dk){CS.ac=1;CS.rf=0;CS.cm='';renderCourier();var i=$('cdin');if(i)i.focus()}
+  else if(a==='crf'&&dk){CS.rf=1;CS.ac=0;renderCourier()}
+  else if(a==='cok'&&dk){var c=($('cdin').value||'').trim();
+    if(c===dcode(dk.tid||'')){cfire('Livré');CS.ac=0;CS.dn=1;try{var l=JSON.parse(localStorage.getItem('cod_cr')||'[]');l.push({d:today(),m:+dk.m||0});localStorage.setItem('cod_cr',JSON.stringify(l.slice(-200)))}catch(x){}conf();renderCourier()}
+    else{CS.cm='Code incorrect. Redemande-le au client.';CS.sh=1;renderCourier();setTimeout(function(){CS.sh=0},500)}}
+  else if(a==='crs'&&dk&&dk.db){CS.rf=0;var k=t.getAttribute('data-k'),b4={r:v.slice(0,40),t:n};
+    if(k==='r'){cfire('Refusé');b4['ev/e'+(n+1)]={t:n+1,x:'Livraison échouée : '+v}}else{b4['ev/e'+n]={t:n,x:'Livreur : '+v+', nouvelle tentative prévue'};CS.ok='Signalé ✓'}
+    fbp(dk.db,dk.tid,b4);renderCourier()}
+  else if(a==='inst'&&IP){IP.prompt();t.parentNode.remove()}
+});
+/* vendeur */
+function satc(){var R=DB.orders.filter(function(o){return o.rt}),n=R.length,rq=DB.orders.filter(function(o){return o.rq&&stage(o)<3&&!bad(o)}),avg=n?R.reduce(function(a,o){return a+o.rt},0)/n:0,low=R.filter(function(o){return o.rt<4&&o.fb}).slice(-3).reverse();
+  return '<div class="card"><h2>Satisfaction clients</h2>'+(n?'<div class="grid"><div class="kpi"><span class="mut">Note moyenne</span><b>★ '+(Math.round(avg*10)/10)+' / 5</b></div><div class="kpi"><span class="mut">Avis reçus</span><b>'+n+'</b></div></div>':'<p class="mut">Les avis des clients apparaîtront ici après les livraisons suivies en direct.</p>')+low.map(function(o){return '<div class="alert">★'+o.rt+' · '+e(o.name)+' : '+e(o.fb)+'</div>'}).join('')+rq.map(function(o){return '<div class="alert">'+e(o.name)+' demande : '+e(o.rq)+' <a class="b sm" href="tel:'+e(o.phone)+'">Appeler</a></div>'}).join('')+'</div>'}
+var _rd=render;
+render=function(){_rd();if(!DB||S.locked||Q.get('t')||Q.get('l')||Q.get('v'))return;var A=$('app');
+  if(LT!==S.tab){LT=S.tab;A.classList.remove('tin');void A.offsetWidth;A.classList.add('tin')}
+  if(S.tab==='home')A.insertAdjacentHTML('beforeend',satc())};
+/* acheteur */
+var _rb=renderBuyer;
+renderBuyer=function(){_rb();$('app').insertAdjacentHTML('beforeend','<div class="card"><h2>Comment ça marche</h2><div class="mut">• Tu paies à la livraison, en espèces<br>• Tu peux vérifier le produit avant de payer<br>• On t’appelle pour confirmer ta commande<br>• Tu reçois un lien pour suivre ton colis</div></div>')};
+document.addEventListener('input',function(ev){var t=ev.target;if(t.id!=='b-p')return;var ok=!t.value||mph(t.value),x=$('b-pe');t.style.borderColor=ok?'':'var(--ko)';if(!x){x=document.createElement('div');x.id='b-pe';x.className='mut';t.insertAdjacentElement('afterend',x)}x.textContent=ok?'':'Numéro marocain attendu : 06… ou 07…'});
+addEventListener('offline',function(){toast('Hors ligne : les infos affichées peuvent être anciennes')});
+addEventListener('online',function(){toast('Connexion rétablie')});
+addEventListener('beforeinstallprompt',function(ev){ev.preventDefault();IP=ev;if(Q.get('t')||Q.get('l')||Q.get('v'))return;var x=document.createElement('div');x.className='tst';x.innerHTML='Installer l’application sur ton écran d’accueil<br><button class="b sm" data-act="inst" style="margin-top:6px">Installer</button>';document.body.appendChild(x);setTimeout(function(){x.remove()},12000)});
+
+/* ===== v6 : catalogue, créneaux, photo de preuve, notifications, darija ===== */
+var DR=0,NS=null,BP=0,DAR={'Suivi de ta commande':'تتبع الطلب ديالك','Ma mission':'المهمة ديالي','Code de livraison':'كود التوصيل','Un souci ?':'عندك شي مشكل؟','Reporter la livraison':'أجّل التوصيل','Changer l’adresse':'بدّل العنوان','Livreur injoignable':'الموزع ما كيجاوبش','Autre problème':'مشكل آخر','Comment s’est passée la livraison ?':'كيفاش دازت عملية التوصيل؟','Merci pour ton avis':'شكرا على رأيك','Bon à savoir':'مزيان تعرف','Partager ce suivi':'شارك التتبع','Code du client':'كود الزبون','Valider la livraison':'أكّد التوصيل','Pourquoi ?':'علاش؟','Client absent':'الزبون ماشي موجود','Report demandé':'الزبون طلب التأجيل','Colis refusé':'الزبون رفض الكولي','Adresse introuvable':'العنوان ما تلقاش','Livraison validée':'التوصيل تأكد','Comment ça marche':'كيفاش كيخدم','Étapes':'المراحل','Photo de preuve':'تصويرة الإثبات','Prendre la photo':'صوّر الكولي','Envoyer ma commande sur WhatsApp':'صيفط الطلب ديالي فواتساب','Contacter le service':'تواصل مع الخدمة','Livrée':'تسلّم','En cours de livraison':'جاري التوصيل','Validée':'مقبولة','En attente de validation':'كتسنى التأكيد','Distance restante':'المسافة لباقية','Arrivée estimée':'الوصول المتوقع','Choisir':'اختار','Catalogue':'الكتالوج','Créneau de livraison':'وقت التوصيل','Total à payer à la livraison':'المجموع اللي غتخلص عند التوصيل','Être prévenu à chaque étape':'توصل بإشعار فكل مرحلة','Activer les notifications':'فعّل الإشعارات','Peu importe':'أي وقت','Matin (9h–12h)':'الصباح (9h–12h)','Après-midi (12h–17h)':'العشية (12h–17h)','Soir (17h–21h)':'الليل (17h–21h)'};
+try{DR=localStorage.getItem('cod_dar')==='1'}catch(x){}
+function dar(){if(!(Q.get('t')||Q.get('l')||Q.get('v')))return;document.documentElement.dir=DR?'rtl':'ltr';
+  if(DR){var w=document.createTreeWalker($('app'),NodeFilter.SHOW_TEXT),n,l=[];while(n=w.nextNode())l.push(n);l.forEach(function(n){var k=n.nodeValue.trim();if(DAR[k])n.nodeValue=n.nodeValue.replace(k,DAR[k])});Array.prototype.forEach.call(document.querySelectorAll('#app option'),function(o){if(DAR[o.text])o.text=DAR[o.text]})}
+  if(!$('lng')){var b=document.createElement('button');b.id='lng';b.className='b sm';b.setAttribute('data-act','dar');b.style.cssText='position:fixed;top:calc(8px + env(safe-area-inset-top,0px));right:10px;z-index:50;min-width:0;flex:none';document.body.appendChild(b)}
+  $('lng').textContent=DR?'Français':'دارجة'}
+function ntf(){var d=decq('t');if(!d||!('Notification' in window))return;var m=Object.assign({},d,CL),s=m.bad?-1:(m.s||0);
+  if(NS!==null&&s!==NS&&Notification.permission==='granted'){var t=m.bad?'Livraison annulée ou refusée':STV[s];(navigator.serviceWorker?navigator.serviceWorker.ready.then(function(r){return r.showNotification(t,{body:m.p,icon:'icon-192.png',vibrate:[200,100,200]})}):Promise.reject()).catch(function(){try{new Notification(t,{body:m.p})}catch(x){}})}NS=s;
+  if(d.db&&Notification.permission==='default'&&!$('ntc'))$('app').insertAdjacentHTML('afterbegin','<div class="card" id="ntc"><b>Être prévenu à chaque étape</b><button class="b full" style="margin-top:8px" data-act="ntf">Activer les notifications</button></div>')}
+var _rc2=renderClient;renderClient=function(){_rc2();ntf();dar()};
+var _rl2=renderCourier;renderCourier=function(){_rl2();if(!decq('l'))return;if(!$('phc'))$('app').insertAdjacentHTML('beforeend','<div class="card" id="phc"><h2>Photo de preuve</h2><p class="mut">Photographie le colis remis. La photo n’est pas gardée dans l’appli : tu l’envoies au vendeur par WhatsApp.</p><input id="pf" type="file" accept="image/*" capture="environment" hidden><button class="b full" data-act="pho">Prendre la photo</button></div>');dar()};
+var _rb2=renderBuyer;
+renderBuyer=function(){_rb2();var A=$('app'),c=decq('c')||[],h='',f=A.querySelector('h1'),bt=A.querySelector('[data-act=bsend]');
+  if(c.length)h='<h2>Catalogue</h2><div class="pg">'+c.map(function(a,i){return '<div class="pc">'+(a.o>a.p?'<span class="bd">-'+Math.round(100*(a.o-a.p)/a.o)+'%</span>':'')+'<div class="ph"><svg class="i" viewBox="0 0 24 24">'+ICO.box+'</svg></div><div class="pb"><div class="pn">'+e(a.n)+'</div><div class="px">'+a.p+' dh'+(a.o>a.p?'<span class="old">'+a.o+' dh</span>':'')+'</div><button class="b sm full" data-act="bpick" data-i="'+i+'">Choisir</button></div></div>'}).join('')+'</div>';
+  if(f&&h)f.insertAdjacentHTML('afterend',h);
+  if(bt)bt.insertAdjacentHTML('beforebegin','<label>Créneau de livraison</label><select id="b-s"><option>Peu importe</option><option>Matin (9h–12h)</option><option>Après-midi (12h–17h)</option><option>Soir (17h–21h)</option></select><div class="kpi" id="b-t" style="margin-bottom:8px"><span class="mut">Total à payer à la livraison</span><b>—</b></div>');
+  BP=0;dar()};
+function btot(){var q=+($('b-q').value)||1,t=$('b-t');if(t)t.lastChild.textContent=BP?fm(BP*q)+' dh':'—'}
+document.addEventListener('click',function(ev){var t=ev.target.closest('[data-act=bsend]'),s=$('b-s');
+  if(t&&s){var a=$('b-a'),q=+($('b-q').value)||1;if(a.value.indexOf('Créneau')<0)a.value=(a.value+(s.selectedIndex?' | Créneau : '+s.value:'')+(BP?' | Total : '+fm(BP*q)+' dh':'')).replace(/^ \| /,'').trim()}},true);
+document.addEventListener('click',function(ev){var t=ev.target.closest('[data-act]');if(!t)return;var a=t.getAttribute('data-act');
+  if(a==='dar'){DR=!DR;try{localStorage.setItem('cod_dar',DR?'1':'0')}catch(x){}LK='';if(Q.get('t'))renderClient();else if(Q.get('l'))renderCourier();else if(Q.get('v'))renderBuyer()}
+  else if(a==='bpick'){var c=(decq('c')||[])[+t.getAttribute('data-i')];if(c){$('b-pr').value=c.n;BP=c.p;btot();$('b-pr').scrollIntoView({behavior:'smooth',block:'center'});toast('Choisi : '+c.n)}}
+  else if(a==='ntf'){Notification.requestPermission().then(function(){var c=$('ntc');if(c)c.remove()})}
+  else if(a==='pho'){$('pf').click()}});
+document.addEventListener('input',function(ev){if(ev.target.id==='b-q')btot()});
+document.addEventListener('change',function(ev){var t=ev.target;if(t.id!=='pf'||!t.files[0])return;var im=new Image(),u=URL.createObjectURL(t.files[0]);
+  im.onload=function(){var c=document.createElement('canvas'),k=Math.min(1,900/Math.max(im.width,im.height));c.width=im.width*k;c.height=im.height*k;c.getContext('2d').drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);
+    c.toBlob(function(b){var d=decq('l')||{},f=new File([b],'preuve-'+(d.id||'colis')+'.jpg',{type:'image/jpeg'});
+      if(navigator.canShare&&navigator.canShare({files:[f]}))navigator.share({files:[f],text:'Preuve de livraison : '+(d.p||'')+' · '+(d.n||'')}).catch(function(){});
+      else{var l=document.createElement('a');l.href=URL.createObjectURL(b);l.download=f.name;l.click();toast('Photo enregistrée sur ton téléphone')}},'image/jpeg',.72)};im.src=u});
+
+/* ===== v7 : automatisations ===== */
+var LN=0,AUTO0={ca:1,cp:1,cn:1,cb:0};
+function nt(t,b){(navigator.serviceWorker?navigator.serviceWorker.ready.then(function(r){return r.showNotification(t,{body:b,icon:'icon-192.png'})}):Promise.reject()).catch(function(){try{new Notification(t,{body:b})}catch(x){}})}
+function aset(){DB.set.auto=Object.assign({},AUTO0,DB.set.auto);return DB.set.auto}
+function actv(n){return DB.orders.filter(function(o){return o.courier===n&&stage(o)<3&&!bad(o)}).length}
+function pickc(o){var l=DB.cour.filter(function(c){return c.city&&o.city&&nrm(c.city)===nrm(o.city)});if(!l.length)l=DB.cour.filter(function(c){return !c.city});if(!l.length)return '';return l.sort(function(a,b){return actv(a.name)-actv(b.name)})[0].name}
+function qcl(){return DB.orders.filter(function(o){return o.phone&&!bad(o)&&stage(o)>=1&&(o.ns==null?-1:o.ns)<stage(o)})}
+function qms(){return DB.orders.filter(function(o){return o.courier&&!bad(o)&&stage(o)===1&&!o.ms&&DB.cour.some(function(c){return c.name===o.courier&&c.phone})})}
+function tick(){if(!DB||S.locked||Q.get('t')||Q.get('l')||Q.get('v'))return;var A=aset(),ch=false;
+  DB.orders.forEach(function(o){var k=bad(o)?-1:stage(o);
+    if(A.ca&&o.status==='Confirmé'&&!o.courier&&!bad(o)&&stage(o)<3&&DB.cour.length){var c=pickc(o);if(c){o.courier=c;ch=true}}
+    if(o.ns==null&&(k===3||k===-1)){o.ns=stage(o);ch=true}
+    if(A.cp&&DB.set.db){if(o._ps===undefined){o._ps=k;ch=true;if(k>=1&&k<3)pub(o)}else if(o._ps!==k){o._ps=k;ch=true;if(o.tid||k>=1)pub(o)}}});
+  var due=DB.orders.filter(function(o){return o.status==='En attente'&&callDue(o)}).length;
+  if(A.cn&&due&&Date.now()-LN>18e5&&'Notification' in window&&Notification.permission==='granted'){LN=Date.now();nt(due+(due>1?' appels':' appel')+' à passer','Ouvre Appels pour les traiter.')}
+  if(A.cb&&!K&&DB.orders.length&&Date.now()-(DB.set.lastBackup||0)>6048e5){var b=document.createElement('button');b.setAttribute('data-act','bak');b.hidden=true;document.body.appendChild(b);b.click();b.remove();ch=false}
+  if(ch){save();var ae=document.activeElement;if((S.tab==='home'||S.tab==='del')&&!(ae&&/INPUT|TEXTAREA|SELECT/.test(ae.tagName)))render()}}
+setInterval(tick,15000);setTimeout(tick,2500);
+function autc(){var A=aset(),tg=[['ca','Attribuer un livreur automatiquement (par ville, le moins chargé)'],['cp','Publier le suivi à chaque étape'],['cn','Me rappeler les appels à passer'],['cb','Sauvegarde automatique chaque semaine (si pas de code)']],c=qcl(),m=qms(),
+  q=function(l,a,t,f){return l.length?'<div class="mut" style="margin-top:10px">'+t+' ('+l.length+')</div>'+l.slice(0,5).map(function(o){return '<div class="row" style="padding:4px 0"><span>'+e(o.name)+' · '+e(o.product||'')+'</span><button class="b sm" style="flex:none" data-act="'+a+'" data-id="'+o.id+'">Envoyer</button></div>'}).join(''):''};
+  return '<div class="card"><h2>Automatisations</h2>'+tg.map(function(t){return '<label class="row" style="color:var(--tx);font-size:14px;padding:6px 0"><span>'+t[1]+'</span><input type="checkbox" style="width:auto;min-height:0;margin:0 0 0 8px" data-act="aut" data-k="'+t[0]+'"'+(A[t[0]]?' checked':'')+'></label>'}).join('')+q(c,'aq','Clients à prévenir')+q(m,'am','Missions à envoyer aux livreurs')+(c.length+m.length?'':'<p class="mut">Rien à envoyer pour le moment.</p>')+'<p class="mut">WhatsApp s’ouvre avec le message prêt : tu n’as qu’à appuyer sur Envoyer.</p></div>'}
+var _rd2=render;render=function(){_rd2();if(DB&&!S.locked&&!Q.get('t')&&!Q.get('l')&&!Q.get('v')&&S.tab==='home')$('app').insertAdjacentHTML('beforeend',autc())};
+document.addEventListener('click',function(ev){var t=ev.target.closest('[data-act]');if(!t||!DB)return;var a=t.getAttribute('data-act'),id=t.getAttribute('data-id'),o=id?DB.orders.filter(function(x){return x.id===id})[0]:null;
+  if(a==='aut'){var k=t.getAttribute('data-k');aset()[k]=t.checked?1:0;if(k==='cn'&&t.checked&&'Notification' in window&&Notification.permission==='default')Notification.requestPermission();save();tick();render()}
+  else if(a==='aq'&&o){o.ns=stage(o);save();window.open(wa(o.phone,nmsgL(o)),'_blank');render()}
+  else if(a==='am'&&o){var c=DB.cour.filter(function(x){return x.name===o.courier})[0];o.ms=1;save();window.open(wa(c.phone,'Nouvelle mission : '+o.product+' pour '+o.name+' ('+(o.city||'')+'). Ouvre : '+tlink(o,'l')),'_blank');render()}});
+
 boot();
 if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){})})}
 </script>
