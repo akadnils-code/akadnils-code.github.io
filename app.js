@@ -1,6 +1,6 @@
-/* Confirmation COD 7.5.0 - script principal
+/* Confirmation COD 7.7.0 - script principal
    Sections repérées : modules réintégrés de la v3 | v5 : code de livraison, avis, demandes, motifs livreur, sati | v6 : catalogue, créneaux, photo de preuve, notifications, da | v7 : automatisations | v7.2 : QR code + NFC (QR hors ligne, aucune dépendance résea | v7.4 : scanner QR (caméra), tags NFC associés, diagnostic */
-var CIT=200000,KEY='cod_v4',OLDKEY='cod_v1',VER='7.5.0',IT=200000;
+var CIT=200000,KEY='cod_v4',OLDKEY='cod_v1',VER='7.7.0',IT=200000;
 var DEFTPL='Bonjour 👋 [boutique] a essayé de vous joindre pour confirmer votre commande de [produit]. Répondez OUI pour confirmer, ou dites-nous à quelle heure vous rappeler. Merci !';
 var DEFSCRIPT='1) Se présenter : « Bonjour, je vous appelle de la part de [boutique]. »\n2) Confirmer le produit, la quantité, le prix et la livraison.\n3) Confirmer la ville et l’adresse exacte (quartier, repère).\n4) Proposer un produit complémentaire ou un pack.\n5) Rappeler : paiement à la livraison, merci de préparer le montant.';
 var DEFSET={rc:0,db:'',tiles:'',ckey:'',net:[],deals:[],wallet:[],sim:{cpw:200,tc:70,td:80,nv:5,pa:60,pv:90,q:100},cf:5,bn:6,up:12,trial:30,dth:500,dpc:20,minc:100,phone:'',rib:'',holder:'',insta:'',tpl:DEFTPL,script:DEFSCRIPT,lang:'fr',lastBackup:0};
@@ -608,9 +608,14 @@ function simv(){
    +'<div class="card" style="margin-top:10px"><h2>Marge d’intermédiaire</h2>'+inp('pa','Prix d’achat unitaire (dh)')+inp('pv','Prix de vente unitaire (dh)')+inp('q','Quantité')+'<div class="kpi"><span class="mut">Marge estimée</span><b>'+fm(mg)+' dh</b></div></div><p class="mut">Estimation indicative : elle ne garantit aucun revenu.</p>';
 }
 function morev(){
-  var I=[['cat','Catalogue','bag','Produits des vendeurs'],['net','Réseau','net','Grossistes, acheteurs, livreurs'],['deals','Affaires','chart','Marges d’intermédiaire'],['wl','Portefeuille','wallet','Appels sortants'],['wn','Nouvel appel','plus','Ajouter au portefeuille'],['calc','Calculatrice','calc','Style Apple'],['pro','Société livraison','truck','Rapport et argumentaire'],['sim','Simulation','chart','Revenus estimés'],['set','Réglages','sliders','Tarifs, sécurité, données']];
-  return mb()+'<div class="pg">'+I.map(function(i){return '<div class="card" data-act="tab" data-v="'+i[0]+'" style="cursor:pointer;text-align:center;margin:0"><div style="color:#a98319">'+ico(i[2])+'</div><b>'+i[1]+'</b><div class="mut" style="font-size:11px">'+i[3]+'</div></div>'}).join('')+'</div>';
+  var G=[['Outils terrain',[['tools','QR code & NFC','box','Partager, scanner, associer'],['calc','Calculatrice','calc','Calculs rapides']]],
+  ['Ventes & marché',[['cat','Catalogue','bag','Produits des vendeurs'],['net','Réseau','net','Grossistes, acheteurs, livreurs'],['deals','Affaires','chart','Marges d’intermédiaire']]],
+  ['Appels',[['wl','Portefeuille','wallet','Appels sortants'],['wn','Nouvel appel','plus','Ajouter au portefeuille']]],
+  ['Pilotage',[['sim','Simulation','chart','Revenus estimés'],['pro','Société livraison','truck','Rapport et argumentaire']]],
+  ['Administration',[['set','Réglages','sliders','Tarifs, sécurité, données']]]];
+  return mb()+G.map(function(g){return '<div class="sec">'+g[0]+'</div><div class="pg">'+g[1].map(function(i){return '<div class="card tile" data-act="tab" data-v="'+i[0]+'"><div class="ti">'+ico(i[2])+'</div><b>'+i[1]+'</b><div class="mut">'+i[3]+'</div></div>'}).join('')+'</div>'}).join('');
 }
+function toolv(){return mb()+'<div class="sec">QR code &amp; NFC</div>'+qacc()}
 function setExtra(){
   var s=DB.set;
   return '<div class="card"><h2>Suivi en direct (Firebase)</h2><label>Adresse de ta base Realtime Database</label><input data-set="db" value="'+e(s.db||'')+'" placeholder="https://ton-projet-default-rtdb.europe-west1.firebasedatabase.app"><p class="mut">'+(s.db?'Suivi en direct activé : le client, le livreur et toi voient les mêmes étapes en temps réel.':'Sans cette adresse, le suivi marche par liens et messages.')+' Colle les règles du fichier database.rules.json dans Firebase (Règles) : elles empêchent de lister ou d’écraser les suivis des autres.</p>'+(s.db?'<button class="b" data-act="dbtest">Tester la connexion</button><p class="mut">'+e(S.dbt||'')+'</p>':'')+'</div>'
@@ -666,11 +671,11 @@ function render(){
   document.documentElement.dir=(DB&&DB.set.lang==='ar')?'rtl':'ltr';
   if(S.locked||!DB){$('nav').innerHTML='';$('hs').innerHTML='';lockv();return}
   $('ver').textContent='v'+VER;$('hs').innerHTML=ico('gear');$('hl').textContent=DB.set.lang==='ar'?'AR':'FR';
-  var MORE=['more','cat','net','deals','wl','wn','calc','sim','pro','set'];
+  var MORE=['more','tools','cat','net','deals','wl','wn','calc','sim','pro','set'];
   var pe=DB.orders.filter(function(o){return o.status==='En attente'&&callDue(o)}).length;
   var M=[['home','Accueil','home'],['calls','Appels','phone'],['ord','Commandes','box'],['del','Livraison','truck'],['vend','Vendeurs','store'],['fin','Finances','chart'],['more','Plus','plus']];
   $('nav').innerHTML=M.map(function(m){var on=S.tab===m[0]||(m[0]==='more'&&MORE.indexOf(S.tab)>=0);return '<button data-act="tab" data-v="'+m[0]+'" class="'+(on?'on':'')+'">'+ico(m[2])+T(m[1])+(m[0]==='calls'&&pe?'<span class="bd">'+pe+'</span>':'')+'</button>'}).join('');
-  var V={home:home,calls:calls,ord:ordv,del:delv,vend:vendv,fin:finv,set:setv,more:morev,cat:catv,net:net,deals:dealsv,wl:wlist,wn:wnew,calc:calcv,sim:simv,pro:prov}[S.tab]||home;
+  var V={home:home,calls:calls,ord:ordv,del:delv,vend:vendv,fin:finv,set:setv,more:morev,tools:toolv,cat:catv,net:net,deals:dealsv,wl:wlist,wn:wnew,calc:calcv,sim:simv,pro:prov}[S.tab]||home;
   var back=(MORE.indexOf(S.tab)>0)?'<button class="b full sm" data-act="tab" data-v="more" style="margin-bottom:10px">← Plus</button>':'';
   $('app').innerHTML=back+V();
   S.msg='';S.err=false;
@@ -907,7 +912,7 @@ setInterval(tick,15000);setTimeout(tick,2500);
 function autc(){var A=aset(),tg=[['ca','Attribuer un livreur automatiquement (par ville, le moins chargé)'],['cp','Publier le suivi à chaque étape'],['cn','Me rappeler les appels à passer'],['cb','Sauvegarde automatique chaque semaine (si pas de code)'],['rv','Valider moi-même les livraisons signalées à distance (anti-fraude, conseillé)']],c=qcl(),m=qms(),
   q=function(l,a,t,f){return l.length?'<div class="mut" style="margin-top:10px">'+t+' ('+l.length+')</div>'+l.slice(0,5).map(function(o){return '<div class="row" style="padding:4px 0"><span>'+e(o.name)+' · '+e(o.product||'')+'</span><button class="b sm" style="flex:none" data-act="'+a+'" data-id="'+o.id+'">Envoyer</button></div>'}).join(''):''};
   return '<div class="card"><h2>Automatisations</h2>'+tg.map(function(t){return '<label class="row" style="color:var(--tx);font-size:14px;padding:6px 0"><span>'+t[1]+'</span><input type="checkbox" style="width:auto;min-height:0;margin:0 0 0 8px" data-act="aut" data-k="'+t[0]+'"'+(A[t[0]]?' checked':'')+'></label>'}).join('')+q(c,'aq','Clients à prévenir')+q(m,'am','Missions à envoyer aux livreurs')+(c.length+m.length?'':'<p class="mut">Rien à envoyer pour le moment.</p>')+'<p class="mut">WhatsApp s’ouvre avec le message prêt : tu n’as qu’à appuyer sur Envoyer.</p></div>'}
-var _rd2=render;render=function(){_rd2();if(DB&&!S.locked&&!Q.get('t')&&!Q.get('l')&&!Q.get('v')&&S.tab==='home'){$('app').insertAdjacentHTML('beforeend',autc());$('app').insertAdjacentHTML('afterbegin',qacc())}};
+var _rd2=render;render=function(){_rd2();if(DB&&!S.locked&&!Q.get('t')&&!Q.get('l')&&!Q.get('v')&&S.tab==='home'){$('app').insertAdjacentHTML('beforeend',autc());$('app').insertAdjacentHTML('afterbegin','<div class="card hero" data-act="tab" data-v="tools" style="cursor:pointer"><div class="row"><div><b>Outils QR &amp; NFC</b><div class="mut">Partager, scanner, associer un tag</div></div><span class="arr">›</span></div></div>')}};
 document.addEventListener('click',function(ev){var t=ev.target.closest('[data-act]');if(!t||!DB)return;var a=t.getAttribute('data-act'),id=t.getAttribute('data-id'),o=id?DB.orders.filter(function(x){return x.id===id})[0]:null;
   if(a==='aut'){var k=t.getAttribute('data-k');aset()[k]=t.checked?1:0;if(k==='cn'&&t.checked&&'Notification' in window&&Notification.permission==='default')Notification.requestPermission();save();tick();render()}
   else if(a==='aq'&&o){o.ns=stage(o);save();window.open(wa(o.phone,nmsgL(o)),'_blank');render()}
@@ -1811,7 +1816,7 @@ return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+s+' '+s+'" shape-
 function cat_(){var c=decq('c');return Array.isArray(c)?c.slice(0,12).map(function(a){a=a||{};return{n:String(a.n||'').slice(0,40),p:+a.p||0,o:+a.o||0}}):[]}
 function vurl(vl){return location.origin+location.pathname+'?v='+encodeURIComponent(vl.name)+'&w='+encodeURIComponent(waNum(DB.set.phone))+(vl.arts&&vl.arts.length?'&c='+encq(vl.arts.slice(0,12).map(function(x){return{n:String(x.name).slice(0,40),p:x.price,o:x.old||0}})):'')}
 function qacc(){var vs=DB.vend.slice(0,8).map(function(v){return '<button class="b sm" data-act="qrs" data-k="vd" data-id="'+v.id+'">'+e(v.name)+'</button>'}).join(''),ms=DB.orders.filter(function(o){return o.courier&&!bad(o)&&stage(o)>=1&&stage(o)<3}).slice(0,6).map(function(o){return '<button class="b sm" data-act="qrs" data-k="l" data-id="'+o.id+'">'+e(o.courier)+' · '+e(o.name)+'</button>'}).join('');
-  return '<div class="card"><h2>QR code &amp; NFC</h2><div class="btns"><button class="b pri" data-act="qrs" data-k="app">Mon application</button><button class="b" data-act="qrx" data-k="read">Lire un tag NFC</button></div><div class="btns"><button class="b" data-act="scn">Scanner un QR</button><button class="b" data-act="tagp">Associer un tag</button><button class="b" data-act="diag">Diagnostic</button></div>'+(vs?'<div class="mut" style="margin-top:8px">Lien de commande d’un vendeur :</div><div class="btns">'+vs+'</div>':'')+(ms?'<div class="mut" style="margin-top:8px">Mission d’un livreur :</div><div class="btns">'+ms+'</div>':'')+'<p class="mut">Ces codes ouvrent un lien. L’application n’a pas de comptes : les données restent sur chaque téléphone.'+(nfcOK()?'':' NFC : Chrome Android en HTTPS requis.')+'</p></div>'}
+  return '<div class="card"><h2>QR code</h2><div class="mut">Partager ou scanner un lien</div><div class="btns"><button class="b pri" data-act="qrs" data-k="app">Mon application</button><button class="b" data-act="scn">Scanner un QR</button></div>'+(vs?'<div class="mut" style="margin-top:10px">Lien de commande d’un vendeur</div><div class="btns">'+vs+'</div>':'')+(ms?'<div class="mut" style="margin-top:10px">Mission d’un livreur</div><div class="btns">'+ms+'</div>':'')+'</div><div class="card"><h2>NFC</h2><div class="mut">'+(nfcOK()?'NFC disponible sur cet appareil':'NFC : Chrome Android en HTTPS requis')+'</div><div class="btns"><button class="b" data-act="qrx" data-k="read">Lire un tag</button><button class="b" data-act="tagp">Associer un tag</button></div></div><div class="card"><h2>Diagnostic</h2><div class="mut">Vérifier caméra, NFC et connexion</div><div class="btns"><button class="b" data-act="diag">Lancer le diagnostic</button></div><p class="mut">Ces codes ouvrent un lien. Les données restent sur chaque téléphone.</p></div>'}
 var QO=null;
 function qclose(){scnStop();if(QO){QO.remove();QO=null}}
 function qshow(title,url){
