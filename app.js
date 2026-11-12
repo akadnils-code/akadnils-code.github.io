@@ -608,7 +608,7 @@ function simv(){
    +'<div class="card" style="margin-top:10px"><h2>Marge d’intermédiaire</h2>'+inp('pa','Prix d’achat unitaire (dh)')+inp('pv','Prix de vente unitaire (dh)')+inp('q','Quantité')+'<div class="kpi"><span class="mut">Marge estimée</span><b>'+fm(mg)+' dh</b></div></div><p class="mut">Estimation indicative : elle ne garantit aucun revenu.</p>';
 }
 function morev(){
-  var G=[['Outils terrain',[['tools','QR code & NFC','box','Partager, scanner, associer'],['calc','Calculatrice','calc','Calculs rapides']]],
+  var G=[['Gestion',[['vend','Vendeurs','store','Boutiques et commissions'],['fin','Finances','chart','Gains, soldes, exports']]],['Outils terrain',[['tools','QR code & NFC','box','Partager, scanner, associer'],['calc','Calculatrice','calc','Calculs rapides']]],
   ['Ventes & marché',[['cat','Catalogue','bag','Produits des vendeurs'],['net','Réseau','net','Grossistes, acheteurs, livreurs'],['deals','Affaires','chart','Marges d’intermédiaire']]],
   ['Appels',[['wl','Portefeuille','wallet','Appels sortants'],['wn','Nouvel appel','plus','Ajouter au portefeuille']]],
   ['Pilotage',[['sim','Simulation','chart','Revenus estimés'],['pro','Société livraison','truck','Rapport et argumentaire']]],
@@ -679,9 +679,9 @@ function render(){
   document.documentElement.dir=(DB&&DB.set.lang==='ar')?'rtl':'ltr';
   if(S.locked||!DB){$('nav').innerHTML='';$('hs').innerHTML='';lockv();return}
   $('ver').textContent='v'+VER;$('hs').innerHTML=ico('gear');$('hl').textContent=DB.set.lang==='ar'?'AR':'FR';
-  var MORE=['more','tools','cat','net','deals','wl','wn','calc','sim','pro','set'];
+  var MORE=['more','vend','fin','tools','cat','net','deals','wl','wn','calc','sim','pro','set'];
   var pe=DB.orders.filter(function(o){return o.status==='En attente'&&callDue(o)}).length;
-  var M=[['home','Accueil','home'],['calls','Appels','phone'],['ord','Commandes','box'],['del','Livraison','truck'],['vend','Vendeurs','store'],['fin','Finances','chart'],['more','Plus','plus']];
+  var M=[['home','Accueil','home'],['calls','Appels','phone'],['ord','Commandes','box'],['del','Livraison','truck'],['more','Compte','gear']];
   $('nav').innerHTML=M.map(function(m){var on=S.tab===m[0]||(m[0]==='more'&&MORE.indexOf(S.tab)>=0);return '<button data-act="tab" data-v="'+m[0]+'" class="'+(on?'on':'')+'">'+ico(m[2])+T(m[1])+(m[0]==='calls'&&pe?'<span class="bd">'+pe+'</span>':'')+'</button>'}).join('');
   var V={home:home,calls:calls,ord:ordv,del:delv,vend:vendv,fin:finv,set:setv,more:morev,tools:toolv,cat:catv,net:net,deals:dealsv,wl:wlist,wn:wnew,calc:calcv,sim:simv,pro:prov}[S.tab]||home;
   var back=(MORE.indexOf(S.tab)>0)?'<button class="b full sm" data-act="tab" data-v="more" style="margin-bottom:10px">← Plus</button>':'';
@@ -1904,3 +1904,33 @@ var _rc3=renderClient;renderClient=function(){_rc3();var d=decq('t');if(!d||!d.t
 
 boot();
 if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){})})}
+
+/* ===== 7.8 : accueil style marketplace (structure Jumia, couleurs premium) ===== */
+(function(){
+var _rh=render;
+render=function(){_rh();
+  if(!DB||S.locked||Q.get('t')||Q.get('l')||Q.get('v')||S.tab!=='home')return;
+  var o=DB.orders,mo=today().slice(0,7),pe=o.filter(function(x){return x.status==='En attente'}),due=pe.filter(callDue),
+  om=o.filter(function(x){return (x.date||'').slice(0,7)===mo}),s=stats(om),tr=s.n-s.pe,
+  gm=o.filter(function(x){return (x.cdate||'').slice(0,7)===mo}).reduce(function(a,x){return a+earned(x)},0),
+  tc=0;DB.vend.forEach(function(v){var b=vbal(v).bal;if(b<0)tc-=b});
+  var B=[['g1','À appeler maintenant',due.length,'Appeler →','calls'],
+         ['g2','Gagné ce mois',fm(gm)+' dh','Voir les finances →','fin'],
+         ['g3','Livraison (mois)',pct(s.liv,s.liv+s.ref),'Voir les livraisons →','del']];
+  var L=(due.length?due:pe).slice(0,8);
+  var h='<label class="hsr">'+ico('search')+'<input id="hq" placeholder="Rechercher une commande, un client…" enterkeyhint="search"></label>'
+   +'<div class="hl">'+(due.length?due.length+' commande(s) à appeler maintenant':'Aucun appel urgent, tout est à jour')+'</div>'
+   +'<div class="bnr" id="bnr">'+B.map(function(b){return '<div class="bn '+b[0]+'" data-act="tab" data-v="'+b[4]+'"><div><small>'+b[1]+'</small><strong>'+b[2]+'</strong></div><span class="go">'+b[3]+'</span></div>'}).join('')+'</div>'
+   +'<div class="dots" id="dots">'+B.map(function(_,i){return '<i'+(i?'':' class="on"')+'></i>'}).join('')+'</div>'
+   +'<div class="dk"><h3>TON ACTIVITÉ, EN DIRECT</h3><div class="hrow">'
+   +[['ok','Confirmation (mois)',pct(s.ok,tr),'Taux de confirmation'],['bolt','Programmés',pe.length-due.length,'Rappels à venir'],['wal','À encaisser',fm(tc)+' dh','Chez les vendeurs']].map(function(q){return '<div class="dc"><small>'+q[1]+'</small><div class="orb">'+ico(q[0]==='bolt'?'phone':q[0]==='wal'?'chart':'box')+'</div><b>'+q[2]+'</b><span>'+q[3]+'</span></div>'}).join('')
+   +'</div></div>'
+   +'<div class="fl"><div class="row"><h3>Appels à passer</h3><span class="arrb" data-act="tab" data-v="calls">→</span></div><div class="pill">'+ico('phone','s')+' '+pe.length+' en attente</div>'
+   +(L.length?'<div class="hrow">'+L.map(function(x){return '<div class="oc"><div class="ph0">'+e((x.name||'?').charAt(0).toUpperCase())+'<a class="plus" href="tel:'+e(x.phone)+'" aria-label="Appeler">'+ico('phone')+'</a></div><div class="on1">'+e(x.name)+'</div><div class="mut">'+e(x.product||'—')+'</div><div class="mut">'+e(x.city||'')+(x.amount?' · <b>'+fm(x.amount)+' dh</b>':'')+'</div></div>'}).join('')+'</div>':'<p class="mut" style="color:#f6dc85">Ajoute ta première commande pour la voir ici.</p>')
+   +'</div>';
+  $('app').insertAdjacentHTML('afterbegin',h);
+  var bn=$('bnr'),d=$('dots');
+  if(bn)bn.addEventListener('scroll',function(){var i=Math.round(bn.scrollLeft/(bn.firstChild.offsetWidth+12));[].forEach.call(d.children,function(x,k){x.className=k===i?'on':''})});
+};
+document.addEventListener('keydown',function(ev){var t=ev.target;if(t.id==='hq'&&ev.key==='Enter'){S.tab='ord';S.sub='list';S.q=t.value;S.sf='';S.vendor='';render()}});
+})();
