@@ -1907,6 +1907,17 @@ if('serviceWorker' in navigator){window.addEventListener('load',function(){navig
 
 /* ===== 7.8 : accueil style marketplace (structure Jumia, couleurs premium) ===== */
 (function(){
+function MX(due,pe,gm,s,tr){
+  var hr=new Date().getHours(),nm=DB.set.holder||'Confirmation COD',sub=DB.set.phone||(pe.length+' commande(s) en attente');
+  var now=new Date(),dt=now.toLocaleDateString('fr-FR')+' • '+now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  var R=[['calls','phone','Appels',due.length],['ord','box','Commandes',0],['del','truck','Livraison',0],['vend','store','Vendeurs',0],['fin','chart','Finances',0],['tools','box','QR & NFC',0]];
+  return '<div class="mx"><div class="gr">'+(hr<5||hr>=18?'Bonsoir':'Bonjour')+' '+e(nm)+'</div><div class="gs">'+e(sub)+'</div>'
+   +'<div class="hrow rings">'+R.map(function(r){return '<div class="rg" data-act="tab" data-v="'+r[0]+'"><div class="ring"><div class="rin">'+ico(r[1])+'</div>'+(r[3]?'<span class="rb">'+r[3]+'</span>':'')+'</div><span>'+r[2]+'</span></div>'}).join('')+'</div></div>'
+   +'<div class="mxw"><div class="mxc"><div class="row"><h2>Résumé du mois</h2></div><div class="mut">Solde au <b style="color:#d4742a">'+dt+'</b></div>'
+   +'<div class="sbx"><div class="sb"><div class="si">'+ico('box')+'</div><span>Confirmation</span><b>'+pct(s.ok,tr)+'</b></div><div class="sb2"><div class="si2">'+ico('chart')+'</div><b>'+fm(gm)+' <small>DH</small></b><span>Gagné ce mois</span></div></div>'
+   +'<div class="mut" style="text-align:center;margin:6px 0 14px">'+(due.length?due.length+' commande(s) à appeler maintenant':'Aucun appel urgent, tout est à jour')+'</div>'
+   +'<div class="btns"><button class="b pri" data-act="goto" data-v="calls">'+ico('phone','s')+' Appeler</button><button class="b" data-act="goto" data-v="ord" data-s="add">Ajouter</button><button class="b" data-act="tab" data-v="fin">Finances</button></div></div></div>';
+}
 var _rh=render;
 render=function(){_rh();
   if(!DB||S.locked||Q.get('t')||Q.get('l')||Q.get('v')||S.tab!=='home')return;
@@ -1918,8 +1929,7 @@ render=function(){_rh();
          ['g2','Gagné ce mois',fm(gm)+' dh','Voir les finances →','fin'],
          ['g3','Livraison (mois)',pct(s.liv,s.liv+s.ref),'Voir les livraisons →','del']];
   var L=(due.length?due:pe).slice(0,8);
-  var h='<label class="hsr">'+ico('search')+'<input id="hq" placeholder="Rechercher une commande, un client…" enterkeyhint="search"></label>'
-   +'<div class="hl">'+(due.length?due.length+' commande(s) à appeler maintenant':'Aucun appel urgent, tout est à jour')+'</div>'
+  var h=MX(due,pe,gm,s,tr)+'<label class="hsr">'+ico('search')+'<input id="hq" placeholder="Rechercher une commande, un client…" enterkeyhint="search"></label>'
    +'<div class="bnr" id="bnr">'+B.map(function(b){return '<div class="bn '+b[0]+'" data-act="tab" data-v="'+b[4]+'"><div><small>'+b[1]+'</small><strong>'+b[2]+'</strong></div><span class="go">'+b[3]+'</span></div>'}).join('')+'</div>'
    +'<div class="dots" id="dots">'+B.map(function(_,i){return '<i'+(i?'':' class="on"')+'></i>'}).join('')+'</div>'
    +'<div class="dk"><h3>TON ACTIVITÉ, EN DIRECT</h3><div class="hrow">'

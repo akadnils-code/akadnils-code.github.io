@@ -185,3 +185,28 @@ nav button{color:var(--mut)!important;background:none!important;font-size:12px;f
 nav button.on{color:#a98319!important}nav button.on .i{color:#d4af37!important}
 body{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
 .tst{bottom:calc(76px + env(safe-area-inset-bottom,0px))}
+
+/* ===== 7.8b : haut façon Max it (fond sombre, cercles, grande carte) ===== */
+.mx{margin:-16px -14px 0;padding:18px 14px 84px;background:linear-gradient(180deg,#05080f,#14213d 85%,#1c2d52);border-radius:0 0 34px 34px;color:#fff}
+.gr{font-size:26px;font-weight:800;letter-spacing:-.01em}
+.gs{color:#d4af37;font-size:19px;font-weight:700;margin:4px 0 16px}
+.rings{margin:0 -14px;padding:2px 14px;gap:14px}
+.rg{flex:0 0 78px;text-align:center;cursor:pointer;font-size:12.5px;font-weight:600}
+.rg span{display:block;margin-top:7px;color:#fff}
+.ring{position:relative;width:74px;height:74px;border-radius:50%;padding:3px;margin:0 auto;background:conic-gradient(#f6dc85,#b8921f,#f6dc85)}
+.rin{width:100%;height:100%;border-radius:50%;background:#0a0d16;display:flex;align-items:center;justify-content:center;color:#f6dc85}
+.rin .i{width:30px;height:30px}
+.rb{position:absolute;top:-2px;right:-2px;min-width:22px;height:22px;border-radius:99px;background:#d4af37;color:#1a1405;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;padding:0 5px}
+.mxw{position:relative;margin:-64px 0 26px}
+.mxw:before,.mxw:after{content:"";position:absolute;left:20px;right:20px;bottom:-9px;height:30px;background:var(--card);opacity:.7;border-radius:0 0 28px 28px;box-shadow:var(--sh)}
+.mxw:after{left:38px;right:38px;bottom:-18px;opacity:.4}
+.mxc{position:relative;z-index:1;background:var(--card);border-radius:30px;padding:20px 16px 16px;box-shadow:0 14px 34px rgba(7,11,20,.28)}
+.mxc h2{font-size:24px;margin:0 0 4px;font-weight:800}
+.sbx{display:flex;gap:12px;align-items:stretch;margin:14px 0 6px}
+.sb{flex:1;border:2px solid #3fae7f;border-radius:20px;padding:12px;display:flex;flex-direction:column;gap:4px}
+.sb .si,.sb2 .si2{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:rgba(63,174,127,.14);color:#2c8a63}
+.sb span{font-size:15px;font-weight:600}.sb b{font-size:28px;letter-spacing:-.02em}
+.sb2{flex:1;display:flex;flex-direction:column;gap:4px;justify-content:center;padding-left:6px}
+.sb2 .si2{background:linear-gradient(135deg,#fbf3d3,#e9cf78);color:#8a6a12}
+.sb2 b{font-size:28px}.sb2 b small{font-size:14px;font-weight:700}.sb2 span{font-size:13px;color:var(--mut)}
+nav button.on{background:rgba(212,175,55,.16)!important;border-radius:22px}
