@@ -608,7 +608,7 @@ function simv(){
    +'<div class="card" style="margin-top:10px"><h2>Marge d’intermédiaire</h2>'+inp('pa','Prix d’achat unitaire (dh)')+inp('pv','Prix de vente unitaire (dh)')+inp('q','Quantité')+'<div class="kpi"><span class="mut">Marge estimée</span><b>'+fm(mg)+' dh</b></div></div><p class="mut">Estimation indicative : elle ne garantit aucun revenu.</p>';
 }
 function morev(){
-  var G=[['Gestion',[['vend','Vendeurs','store','Boutiques et commissions'],['fin','Finances','chart','Gains, soldes, exports']]],['Outils terrain',[['tools','QR code & NFC','box','Partager, scanner, associer'],['calc','Calculatrice','calc','Calculs rapides']]],
+  var G=[['Gestion',[['vend','Vendeurs','store','Boutiques et commissions'],['fin','Finances','chart','Gains, soldes, exports'],['auto','Automatisations & avis','sliders','Rappels, suivi, avis clients']]],['Outils terrain',[['tools','QR code & NFC','box','Partager, scanner, associer'],['calc','Calculatrice','calc','Calculs rapides']]],
   ['Ventes & marché',[['cat','Catalogue','bag','Produits des vendeurs'],['net','Réseau','net','Grossistes, acheteurs, livreurs'],['deals','Affaires','chart','Marges d’intermédiaire']]],
   ['Appels',[['wl','Portefeuille','wallet','Appels sortants'],['wn','Nouvel appel','plus','Ajouter au portefeuille']]],
   ['Pilotage',[['sim','Simulation','chart','Revenus estimés'],['pro','Société livraison','truck','Rapport et argumentaire']]],
@@ -679,7 +679,7 @@ function render(){
   document.documentElement.dir=(DB&&DB.set.lang==='ar')?'rtl':'ltr';
   if(S.locked||!DB){$('nav').innerHTML='';$('hs').innerHTML='';lockv();return}
   $('ver').textContent='v'+VER;$('hs').innerHTML=ico('gear');$('hl').textContent=DB.set.lang==='ar'?'AR':'FR';
-  var MORE=['more','vend','fin','tools','cat','net','deals','wl','wn','calc','sim','pro','set'];
+  var MORE=['more','auto','vend','fin','tools','cat','net','deals','wl','wn','calc','sim','pro','set'];
   var pe=DB.orders.filter(function(o){return o.status==='En attente'&&callDue(o)}).length;
   var M=[['home','Accueil','home'],['calls','Appels','phone'],['ord','Commandes','box'],['del','Livraison','truck'],['more','Compte','gear']];
   $('nav').innerHTML=M.map(function(m){var on=S.tab===m[0]||(m[0]==='more'&&MORE.indexOf(S.tab)>=0);return '<button data-act="tab" data-v="'+m[0]+'" class="'+(on?'on':'')+'">'+ico(m[2])+T(m[1])+(m[0]==='calls'&&pe?'<span class="bd">'+pe+'</span>':'')+'</button>'}).join('');
@@ -1919,8 +1919,18 @@ function MX(due,pe,gm,s,tr){
    +'<div class="btns"><button class="b pri" data-act="goto" data-v="calls">'+ico('phone','s')+' Appeler</button><button class="b" data-act="goto" data-v="ord" data-s="add">Ajouter</button><button class="b" data-act="tab" data-v="fin">Finances</button></div></div></div>';
 }
 var _rh=render;
-render=function(){_rh();
+var NM=['Automatisations','Satisfaction clients','Pour commencer'];
+function crds(){return [].slice.call($('app').querySelectorAll('.card')).filter(function(c){var h=c.querySelector('h2');return h&&NM.indexOf(h.textContent.trim())>=0})}
+render=function(){
+  var au=(S.tab==='auto'&&DB&&!S.locked&&!Q.get('v'));
+  if(au)S.tab='home';
+  _rh();
+  if(au){S.tab='auto';var A=$('app'),c=crds().sort(function(x,y){return NM.indexOf(x.querySelector('h2').textContent.trim())-NM.indexOf(y.querySelector('h2').textContent.trim())});
+    A.innerHTML='<button class="b full sm" data-act="tab" data-v="more" style="margin-bottom:10px">← Compte</button><div class="sec">Automatisations & avis</div>';
+    c.forEach(function(x){A.appendChild(x)});
+    [].forEach.call($('nav').children,function(b){b.classList.toggle('on',b.getAttribute('data-v')==='more')});return}
   if(!DB||S.locked||Q.get('t')||Q.get('l')||Q.get('v')||S.tab!=='home')return;
+  crds().forEach(function(x){x.remove()});
   var o=DB.orders,mo=today().slice(0,7),pe=o.filter(function(x){return x.status==='En attente'}),due=pe.filter(callDue),
   om=o.filter(function(x){return (x.date||'').slice(0,7)===mo}),s=stats(om),tr=s.n-s.pe,
   gm=o.filter(function(x){return (x.cdate||'').slice(0,7)===mo}).reduce(function(a,x){return a+earned(x)},0),
