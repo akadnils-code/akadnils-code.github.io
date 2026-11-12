@@ -1,6 +1,6 @@
 /* Confirmation COD 7.8.0 - script principal
    Sections repérées : modules réintégrés de la v3 | v5 : code de livraison, avis, demandes, motifs livreur, sati | v6 : catalogue, créneaux, photo de preuve, notifications, da | v7 : automatisations | v7.2 : QR code + NFC (QR hors ligne, aucune dépendance résea | v7.4 : scanner QR (caméra), tags NFC associés, diagnostic */
-var CIT=200000,KEY='cod_v4',OLDKEY='cod_v1',VER='7.9.4',IT=200000;
+var CIT=200000,KEY='cod_v4',OLDKEY='cod_v1',VER='7.9.8',IT=200000;
 var DEFTPL='Bonjour 👋 [boutique] a essayé de vous joindre pour confirmer votre commande de [produit]. Répondez OUI pour confirmer, ou dites-nous à quelle heure vous rappeler. Merci !';
 var DEFSCRIPT='1) Se présenter : « Bonjour, je vous appelle de la part de [boutique]. »\n2) Confirmer le produit, la quantité, le prix et la livraison.\n3) Confirmer la ville et l’adresse exacte (quartier, repère).\n4) Proposer un produit complémentaire ou un pack.\n5) Rappeler : paiement à la livraison, merci de préparer le montant.';
 var DEFSET={rc:0,db:'',tiles:'',ckey:'',net:[],deals:[],wallet:[],sim:{cpw:200,tc:70,td:80,nv:5,pa:60,pv:90,q:100},cf:5,bn:6,up:12,trial:30,dth:500,dpc:20,minc:100,phone:'',rib:'',holder:'',insta:'',tpl:DEFTPL,script:DEFSCRIPT,lang:'fr',lastBackup:0};
@@ -679,7 +679,7 @@ function render(){
   document.documentElement.dir=(DB&&DB.set.lang==='ar')?'rtl':'ltr';
   if(S.locked||!DB){$('nav').innerHTML='';$('hs').innerHTML='';lockv();return}
   $('ver').textContent='v'+VER;$('hs').innerHTML=ico('gear');$('hl').textContent=DB.set.lang==='ar'?'AR':'FR';
-  var MORE=['more','auto','vend','fin','tools','cat','net','deals','wl','wn','calc','sim','pro','set'];
+  var MORE=['more','pod','wa','rap','auto','vend','fin','tools','cat','net','deals','wl','wn','calc','sim','pro','set'];
   var pe=DB.orders.filter(function(o){return o.status==='En attente'&&callDue(o)}).length;
   var M=[['home','Accueil','home'],['calls','Appels','phone'],['ord','Commandes','box'],['del','Livraison','truck'],['more','Compte','gear']];
   $('nav').innerHTML=M.map(function(m){var on=S.tab===m[0]||(m[0]==='more'&&MORE.indexOf(S.tab)>=0);return '<button data-act="tab" data-v="'+m[0]+'" class="'+(on?'on':'')+'">'+ico(m[2])+T(m[1])+(m[0]==='calls'&&pe?'<span class="bd">'+pe+'</span>':'')+'</button>'}).join('');
@@ -1910,7 +1910,7 @@ if('serviceWorker' in navigator){window.addEventListener('load',function(){navig
 function MX(due,pe,gm,s,tr,tc){
   var hr=new Date().getHours(),nm=DB.set.holder||'Confirmation COD',sub=DB.set.phone||(pe.length+' commande(s) en attente');
   var now=new Date(),dt=now.toLocaleDateString('fr-FR')+' • '+now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-  var R=[['calls','phone','Appels',due.length],['ord','box','Commandes',0],['del','truck','Livraison',0],['vend','store','Vendeurs',0],['fin','chart','Finances',0],['tools','box','QR & NFC',0]];
+  var R=[['calls','phone','Appels',due.length],['ord','box','Commandes',0],['del','truck','Livraison',0],['vend','store','Vendeurs',0],['fin','chart','Finances',0],['wa','phone','WhatsApp',DB.orders.filter(function(o){return o.status==='En attente'&&o.wa&&callDue(o)}).length],['pod','box','Preuves',0],['tools','box','QR & NFC',0]];
   return '<div class="mx"><div class="gr">'+(hr<5||hr>=18?'Bonsoir':'Bonjour')+' '+e(nm)+'</div><div class="gs">'+e(sub)+'</div>'
    +'<div class="hrow rings">'+R.map(function(r){return '<div class="rg" data-act="tab" data-v="'+r[0]+'"><div class="ring"><div class="rin">'+ico(r[1])+'</div>'+(r[3]?'<span class="rb">'+r[3]+'</span>':'')+'</div><span>'+r[2]+'</span></div>'}).join('')+'</div></div>'
    +'<div class="mxw"><div class="mxs" id="mxs"><div class="mxc"><div class="row"><h2>Résumé du mois</h2></div><div class="mut">Solde au <b style="color:#d4742a">'+dt+'</b></div>'
@@ -1937,7 +1937,7 @@ render=function(){
   tc=0;DB.vend.forEach(function(v){var b=vbal(v).bal;if(b<0)tc-=b});
   var B=[['g1','À appeler maintenant',due.length,'Appeler →','calls'],
          ['g2','Gagné ce mois',fm(gm)+' dh','Voir les finances →','fin'],
-         ['g3','Livraison (mois)',pct(s.liv,s.liv+s.ref),'Voir les livraisons →','del']];
+         ['g3','Livraison (mois)',pct(s.liv,s.liv+s.ref),'Voir les livraisons →','del'],['g2','Rapport de la semaine','📊 7 jours','Ouvrir le rapport →','rap']];
   var L=(due.length?due:pe).slice(0,8);
   var h=MX(due,pe,gm,s,tr,tc)+'<label class="hsr">'+ico('search')+'<input id="hq" placeholder="Rechercher une commande, un client…" enterkeyhint="search"></label>'
    +'<div class="bnr" id="bnr">'+B.map(function(b){return '<div class="bn '+b[0]+'" data-act="tab" data-v="'+b[4]+'"><div><small>'+b[1]+'</small><strong>'+b[2]+'</strong></div><span class="go">'+b[3]+'</span></div>'}).join('')+'</div>'
@@ -1989,7 +1989,7 @@ function walk(r,l){if(!r)return;var w=document.createTreeWalker(r,NodeFilter.SHO
   while(n=w.nextNode()){var p=n.parentNode&&n.parentNode.nodeName;if(p!=='SCRIPT'&&p!=='STYLE'&&p!=='TEXTAREA')L.push(n)}
   L.forEach(function(n){var t=tr(n.nodeValue,l);if(t)n.nodeValue=t});
   [].forEach.call(r.querySelectorAll('[placeholder],[aria-label],[title]'),function(x){['placeholder','aria-label','title'].forEach(function(a){var v=x.getAttribute(a),t=v&&tr(v,l);if(t)x.setAttribute(a,t)})})}
-var CD={fr:'FR',ar:'AR',en:'EN'},_rl=render;
+window.trAll=function(r){var l=(DB&&DB.set.lang)||'fr';if(l!=='fr')walk(r,l)};var CD={fr:'FR',ar:'AR',en:'EN'},_rl=render;
 render=function(){_rl();if(!DB||S.locked)return;var l=DB.set.lang||'fr';if(l==='tz'){l=DB.set.lang='fr';save()}
   document.documentElement.dir=l==='ar'?'rtl':'ltr';document.documentElement.lang=l;
   var hl=$('hl');if(hl)hl.textContent=CD[l]||'FR';if(l!=='fr'){walk($('app'),l);walk($('nav'),l)}};
@@ -2090,3 +2090,99 @@ function poiZoom(d){if(!LM.map)return;LM.zd=LM.zd||2;if(!LM.pg)LM.pg=L.layerGrou
 document.addEventListener('click',function(ev){var b=ev.target.closest&&ev.target.closest('[data-poi]');if(!b||!LM.map)return;
   if(LM.zd){LM.zd=0;poiOff();LM.key='';rr();return}
   var sp=LM.spec&&LM.spec.routes[0];if(sp){LM.follow=false;poiZoom(sp.b)}},true);
+
+/* ===== 8.5 : rapport de la semaine (volumes, motifs, meilleur créneau, conseils, économie) ===== */
+function wkData(){var f=new Date(new Date(today()+'T12:00:00').getTime()-6*864e5).toISOString().slice(0,10),o=DB.orders.filter(function(x){return (x.date||'')>=f}),
+  c=function(fn){return o.filter(fn).length},n=o.length,ok=c(function(x){return x.status==='Confirmé'}),an=c(function(x){return x.status==='Annulé'}),inj=c(function(x){return x.status==='Injoignable'}),pe=c(function(x){return x.status==='En attente'}),
+  liv=c(function(x){return x.delivery==='Livré'}),ref=c(function(x){return x.delivery==='Refusé'}),V=[],B=[],R={};for(var i=0;i<24;i++)V.push(0);for(i=0;i<8;i++)B.push([0,0]);
+  o.forEach(function(x){var h=new Date(x.ts||0).getHours();V[h]++;var b=B[Math.floor(h/3)];b[0]++;if(x.status==='Confirmé')b[1]++;if(x.status==='Annulé'&&x.reason)R[x.reason]=(R[x.reason]||0)+1});
+  var S=B.map(function(b,k){return {k:k,n:b[0],r:b[0]?Math.round(100*b[1]/b[0]):0}}).filter(function(s){return s.n>=3}).sort(function(x,y){return y.r-x.r}),
+  rs=Object.keys(R).sort(function(x,y){return R[y]-R[x]});
+  return {n:n,ok:ok,an:an,inj:inj,pe:pe,liv:liv,ref:ref,V:V,best:S[0],worst:S[S.length-1],rs:rs.slice(0,3).map(function(k){return [k,R[k]]}),f:f}}
+function rapTips(w){var t=[],sl=function(s){return s.k*3+'h–'+(s.k*3+3)+'h'};
+  if(w.best&&w.worst&&w.best.k!==w.worst.k&&w.best.r-w.worst.r>=20)t.push('Les commandes passées entre '+sl(w.best)+' confirment à '+w.best.r+' % contre '+w.worst.r+' % entre '+sl(w.worst)+' : appelle les premières en priorité.');
+  if(w.inj>=3)t.push(w.inj+' clients injoignables : rappelle-les à un autre horaire (le soir) ou envoie le message WhatsApp.');
+  if(w.rs.length)t.push('Motif n°1 d’annulation : « '+w.rs[0][0]+' » ('+w.rs[0][1]+'). Traite-le dans ton script ou sur la fiche produit.');
+  if(w.liv+w.ref>=3&&w.ref/(w.liv+w.ref)>.15)t.push('Taux de refus à la livraison de '+Math.round(100*w.ref/(w.liv+w.ref))+' % : valide toi-même les livraisons signalées à distance et rappelle le client avant le passage du livreur.');
+  if(w.pe>=5)t.push(w.pe+' commandes sont encore en attente : appelle-les avant qu’elles ne refroidissent.');
+  return t.length?t:['Rien d’alarmant cette semaine, continue comme ça.']}
+function rapHTML(){var w=wkData(),p=function(a,b){return b?Math.round(100*a/b)+' %':'—'},mx=Math.max.apply(null,w.V.concat([1])),tips=rapTips(w),
+  txt='📊 Rapport 7 jours : '+w.n+' commandes, '+w.ok+' confirmées ('+p(w.ok,w.n)+'), '+w.an+' annulées, '+w.inj+' injoignables. Livrées : '+w.liv+', refusées : '+w.ref+'.\n'+tips.map(function(x,i){return (i+1)+'. '+x}).join('\n')+memoTxt();
+  return '<button class="b full sm" data-act="tab" data-v="more" style="margin-bottom:10px">← Compte</button><div class="sec">Rapport de la semaine</div><div class="mut" style="margin:-6px 0 10px">Du '+w.f.split('-').reverse().join('/')+' à aujourd’hui</div>'
+  +'<div class="card rp"><div class="rg2"><div><b>'+w.n+'</b><span>Reçues</span></div><div><b>'+w.ok+'</b><span>Confirmées · '+p(w.ok,w.n)+'</span></div><div><b>'+w.an+'</b><span>Annulées · '+p(w.an,w.n)+'</span></div><div><b>'+w.inj+'</b><span>Injoignables</span></div><div><b>'+w.liv+'</b><span>Livrées</span></div><div><b>'+w.ref+'</b><span>Refusées</span></div></div></div>'
+  +'<div class="card"><h2>Quand tes clients commandent</h2><div class="bars">'+w.V.map(function(v,h){return '<i style="height:'+Math.max(4,Math.round(100*v/mx))+'%"'+(h>=20||h<3?' class="n"':'')+' title="'+h+'h : '+v+'"></i>'}).join('')+'</div><div class="bl"><span>0h</span><span>6h</span><span>12h</span><span>18h</span><span>23h</span></div><div class="mut">Barres dorées : le soir et la nuit (20h à 3h).</div></div>'
+  +(w.rs.length?'<div class="card"><h2>Motifs d’annulation</h2>'+w.rs.map(function(r){return '<div class="row"><span>'+e(r[0])+'</span><b>'+r[1]+'</b></div>'}).join('')+'</div>':'')
+  +'<div class="card"><h2>💡 Recommandations</h2>'+tips.map(function(x){return '<p style="margin:8px 0">• '+e(x)+'</p>'}).join('')+'</div>'
+  +'<div class="card"><h2>💰 Économie estimée</h2><p style="margin:6px 0">En gérant toi-même tes confirmations, tu évites au moins <b>'+fm(w.liv*5)+' DH</b> cette semaine, sur la base de 5 DH par commande livrée (tarif de départ d’un centre d’appel au Maroc).</p><div class="mut">Estimation indicative : les tarifs réels varient selon le volume et l’offre.</div></div>'
+  +'<div class="card"><h2>🔔 Mémo de rappel</h2>'+(memoLines().length?memoLines().map(function(x){return '<div style="margin:6px 0">'+e(x)+'</div>'}).join(''):'<div class="mut">Rien en attente.</div>')+'</div>'+'<a class="b pri full" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none" href="https://wa.me/?text='+encodeURIComponent(txt)+'">Partager le rapport sur WhatsApp</a>'}
+var _r5=render;
+render=function(){var rp=S.tab==='rap'&&DB&&!S.locked&&!Q.get('v');if(rp)S.tab='more';_r5();
+  if(rp){S.tab='rap';$('app').innerHTML=rapHTML();[].forEach.call($('nav').children,function(b){b.classList.toggle('on',b.getAttribute('data-v')==='more')})}};
+
+/* ===== 8.6 : WhatsApp en un mot + mémo de rappel intégré ===== */
+function waMsg(o){return 'Bonjour '+o.name+' 👋 C’est '+(o.vendor||'votre boutique')+'.\nVotre commande : '+(o.product||'—')+(o.amount?' · '+fm(o.amount)+' DH':'')+(o.city?' · livraison à '+o.city:'')+'.\nRépondez par UN mot :\n✅ OUI pour confirmer\n❌ NON pour annuler\n✏️ MODIFIER pour changer l’adresse ou le produit\n(نعم = تأكيد · لا = إلغاء)\nMerci !'}
+function waHref(o){return 'https://wa.me/'+waNum(o.phone)+'?text='+encodeURIComponent(waMsg(o))}
+function hhmm(t){return new Date(t).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}
+function memoLines(){return DB.orders.filter(function(o){return o.status==='En attente'}).sort(function(x,y){return (x.cb||0)-(y.cb||0)}).slice(0,8).map(function(o){return '• '+o.name+' · '+(o.product||'—')+' · '+(callDue(o)?'à rappeler maintenant':'rappel à '+hhmm(o.cb))+(o.wa?' (WhatsApp envoyé)':'')})}
+function memoTxt(){var m=memoLines();return m.length?'\n\n🔔 Mémo de rappel :\n'+m.join('\n'):''}
+function waHTML(){var P=DB.orders.filter(function(o){return o.status==='En attente'}),sent=P.filter(function(o){return o.wa}).sort(function(x,y){return x.wa-y.wa}),todo=P.filter(function(o){return !o.wa}).slice(0,15),
+  ago=function(t){var m=Math.round((Date.now()-t)/6e4);return m<60?m+' min':Math.floor(m/60)+' h'};
+  return '<button class="b full sm" data-act="tab" data-v="more" style="margin-bottom:10px">← Compte</button><div class="sec">WhatsApp en un mot</div><div class="mut" style="margin:-6px 0 10px">Envoie le message, le client répond OUI / NON / MODIFIER, et tu touches sa réponse ici.</div>'
+  +'<div class="card"><h2>🔔 Mémo de rappel</h2>'+(sent.length?sent.map(function(o){return '<div class="wi"><b>'+e(o.name)+'</b><div class="mut">'+e(o.product||'—')+' · envoyé il y a '+ago(o.wa)+' · '+(callDue(o)?'<b style="color:#c2410c">⏰ à relancer</b>':'relance à '+hhmm(o.cb))+'</div><div class="wbt"><button class="b" data-wr="'+o.id+'|OUI">✅ OUI</button><button class="b" data-wr="'+o.id+'|NON">❌ NON</button><button class="b" data-wr="'+o.id+'|MOD">✏️ Modifier</button><a class="b" href="tel:'+e(o.phone)+'" style="text-decoration:none;text-align:center">📞</a></div></div>'}).join(''):'<div class="mut">Aucun message en attente de réponse.</div>')
+  +(sent.length?'<a class="b full" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none;margin-top:8px" href="https://wa.me/?text='+encodeURIComponent('🔔 Mémo de rappel :\n'+memoLines().join('\n'))+'">Partager mon mémo sur WhatsApp</a>':'')+'</div>'
+  +'<div class="card"><h2>À envoyer ('+todo.length+')</h2>'+(todo.length?todo.map(function(o){return '<div class="wi"><div class="row"><b>'+e(o.name)+'</b><span class="mut">'+(o.amount?fm(o.amount)+' DH':'')+'</span></div><div class="mut">'+e(o.product||'—')+(o.city?' · '+e(o.city):'')+'</div><div class="wbt"><a class="b pri" data-wa="'+o.id+'" target="_blank" rel="noopener" href="'+waHref(o)+'" style="text-decoration:none;text-align:center">Envoyer sur WhatsApp</a></div></div>'}).join(''):'<div class="mut">Toutes les commandes en attente ont déjà reçu le message.</div>')+'</div>'}
+var _r6=render;
+render=function(){var w=S.tab==='wa'&&DB&&!S.locked&&!Q.get('v');if(w)S.tab='more';_r6();
+  if(w){S.tab='wa';$('app').innerHTML=waHTML();[].forEach.call($('nav').children,function(b){b.classList.toggle('on',b.getAttribute('data-v')==='more')})}};
+document.addEventListener('click',function(ev){var t=ev.target,b=t.closest&&t.closest('[data-wa]'),r=t.closest&&t.closest('[data-wr]');
+  if(b){var o=DB.orders.filter(function(x){return x.id===b.getAttribute('data-wa')})[0];if(o){o.wa=Date.now();o.cb=Date.now()+2*36e5;o.note=(o.note?o.note+' · ':'')+'WhatsApp envoyé '+hhmm(o.wa);save();setTimeout(render,400)}return}
+  if(r){var p=r.getAttribute('data-wr').split('|'),q=DB.orders.filter(function(x){return x.id===p[0]})[0];if(!q)return;ev.preventDefault();
+    if(p[1]==='OUI')setStatus(q,'Confirmé');else if(p[1]==='NON'){setStatus(q,'Annulé');q.reason='Client a répondu NON (WhatsApp)'}else{q.cb=Date.now()+30*6e4;q.note=(q.note?q.note+' · ':'')+'Client veut modifier'}
+    save();render()}},true);
+
+/* ===== 8.7 : preuve de livraison (photo + heure + GPS), sondage 1-5, effets premium ===== */
+function burst(){try{navigator.vibrate&&navigator.vibrate(25)}catch(x){}var d=document.createElement('div');d.className='cf';for(var i=0;i<24;i++){var s=document.createElement('i');s.style.cssText='--x:'+Math.round(Math.random()*260-130)+'px;--y:'+Math.round(-110-Math.random()*150)+'px;--r:'+Math.round(Math.random()*720-360)+'deg;background:'+['#f6dc85','#d4af37','#22d3ee','#3fae7f','#fff'][i%5]+';animation-delay:'+(Math.random()*.1).toFixed(2)+'s';d.appendChild(s)}document.body.appendChild(d);setTimeout(function(){d.remove()},1500)}
+var _ss=setStatus;setStatus=function(o,s){_ss(o,s);if(s==='Confirmé')burst()};
+var _sd=setDel;setDel=function(o,d){_sd(o,d);if(d==='Livré')burst()};
+function img2(f,txt,done){var r=new FileReader();r.onload=function(){var im=new Image();im.onload=function(){var k=Math.min(1,560/Math.max(im.width,im.height)),c=document.createElement('canvas'),w=Math.round(im.width*k),h=Math.round(im.height*k);c.width=w;c.height=h;var x=c.getContext('2d');x.drawImage(im,0,0,w,h);x.fillStyle='rgba(0,0,0,.6)';x.fillRect(0,h-26,w,26);x.fillStyle='#fff';x.font='bold 12px sans-serif';x.fillText(txt,8,h-9);done(c.toDataURL('image/jpeg',.62))};im.src=r.result};r.readAsDataURL(f)}
+function svMsg(o){return 'Bonjour '+o.name+', merci pour votre commande ('+(o.product||'—')+') 🙏\nSur une échelle de 1 à 5 ⭐ (5 = excellent), comment s’est passée la livraison ?\nRépondez simplement par un chiffre.\n(من 1 إلى 5 ⭐)'}
+function podHTML(){var O=DB.orders,rt=O.filter(function(o){return o.rate}),avg=rt.length?(rt.reduce(function(s,o){return s+o.rate},0)/rt.length).toFixed(1).replace('.',','):'—',np=O.filter(function(o){return o.pod}).length,
+  tp=O.filter(function(o){return o.status==='Confirmé'&&o.delivery!=='Refusé'}).sort(function(x,y){return (x.pod?1:0)-(y.pod?1:0)}).slice(0,12),dv=O.filter(function(o){return o.delivery==='Livré'}).slice(0,12),
+  st=function(n){return '★★★★★'.slice(0,n)+'☆☆☆☆☆'.slice(0,5-n)};
+  return '<button class="b full sm" data-act="tab" data-v="more" style="margin-bottom:10px">← Compte</button><div class="sec">Preuve & satisfaction</div>'
+  +'<div class="card"><div class="rg2"><div><b>'+avg+'</b><span>Note moyenne</span></div><div><b>'+rt.length+'</b><span>Avis reçus</span></div><div><b>'+np+'</b><span>Preuves photo</span></div></div></div>'
+  +'<div class="card"><h2>📸 Preuve de livraison</h2><div class="mut" style="margin-bottom:6px">Photo du colis remis, horodatée avec l’heure et la position GPS : elle règle les litiges.</div>'
+  +(tp.length?tp.map(function(o){return '<div class="wi"><div class="row"><b>'+e(o.name)+'</b><span class="mut">'+e(o.city||'')+(o.amount?' · '+fm(o.amount)+' DH':'')+'</span></div>'
+    +(o.pod?'<img class="pod" src="'+o.pod.i+'" alt="Preuve"><div class="mut">✅ '+new Date(o.pod.ts).toLocaleString('fr-FR')+(o.pod.g?' · '+e(o.pod.g):'')+'</div><div class="wbt"><button class="b" data-ps="'+o.id+'">Partager</button><label class="b">Refaire<input type="file" accept="image/*" capture="environment" hidden data-pod="'+o.id+'"></label></div>'
+     :'<div class="wbt"><label class="b pri">📸 Prendre la photo<input type="file" accept="image/*" capture="environment" hidden data-pod="'+o.id+'"></label></div>')+'</div>'}).join(''):'<div class="mut">Aucune commande confirmée à prouver pour le moment.</div>')+'</div>'
+  +'<div class="card"><h2>⭐ Avis clients</h2>'+(dv.length?dv.map(function(o){return '<div class="wi"><div class="row"><b>'+e(o.name)+'</b><span class="mut">'+e(o.product||'')+'</span></div>'
+    +(o.rate?'<div style="color:#d4af37;font-size:20px;letter-spacing:2px">'+st(o.rate)+'</div>'
+     :(o.sv?'<div class="mut">Sondage envoyé : touche la note reçue</div><div class="wbt">'+[1,2,3,4,5].map(function(n){return '<button class="b" data-rt="'+o.id+'|'+n+'">'+n+'⭐</button>'}).join('')+'</div>'
+      :'<div class="wbt"><a class="b pri" data-sv="'+o.id+'" target="_blank" rel="noopener" href="https://wa.me/'+waNum(o.phone)+'?text='+encodeURIComponent(svMsg(o))+'" style="text-decoration:none;text-align:center">Envoyer le sondage WhatsApp</a></div>'))+'</div>'}).join(''):'<div class="mut">Les commandes livrées apparaîtront ici pour envoyer le sondage.</div>')+'</div>'}
+var _r7=render;
+render=function(){var w=S.tab==='pod'&&DB&&!S.locked&&!Q.get('v');if(w)S.tab='more';_r7();
+  if(w){S.tab='pod';$('app').innerHTML=podHTML();[].forEach.call($('nav').children,function(b){b.classList.toggle('on',b.getAttribute('data-v')==='more')})}};
+function oid(i){return DB.orders.filter(function(x){return x.id===i})[0]}
+document.addEventListener('change',function(ev){var t=ev.target,id=t.getAttribute&&t.getAttribute('data-pod'),o=id&&oid(id),f=t.files&&t.files[0];if(!o||!f)return;
+  var go=function(p){var ts=Date.now(),g=p?p.coords.latitude.toFixed(5)+','+p.coords.longitude.toFixed(5):'';img2(f,new Date(ts).toLocaleString('fr-FR')+(g?' · '+g:''),function(d){o.pod={i:d,ts:ts,g:g};save();render();burst()})};
+  if(navigator.geolocation)navigator.geolocation.getCurrentPosition(go,function(){go(null)},{timeout:4000,maximumAge:60000});else go(null)},true);
+document.addEventListener('click',function(ev){var t=ev.target,q=t.closest&&t.closest('[data-sv]'),r=t.closest&&t.closest('[data-rt]'),s=t.closest&&t.closest('[data-ps]');
+  if(q){var o=oid(q.getAttribute('data-sv'));if(o){o.sv=Date.now();save();setTimeout(render,400)}return}
+  if(r){var p=r.getAttribute('data-rt').split('|'),x=oid(p[0]);if(x){x.rate=+p[1];x.rts=Date.now();save();render();if(x.rate>=4)burst()}return}
+  if(s){var y=oid(s.getAttribute('data-ps'));if(!y||!y.pod)return;fetch(y.pod.i).then(function(b){return b.blob()}).then(function(b){var f=new File([b],'preuve-'+y.name+'.jpg',{type:'image/jpeg'});
+    if(navigator.canShare&&navigator.canShare({files:[f]}))navigator.share({files:[f],text:'Preuve de livraison · '+y.name+' · '+new Date(y.pod.ts).toLocaleString('fr-FR')});else{var l=document.createElement('a');l.href=y.pod.i;l.download=f.name;l.click()}})}},true);
+
+/* ===== 8.8 : chaque nouveauté dans son onglet (Appels, Livraison, Finances) ===== */
+var _r8=render,TMAP={wa:['calls','sec-wa'],rap:['fin','sec-rap'],pod:['del','sec-pod']},TB={
+  calls:{id:'sec-wa',f:function(){return waHTML()},c:[['top','📞 Appels'],['sec-wa','💬 WhatsApp en un mot']]},
+  del:{id:'sec-pod',f:function(){return podHTML()},c:[['top','🛵 Suivi'],['sec-pod','📸 Preuve & avis']]},
+  fin:{id:'sec-rap',f:function(){return rapHTML()},c:[['top','💰 Finances'],['sec-rap','📊 Rapport de la semaine']]}};
+render=function(){if(TMAP[S.tab]){S.go=TMAP[S.tab][1];S.tab=TMAP[S.tab][0]}
+  _r8();if(!DB||S.locked||Q.get('t')||Q.get('l')||Q.get('v'))return;
+  var T=TB[S.tab],A=$('app');if(!T||!A)return;
+  A.insertAdjacentHTML('afterbegin','<div class="tbar">'+T.c.map(function(c){return '<button data-go="'+c[0]+'">'+c[1]+'</button>'}).join('')+'</div>');
+  A.insertAdjacentHTML('beforeend','<div id="'+T.id+'" class="xs">'+T.f().replace(/<button class="b full sm"[^>]*>← Compte<\/button>/,'')+'</div>');
+  if(window.trAll)window.trAll(A);
+  if(S.go){var g=$(S.go);S.go='';if(g)setTimeout(function(){g.scrollIntoView({behavior:'smooth',block:'start'})},60)}};
+document.addEventListener('click',function(ev){var b=ev.target.closest&&ev.target.closest('[data-go]');if(!b)return;var i=b.getAttribute('data-go');
+  if(i==='top')window.scrollTo({top:0,behavior:'smooth'});else{var g=$(i);if(g)g.scrollIntoView({behavior:'smooth',block:'start'})}},true);
