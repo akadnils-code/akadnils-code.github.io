@@ -226,3 +226,8 @@ path.rflow{animation:rfl .9s linear infinite}
 @keyframes rfl{to{stroke-dashoffset:-15}}
 .lchip{position:absolute;left:10px;bottom:28px;z-index:1000;background:#0b1f5c;color:#fff;border:1px solid #22d3ee;border-radius:14px;padding:7px 13px;font-weight:800;font-size:15px;pointer-events:none;box-shadow:0 4px 14px rgba(0,0,0,.4)}
 .lfb.on{background:linear-gradient(135deg,#22d3ee,#0ea5c6)!important;color:#05263a!important;border-color:#22d3ee!important}
+
+/* ===== 8.2 : simulation + véhicules ===== */
+.vh svg{transform:scale(var(--vs,1));transition:transform .25s;transform-origin:center}
+.sim{margin:8px 0 6px;padding:12px;border:1px solid rgba(212,175,55,.45);border-radius:18px;background:var(--card)}
+.srow{display:flex;gap:8px;align-items:center;margin-top:8px}.srow select{flex:1;margin:0;min-width:0}.srow .b{flex:1;text-align:center;text-decoration:none}

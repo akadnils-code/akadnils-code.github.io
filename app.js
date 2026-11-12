@@ -1,6 +1,6 @@
 /* Confirmation COD 7.8.0 - script principal
    Sections repérées : modules réintégrés de la v3 | v5 : code de livraison, avis, demandes, motifs livreur, sati | v6 : catalogue, créneaux, photo de preuve, notifications, da | v7 : automatisations | v7.2 : QR code + NFC (QR hors ligne, aucune dépendance résea | v7.4 : scanner QR (caméra), tags NFC associés, diagnostic */
-var CIT=200000,KEY='cod_v4',OLDKEY='cod_v1',VER='7.8.0',IT=200000;
+var CIT=200000,KEY='cod_v4',OLDKEY='cod_v1',VER='7.9.2',IT=200000;
 var DEFTPL='Bonjour 👋 [boutique] a essayé de vous joindre pour confirmer votre commande de [produit]. Répondez OUI pour confirmer, ou dites-nous à quelle heure vous rappeler. Merci !';
 var DEFSCRIPT='1) Se présenter : « Bonjour, je vous appelle de la part de [boutique]. »\n2) Confirmer le produit, la quantité, le prix et la livraison.\n3) Confirmer la ville et l’adresse exacte (quartier, repère).\n4) Proposer un produit complémentaire ou un pack.\n5) Rappeler : paiement à la livraison, merci de préparer le montant.';
 var DEFSET={rc:0,db:'',tiles:'',ckey:'',net:[],deals:[],wallet:[],sim:{cpw:200,tc:70,td:80,nv:5,pa:60,pv:90,q:100},cf:5,bn:6,up:12,trial:30,dth:500,dpc:20,minc:100,phone:'',rib:'',holder:'',insta:'',tpl:DEFTPL,script:DEFSCRIPT,lang:'fr',lastBackup:0};
@@ -438,7 +438,7 @@ function lspec(m){
 function mapView(m){
   if(!LOK()||LM.bad){loadL();return mapSvg(m)}
   LM.spec=lspec(m);
-  return '<div class="lslot"></div><div class="btns lbtns"><button class="b" data-act="lfit">Recentrer le trajet</button><button class="b" data-act="lmaroc">Tout le Maroc</button><button class="b lfb'+(LM.follow?' on':'')+'" data-lf="1">🧭 Suivi Waze</button></div><p class="mut" style="font-size:12px">Carte OpenStreetMap : zoome avec deux doigts ou avec +/−, déplace-la avec le doigt. Internet requis pour le fond de carte.</p>';
+  return '<div class="lslot"></div><div class="btns lbtns"><button class="b" data-act="lfit">Recentrer le trajet</button><button class="b" data-act="lmaroc">Tout le Maroc</button><button class="b lfb'+(LM.follow?' on':'')+'" data-lf="1">🧭 Suivi Waze</button></div>'+simUI()+'<p class="mut" style="font-size:12px">Carte OpenStreetMap : zoome avec deux doigts ou avec +/−, déplace-la avec le doigt. Internet requis pour le fond de carte.</p>';
 }
 function flatBtn(){return (LOK()&&!LM.bad)?'':'<button class="b" style="flex:0 0 auto;min-width:0" data-act="flat">3D / Plat</button>'}
 function lpin(col,t){return L.divIcon({className:'lpin',html:'<div class="pin" style="background:'+col+'"></div><span>'+e(t)+'</span>',iconSize:[0,0]})}
@@ -2011,10 +2011,10 @@ function lrot(mk,h){var el=mk.getElement(),v=el&&el.firstChild;if(v)v.style.tran
 function lanim(mk,line,x,l){var d=[0],i;for(i=1;i<line.length;i++)d.push(d[i-1]+hav(line[i-1],line[i]));LM.anims.push({mk:mk,line:line,d:d,tot:d[d.length-1]||1,x:x,l:l})}
 function lstep(ts){
   if(!LM.el||!LM.el.isConnected){LM.anim=0;return}
-  LM.anims.forEach(function(a){var p=((ts%16000)/16000)*a.tot,i=1;while(i<a.d.length-1&&a.d[i]<p)i++;var s0=a.d[i-1],f=Math.max(0,Math.min(1,(p-s0)/Math.max(1e-6,a.d[i]-s0))),A=a.line[i-1],B=a.line[i],q=[A[0]+(B[0]-A[0])*f,A[1]+(B[1]-A[1])*f],rs=[q].concat(a.line.slice(i));
+  LM.anims.forEach(function(a){var D=a.x.sim?Math.min(70000,Math.max(18000,a.tot*2500)):16000,p=((ts%D)/D)*a.tot,i=1;while(i<a.d.length-1&&a.d[i]<p)i++;var s0=a.d[i-1],f=Math.max(0,Math.min(1,(p-s0)/Math.max(1e-6,a.d[i]-s0))),A=a.line[i-1],B=a.line[i],q=[A[0]+(B[0]-A[0])*f,A[1]+(B[1]-A[1])*f],rs=[q].concat(a.line.slice(i));
     a.mk.setLatLng(q);lrot(a.mk,brg(A,B));a.l.rest.setLatLngs(rs);a.l.flow.setLatLngs(rs);a.l.done.setLatLngs(a.line.slice(0,i).concat([q]));
     var rm=1-p/a.tot;if(LM.chip)LM.chip.textContent=(a.x.ve==='car'?'🚗 ':'🛵 ')+Math.max(1,Math.round((a.x.mn||a.tot*1.6)*rm))+' min · '+((a.x.km||a.tot)*rm).toFixed(1).replace('.',',')+' km';
-    if(LM.follow)LM.map.panTo(q,{animate:false})});
+    if(LM.follow){var z=LM.fz||15;if(LM.map.getZoom()!==z)LM.map.setZoom(z,{animate:false});LM.map.panTo(q,{animate:false})}});
   LM.anim=requestAnimationFrame(lstep);
 }
 function lmDraw(){
@@ -2035,6 +2035,31 @@ function lmDraw(){
   if(LM.anims.length)LM.anim=requestAnimationFrame(lstep);
 }
 document.addEventListener('click',function(ev){var b=ev.target.closest&&ev.target.closest('[data-lf]');if(!b||!LM.map)return;
-  LM.follow=!LM.follow;b.classList.toggle('on',LM.follow);if(LM.follow)LM.map.setZoom(15,{animate:false});else rr()},true);
+  LM.follow=!LM.follow;b.classList.toggle('on',LM.follow);if(LM.follow){var t0=LM.anims[0]&&LM.anims[0].tot;LM.fz=t0?(t0<12?17:t0<60?15:13):15;LM.map.setZoom(LM.fz,{animate:false})}else rr()},true);
 document.addEventListener('change',function(ev){var t=ev.target,id=t.getAttribute&&t.getAttribute('data-vh');if(!id)return;
   var c=DB.cour.filter(function(x){return x.id===id})[0];if(c){c.veh=t.value;save();render()}},true);
+
+/* ===== 8.1 : diagnostic : bandeau d'erreur + secours des onglets ===== */
+(function(){
+function show(m){var d=document.getElementById('errb');if(!d){d=document.createElement('div');d.id='errb';d.style.cssText='position:fixed;left:8px;right:8px;top:8px;z-index:999;background:#7f1d1d;color:#fff;padding:10px 12px;border-radius:12px;font-size:12px;line-height:1.35;word-break:break-word';d.onclick=function(){d.remove()};document.body.appendChild(d)}d.textContent='Erreur : '+m+' (touche pour fermer)'}
+window.addEventListener('error',function(e){show((e.message||'')+' [ligne '+(e.lineno||'?')+']')});
+window.addEventListener('unhandledrejection',function(e){show(String(e.reason&&e.reason.message||e.reason))});
+document.addEventListener('click',function(ev){var b=ev.target.closest&&ev.target.closest('#nav [data-act=tab]');if(!b||!DB)return;var v=b.getAttribute('data-v');
+  setTimeout(function(){if(S.tab!==v&&!(v==='more'&&S.tab==='auto')){S.tab=v;S.pview='';S.del='';S.vsel='';S.inv='';S.vform=false;S.edit='';S.cx='';try{render()}catch(x){show(x.message)}}},80)});
+})();
+
+/* ===== 8.2 : simulation de trajet, zoom véhicule, véhicules détaillés, Waze / Google Maps ===== */
+SCT='<svg viewBox="0 0 44 88" width="36" height="72"><defs><linearGradient id="sg" x1="0" x2="1"><stop offset="0" stop-color="#6b7280"/><stop offset=".5" stop-color="#e5e7eb"/><stop offset="1" stop-color="#6b7280"/></linearGradient><linearGradient id="sj" x1="0" x2="1"><stop offset="0" stop-color="#0b1b3f"/><stop offset=".5" stop-color="#27427a"/><stop offset="1" stop-color="#0b1b3f"/></linearGradient><radialGradient id="sh" cx=".4" cy=".35"><stop offset="0" stop-color="#fff8d6"/><stop offset="1" stop-color="#d4af37"/></radialGradient></defs><ellipse cx="22" cy="48" rx="17" ry="38" fill="#000" opacity=".3"/><rect x="18.5" y="2" width="7" height="15" rx="3.5" fill="#0d0d0d"/><path d="M19 5h6M19 9h6M19 13h6" stroke="#333" stroke-width=".8"/><rect x="19.5" y="14" width="5" height="14" rx="2" fill="#9ca3af"/><path d="M12 22Q22 18 32 22L31 28Q22 25 13 28Z" fill="url(#sg)" stroke="#4b5563" stroke-width=".6"/><path d="M3 24H12M32 24H41" stroke="#111" stroke-width="3" stroke-linecap="round"/><path d="M5 22l-3 4h6zM39 22l3 4h-6z" fill="#9ca3af"/><circle cx="22" cy="21" r="2.4" fill="#fff8c0"/><path d="M11 27Q22 31 33 27L34 50Q22 54 10 50Z" fill="url(#sg)" stroke="#4b5563" stroke-width=".7"/><path d="M7 27Q8 36 13 38M37 27Q36 36 31 38" fill="none" stroke="#1e3a8a" stroke-width="5.5" stroke-linecap="round"/><path d="M14 38H30L31 52H13Z" fill="#111827"/><ellipse cx="22" cy="35" rx="10.5" ry="7.5" fill="url(#sj)" stroke="#0b1b3f" stroke-width=".8"/><circle cx="22" cy="29.5" r="6.3" fill="url(#sh)" stroke="#6b5200" stroke-width=".9"/><path d="M17 27.6Q22 24.4 27 27.6L26.6 29.4Q22 27.2 17.4 29.4Z" fill="#0b1220"/><rect x="9" y="54" width="26" height="20" rx="4" fill="#b8921f" stroke="#f6dc85" stroke-width="1.3"/><path d="M12 57h20" stroke="#fff3b0" stroke-width="1.4" opacity=".7"/><rect x="18" y="62" width="8" height="8" rx="1.5" fill="#8a6a12"/><rect x="18" y="72" width="8" height="12" rx="4" fill="#0d0d0d"/><rect x="16" y="75" width="12" height="2.4" rx="1.2" fill="#ef4444"/></svg>';
+CAR2='<svg viewBox="0 0 44 90" width="40" height="82"><defs><linearGradient id="cb" x1="0" x2="1"><stop offset="0" stop-color="#8a939f"/><stop offset=".5" stop-color="#f7f9fb"/><stop offset="1" stop-color="#7f8894"/></linearGradient><linearGradient id="cg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5b7fa3"/><stop offset="1" stop-color="#14263d"/></linearGradient></defs><ellipse cx="22" cy="47" rx="21" ry="42" fill="#000" opacity=".3"/><rect x="0.5" y="14" width="6.5" height="17" rx="3" fill="#0d0d0d"/><rect x="37" y="14" width="6.5" height="17" rx="3" fill="#0d0d0d"/><rect x="0.5" y="58" width="6.5" height="17" rx="3" fill="#0d0d0d"/><rect x="37" y="58" width="6.5" height="17" rx="3" fill="#0d0d0d"/><path d="M10 4Q22 -1 34 4Q41 12 41 26V66Q41 80 34 86Q22 91 10 86Q3 80 3 66V26Q3 12 10 4Z" fill="url(#cb)" stroke="#6b7480" stroke-width=".9"/><path d="M9 20Q22 15 35 20M12 12Q22 9 32 12" fill="none" stroke="#c4ccd5" stroke-width=".8"/><path d="M9 31Q22 25 35 31L33 44H11Z" fill="url(#cg)" stroke="#0b1220" stroke-width=".6"/><path d="M14 30Q22 27.5 30 30" stroke="#fff" stroke-width="1" opacity=".5" fill="none"/><rect x="11" y="44" width="22" height="19" rx="5" fill="#eef1f4" stroke="#b6bec8" stroke-width=".7"/><path d="M14 47h16" stroke="#fff" stroke-width="1.6" opacity=".9"/><rect x="15" y="52" width="14" height="5.5" rx="1.5" fill="#f6dc85" stroke="#8a6a12" stroke-width=".7"/><path d="M11 63H33L35 73Q22 78 9 73Z" fill="url(#cg)" stroke="#0b1220" stroke-width=".6"/><path d="M8 33L10 63M36 33L34 63" stroke="#14263d" stroke-width="2.6"/><path d="M3 34L-.5 36.5L3 39ZM41 34L44.5 36.5L41 39Z" fill="#cfd5dc" stroke="#6b7480" stroke-width=".5"/><path d="M8 6Q13 3.5 18 4.6L17 8.5Q12 8.5 8 10Z" fill="#fffbe0" stroke="#d6c46a" stroke-width=".5"/><path d="M36 6Q31 3.5 26 4.6L27 8.5Q32 8.5 36 10Z" fill="#fffbe0" stroke="#d6c46a" stroke-width=".5"/><path d="M8 82Q13 85 18 84.4L17 81Q12 81 8 79Z" fill="#dc2626"/><path d="M36 82Q31 85 26 84.4L27 81Q32 81 36 79Z" fill="#dc2626"/></svg>';
+var SIM={on:0,a:'Casablanca',b:'Rabat',v:'car',id:0};
+function simSpec(){var A=cfind(SIM.a)||CITIES.casablanca,B=SIM.b==='_same'?null:cfind(SIM.b),a=[A[0],A[1]],b=B?[B[0],B[1]]:[A[0]+.022,A[1]+.03];roadGet(a,b);var rd=ROAD[ck(a,b)];
+  return {routes:[{a:a,b:b,an:A[2]+(B?'':' · centre'),bn:B?B[2]:A[2]+' · quartier',s:2,live:null,road:rd?rd.pts:null,ve:SIM.v,km:rd?rd.km:0,mn:rd?rd.min:0,sim:1}],gps:null,key:'sim'+SIM.id+(rd?'r':'')}}
+var _ls=lspec;lspec=function(m){return SIM.on?simSpec():_ls(m)};
+function simUI(){var o=function(l,v,s){return '<option'+(v!==undefined?' value="'+v+'"':'')+(s?' selected':'')+'>'+l+'</option>'},cs=MCN.map(function(c){return o(c,undefined,c===SIM.a)}).join(''),
+  ds=o('Même ville','_same',SIM.b==='_same')+MCN.map(function(c){return o(c,undefined,c===SIM.b)}).join(''),sp=LM.spec&&LM.spec.routes[0],lk='';
+  if(sp){var d=sp.b.join(','),s0=sp.a.join(',');lk='<a class="b" target="_blank" rel="noopener" href="https://waze.com/ul?ll='+d+'&navigate=yes">Waze</a><a class="b" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&origin='+s0+'&destination='+d+'&travelmode=driving">Google Maps</a>'}
+  return '<div class="sim"><b>🎬 Simulation de trajet</b><div class="srow"><select data-sim="a">'+cs+'</select><span>→</span><select data-sim="b">'+ds+'</select></div><div class="srow"><select data-sim="v">'+o('🛵 Moto','moto',SIM.v==='moto')+o('🚗 Voiture','car',SIM.v==='car')+'</select><button class="b pri" data-sim="go">'+(SIM.on?'■ Arrêter':'▶ Lancer')+'</button></div>'+(lk?'<div class="srow">'+lk+'</div>':'')+'</div>'}
+function vsc(){if(!LM.map||!LM.el)return;var z=LM.map.getZoom();LM.el.style.setProperty('--vs',Math.min(2.6,Math.max(.9,(z-11)*.32+.6)));var t=LM.anims[0]&&LM.anims[0].tot;if(SIM.on&&t)LM.fz=t<12?17:t<60?15:13;if(!LM.zb){LM.zb=1;LM.map.on('zoomend',vsc)}}
+var _ld=lmDraw;lmDraw=function(){_ld();vsc()};
+document.addEventListener('click',function(ev){var b=ev.target.closest&&ev.target.closest('[data-sim=go]');if(!b)return;SIM.on=SIM.on?0:1;SIM.id++;LM.follow=!!SIM.on;LM.key='';render()},true);
+document.addEventListener('change',function(ev){var t=ev.target,k=t.getAttribute&&t.getAttribute('data-sim');if(!k||k==='go')return;SIM[k]=t.value;if(SIM.on)SIM.id++;LM.key='';render()},true);
