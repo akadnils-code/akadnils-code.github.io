@@ -1,6 +1,6 @@
 /* Confirmation COD 7.8.0 - script principal
    Sections repérées : modules réintégrés de la v3 | v5 : code de livraison, avis, demandes, motifs livreur, sati | v6 : catalogue, créneaux, photo de preuve, notifications, da | v7 : automatisations | v7.2 : QR code + NFC (QR hors ligne, aucune dépendance résea | v7.4 : scanner QR (caméra), tags NFC associés, diagnostic */
-var CIT=200000,KEY='cod_v4',OLDKEY='cod_v1',VER='7.9.8',IT=200000;
+var CIT=200000,KEY='cod_v4',OLDKEY='cod_v1',VER='7.9.9',IT=200000;
 var DEFTPL='Bonjour 👋 [boutique] a essayé de vous joindre pour confirmer votre commande de [produit]. Répondez OUI pour confirmer, ou dites-nous à quelle heure vous rappeler. Merci !';
 var DEFSCRIPT='1) Se présenter : « Bonjour, je vous appelle de la part de [boutique]. »\n2) Confirmer le produit, la quantité, le prix et la livraison.\n3) Confirmer la ville et l’adresse exacte (quartier, repère).\n4) Proposer un produit complémentaire ou un pack.\n5) Rappeler : paiement à la livraison, merci de préparer le montant.';
 var DEFSET={rc:0,db:'',tiles:'',ckey:'',net:[],deals:[],wallet:[],sim:{cpw:200,tc:70,td:80,nv:5,pa:60,pv:90,q:100},cf:5,bn:6,up:12,trial:30,dth:500,dpc:20,minc:100,phone:'',rib:'',holder:'',insta:'',tpl:DEFTPL,script:DEFSCRIPT,lang:'fr',lastBackup:0};
@@ -1910,7 +1910,7 @@ if('serviceWorker' in navigator){window.addEventListener('load',function(){navig
 function MX(due,pe,gm,s,tr,tc){
   var hr=new Date().getHours(),nm=DB.set.holder||'Confirmation COD',sub=DB.set.phone||(pe.length+' commande(s) en attente');
   var now=new Date(),dt=now.toLocaleDateString('fr-FR')+' • '+now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-  var R=[['calls','phone','Appels',due.length],['ord','box','Commandes',0],['del','truck','Livraison',0],['vend','store','Vendeurs',0],['fin','chart','Finances',0],['wa','phone','WhatsApp',DB.orders.filter(function(o){return o.status==='En attente'&&o.wa&&callDue(o)}).length],['pod','box','Preuves',0],['tools','box','QR & NFC',0]];
+  var R=[['calls','phone','Appels',due.length],['ord','box','Commandes',0],['del','truck','Livraison',0],['fin','chart','Finances',0],['wa','phone','WhatsApp',DB.orders.filter(function(o){return o.status==='En attente'&&o.wa&&callDue(o)}).length]];
   return '<div class="mx"><div class="gr">'+(hr<5||hr>=18?'Bonsoir':'Bonjour')+' '+e(nm)+'</div><div class="gs">'+e(sub)+'</div>'
    +'<div class="hrow rings">'+R.map(function(r){return '<div class="rg" data-act="tab" data-v="'+r[0]+'"><div class="ring"><div class="rin">'+ico(r[1])+'</div>'+(r[3]?'<span class="rb">'+r[3]+'</span>':'')+'</div><span>'+r[2]+'</span></div>'}).join('')+'</div></div>'
    +'<div class="mxw"><div class="mxs" id="mxs"><div class="mxc"><div class="row"><h2>Résumé du mois</h2></div><div class="mut">Solde au <b style="color:#d4742a">'+dt+'</b></div>'
@@ -1931,6 +1931,7 @@ render=function(){
     [].forEach.call($('nav').children,function(b){b.classList.toggle('on',b.getAttribute('data-v')==='more')});return}
   if(!DB||S.locked||Q.get('t')||Q.get('l')||Q.get('v')||S.tab!=='home')return;
   crds().forEach(function(x){x.remove()});
+  var A0=$('app'),ch=[].slice.call(A0.children);if(ch.length){var dt=document.createElement('details');dt.className='more';dt.innerHTML='<summary>Plus de détails</summary>';ch.forEach(function(c){dt.appendChild(c)});A0.appendChild(dt)}
   var o=DB.orders,mo=today().slice(0,7),pe=o.filter(function(x){return x.status==='En attente'}),due=pe.filter(callDue),
   om=o.filter(function(x){return (x.date||'').slice(0,7)===mo}),s=stats(om),tr=s.n-s.pe,
   gm=o.filter(function(x){return (x.cdate||'').slice(0,7)===mo}).reduce(function(a,x){return a+earned(x)},0),
@@ -1938,13 +1939,8 @@ render=function(){
   var B=[['g1','À appeler maintenant',due.length,'Appeler →','calls'],
          ['g2','Gagné ce mois',fm(gm)+' dh','Voir les finances →','fin'],
          ['g3','Livraison (mois)',pct(s.liv,s.liv+s.ref),'Voir les livraisons →','del'],['g2','Rapport de la semaine','📊 7 jours','Ouvrir le rapport →','rap']];
-  var L=(due.length?due:pe).slice(0,8);
+  var L=(due.length?due:pe).slice(0,5);
   var h=MX(due,pe,gm,s,tr,tc)+'<label class="hsr">'+ico('search')+'<input id="hq" placeholder="Rechercher une commande, un client…" enterkeyhint="search"></label>'
-   +'<div class="bnr" id="bnr">'+B.map(function(b){return '<div class="bn '+b[0]+'" data-act="tab" data-v="'+b[4]+'"><div><small>'+b[1]+'</small><strong>'+b[2]+'</strong></div><span class="go">'+b[3]+'</span></div>'}).join('')+'</div>'
-   +'<div class="dots" id="dots">'+B.map(function(_,i){return '<i'+(i?'':' class="on"')+'></i>'}).join('')+'</div>'
-   +'<div class="dk"><h3>TON ACTIVITÉ, EN DIRECT</h3><div class="hrow">'
-   +[['ok','Confirmation (mois)',pct(s.ok,tr),'Taux de confirmation'],['bolt','Programmés',pe.length-due.length,'Rappels à venir'],['wal','À encaisser',fm(tc)+' dh','Chez les vendeurs']].map(function(q){return '<div class="dc"><small>'+q[1]+'</small><div class="orb">'+ico(q[0]==='bolt'?'phone':q[0]==='wal'?'chart':'box')+'</div><b>'+q[2]+'</b><span>'+q[3]+'</span></div>'}).join('')
-   +'</div></div>'
    +'<div class="fl"><div class="row"><h3>Appels à passer</h3><span class="arrb" data-act="tab" data-v="calls">→</span></div><div class="pill">'+ico('phone','s')+' '+pe.length+' en attente</div>'
    +(L.length?'<div class="hrow">'+L.map(function(x){return '<div class="oc"><div class="ph0">'+e((x.name||'?').charAt(0).toUpperCase())+'<a class="plus" href="tel:'+e(x.phone)+'" aria-label="Appeler">'+ico('phone')+'</a></div><div class="on1">'+e(x.name)+'</div><div class="mut">'+e(x.product||'—')+'</div><div class="mut">'+e(x.city||'')+(x.amount?' · <b>'+fm(x.amount)+' dh</b>':'')+'</div></div>'}).join('')+'</div>':'<p class="mut" style="color:#f6dc85">Ajoute ta première commande pour la voir ici.</p>')
    +'</div>';
