@@ -1954,3 +1954,48 @@ render=function(){
 };
 document.addEventListener('keydown',function(ev){var t=ev.target;if(t.id==='hq'&&ev.key==='Enter'){S.tab='ord';S.sub='list';S.q=t.value;S.sf='';S.vendor='';render()}});
 })();
+
+/* ===== 7.9 : menu langue (FR / AR / EN / Tamazight) ===== */
+(function(){
+var R=[
+"Accueil¦Home¦الرئيسية","Appels¦Calls¦المكالمات","Commandes¦Orders¦الطلبات","Livraison¦Delivery¦التوصيل","Compte¦Account¦الحساب","Vendeurs¦Sellers¦البائعون","Finances¦Finance¦المالية",
+"Résumé du mois¦Monthly summary¦ملخص الشهر","Confirmation¦Confirmation¦التأكيد","Gagné ce mois¦Earned this month¦أرباح هذا الشهر","Confirmation (mois)¦Confirmation (month)¦التأكيد (الشهر)","Livraison (mois)¦Delivery (month)¦التوصيل (الشهر)",
+"Ajouter¦Add¦إضافة","Appeler¦Call¦اتصال","Appeler →¦Call →¦اتصال ←","Voir les finances →¦View finances →¦عرض المالية ←","Voir les livraisons →¦View deliveries →¦عرض التوصيلات ←","À appeler maintenant¦To call now¦للاتصال الآن",
+"Aucun appel urgent, tout est à jour¦No urgent calls, all up to date¦لا مكالمات عاجلة، كل شيء محدّث","Rechercher une commande, un client…¦Search an order or a customer…¦ابحث عن طلب أو عميل…","TON ACTIVITÉ, EN DIRECT¦YOUR ACTIVITY, LIVE¦نشاطك مباشرةً",
+"Programmés¦Scheduled¦مجدولة","Rappels à venir¦Upcoming reminders¦تذكيرات قادمة","À encaisser¦To collect¦للتحصيل","Chez les vendeurs¦With sellers¦لدى البائعين","Taux de confirmation¦Confirmation rate¦نسبة التأكيد","Appels à passer¦Calls to make¦مكالمات للإجراء",
+"Ajoute ta première commande pour la voir ici.¦Add your first order to see it here.¦أضف أول طلب لتراه هنا.","Solde au¦Balance as of¦الرصيد في","Outils QR & NFC¦QR & NFC tools¦أدوات QR وNFC","Partager, scanner, associer un tag¦Share, scan, link a tag¦مشاركة، مسح، ربط وسم",
+"En attente¦Pending¦قيد الانتظار","Confirmé¦Confirmed¦مؤكد","Annulé¦Cancelled¦ملغى","Injoignable¦Unreachable¦لا يمكن الوصول إليه","Livré¦Delivered¦تم التسليم","Refusé¦Refused¦مرفوض","En cours¦In progress¦قيد التنفيذ",
+"Vendeur¦Seller¦البائع","Nom du client¦Customer name¦اسم العميل","Téléphone (06… ou 07…)¦Phone (06… or 07…)¦الهاتف (06… أو 07…)","Produit¦Product¦المنتج","Adresse¦Address¦العنوان","Ville¦City¦المدينة","Montant à encaisser (dh)¦Amount to collect (MAD)¦المبلغ المطلوب تحصيله (درهم)","Canal de vente¦Sales channel¦قناة البيع",
+"Une commande¦One order¦طلب واحد","Coller des commandes WhatsApp¦Paste WhatsApp orders¦لصق طلبات واتساب","Liste ou fichier¦List or file¦قائمة أو ملف","Nom¦Name¦الاسم","Client¦Customer¦العميل","Date¦Date¦التاريخ","Montant¦Amount¦المبلغ","Note¦Note¦ملاحظة","Total¦Total¦المجموع","Téléphone¦Phone¦الهاتف","Aucune commande.¦No orders.¦لا توجد طلبات.",
+"Enregistrer¦Save¦حفظ","Supprimer¦Delete¦حذف","Modifier¦Edit¦تعديل","Fermer¦Close¦إغلاق","Copier¦Copy¦نسخ","Valider¦Confirm¦تأكيد","Ignorer¦Ignore¦تجاهل","Appliquer¦Apply¦تطبيق","Commander¦Order¦اطلب","Envoyer au client¦Send to customer¦إرسال إلى العميل","Liste¦List¦القائمة","Tous les statuts¦All statuses¦كل الحالات",
+"Réglages¦Settings¦الإعدادات","Sécurité¦Security¦الأمان","Données¦Data¦البيانات","Tarifs¦Rates¦التعريفات","Messages¦Messages¦الرسائل","Livreurs¦Couriers¦الموزعون","Livreur¦Courier¦الموزع","Catalogue¦Catalogue¦الكتالوج","Réseau¦Network¦الشبكة","Simulation¦Simulation¦محاكاة","Calculatrice¦Calculator¦آلة حاسبة","Portefeuille¦Portfolio¦المحفظة","Nouvel appel¦New call¦مكالمة جديدة","Affaires¦Deals¦الصفقات",
+"Gestion¦Management¦الإدارة","Outils terrain¦Field tools¦أدوات ميدانية","Ventes & marché¦Sales & market¦المبيعات والسوق","Pilotage¦Steering¦المتابعة والتخطيط","Administration¦Administration¦الإدارة العامة","Boutiques et commissions¦Shops and commissions¦المتاجر والعمولات","Gains, soldes, exports¦Earnings, balances, exports¦الأرباح والأرصدة والتصدير","Rappels, suivi, avis clients¦Reminders, tracking, reviews¦تذكيرات، تتبع، آراء العملاء",
+"Automatisations & avis¦Automations & reviews¦الأتمتة والآراء","Automatisations¦Automations¦الأتمتة","Satisfaction clients¦Customer satisfaction¦رضا العملاء","Pour commencer¦Getting started¦للبدء","← Compte¦← Account¦→ الحساب","← Plus¦← More¦→ المزيد","← Retour¦← Back¦→ رجوع","Suivi de commande¦Order tracking¦تتبع الطلب",
+"Attribuer un livreur automatiquement (par ville, le moins chargé)¦Assign a courier automatically (by city, least loaded)¦تعيين موزع تلقائياً (حسب المدينة، الأقل انشغالاً)","Publier le suivi à chaque étape¦Publish tracking at each step¦نشر التتبع في كل مرحلة","Me rappeler les appels à passer¦Remind me of calls to make¦ذكّرني بالمكالمات المطلوبة","Sauvegarde automatique chaque semaine (si pas de code)¦Automatic weekly backup (if no code)¦نسخ احتياطي أسبوعي تلقائي (بدون رمز)","Valider moi-même les livraisons signalées à distance (anti-fraude, conseillé)¦Validate remotely reported deliveries myself (anti-fraud, recommended)¦أتحقق بنفسي من التسليمات المبلغ عنها عن بُعد (مكافحة الاحتيال، مُوصى به)",
+"Rien à envoyer pour le moment.¦Nothing to send for now.¦لا شيء للإرسال حالياً.","WhatsApp s’ouvre avec le message prêt : tu n’as qu’à appuyer sur Envoyer.¦WhatsApp opens with the message ready: just tap Send.¦يفتح واتساب والرسالة جاهزة: اضغط فقط على إرسال.","Les avis des clients apparaîtront ici après les livraisons suivies en direct.¦Customer reviews will appear here after live-tracked deliveries.¦ستظهر آراء العملاء هنا بعد التسليمات المتتبعة مباشرةً.",
+"1) Crée un vendeur dans Vendeurs. 2) Ajoute ses commandes dans Commandes → Ajouter (une, collées de WhatsApp ou par liste). 3) Appelle dans l’onglet Appels. Chaque vendeur a 30 commandes d’essai gratuites.¦1) Create a seller in Sellers. 2) Add their orders in Orders → Add (one, pasted from WhatsApp, or by list). 3) Call from the Calls tab. Each seller gets 30 free trial orders.¦1) أنشئ بائعاً في البائعين. 2) أضف طلباته في الطلبات ← إضافة (طلب واحد، أو لصق من واتساب، أو قائمة). 3) اتصل من تبويب المكالمات. لكل بائع 30 طلباً تجريبياً مجانياً."];
+var LN={en:{},ar:{},tz:{}};
+R.forEach(function(l){var p=l.split('¦');LN.en[p[0]]=p[1];LN.ar[p[0]]=p[2]});
+var GM={en:['Good evening ','Good morning '],ar:['مساء الخير ','صباح الخير '],tz:['ⴰⵣⵓⵍ ','ⴰⵣⵓⵍ ']};
+var PT=[[/^(\d+) commande\(s\) à appeler maintenant$/,{en:function(m){return m[1]+' order(s) to call now'},ar:function(m){return m[1]+' طلب(ات) للاتصال الآن'}}],
+ [/^(\d+) (?:commande\(s\) )?en attente$/,{en:function(m){return m[1]+' pending'},ar:function(m){return m[1]+' قيد الانتظار'}}],
+ [/^(Bonsoir|Bonjour) (.+)$/,{en:function(m){return GM.en[m[1]==='Bonsoir'?0:1]+m[2]},ar:function(m){return GM.ar[m[1]==='Bonsoir'?0:1]+m[2]},tz:function(m){return GM.tz[0]+m[2]}}]];
+function tr(s,l){var k=s.trim();if(!k)return null;var d=LN[l],v=d&&d[k];if(v)return s.replace(k,function(){return v});
+  for(var i=0;i<PT.length;i++){var m=PT[i][0].exec(k),f=PT[i][1][l];if(m&&f)return s.replace(k,function(){return f(m)})}return null}
+function walk(r,l){if(!r)return;var w=document.createTreeWalker(r,NodeFilter.SHOW_TEXT,null),n,L=[];
+  while(n=w.nextNode()){var p=n.parentNode&&n.parentNode.nodeName;if(p!=='SCRIPT'&&p!=='STYLE'&&p!=='TEXTAREA')L.push(n)}
+  L.forEach(function(n){var t=tr(n.nodeValue,l);if(t)n.nodeValue=t});
+  [].forEach.call(r.querySelectorAll('[placeholder],[aria-label],[title]'),function(x){['placeholder','aria-label','title'].forEach(function(a){var v=x.getAttribute(a),t=v&&tr(v,l);if(t)x.setAttribute(a,t)})})}
+var CD={fr:'FR',ar:'AR',en:'EN',tz:'ⵣ'},_rl=render;
+render=function(){_rl();if(!DB||S.locked)return;var l=DB.set.lang||'fr';
+  document.documentElement.dir=l==='ar'?'rtl':'ltr';document.documentElement.lang=l==='tz'?'zgh':l;
+  var hl=$('hl');if(hl)hl.textContent=CD[l]||'FR';if(l!=='fr'){walk($('app'),l);walk($('nav'),l)}};
+document.addEventListener('click',function(ev){var t=ev.target,m=document.querySelector('.lgm');
+  if(t.closest&&t.closest('#hl')){ev.stopImmediatePropagation();ev.preventDefault();if(m){m.remove();return}
+    m=document.createElement('div');m.className='lgm';var c=DB&&DB.set.lang||'fr';
+    m.innerHTML=[['fr','Français'],['ar','العربية'],['en','English'],['tz','ⵜⴰⵎⴰⵣⵉⵖⵜ']].map(function(x){return '<button data-l="'+x[0]+'"'+(c===x[0]?' class="on"':'')+'>'+x[1]+(c===x[0]?' ✓':'')+'</button>'}).join('');
+    document.body.appendChild(m);return}
+  var b=t.closest&&t.closest('.lgm button');
+  if(b){ev.stopImmediatePropagation();ev.preventDefault();DB.set.lang=b.getAttribute('data-l');save();m.remove();render();return}
+  if(m)m.remove()},true);
+})();
