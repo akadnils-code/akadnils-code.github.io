@@ -216,3 +216,13 @@ nav button.on{background:rgba(212,175,55,.16)!important;border-radius:22px}
 .lgm button{border:0;background:none;color:var(--tx);font:inherit;font-size:16px;font-weight:600;text-align:start;padding:12px 14px;border-radius:12px;cursor:pointer}
 .lgm button.on{background:rgba(212,175,55,.18);color:#a98319}
 [dir=rtl] .lgm{right:auto;left:12px}
+
+/* ===== 8.0 : suivi façon Waze ===== */
+.vh{position:relative;width:46px;height:46px;display:flex;align-items:center;justify-content:center;transition:transform .12s linear;filter:drop-shadow(0 3px 4px rgba(0,0,0,.45))}
+.vh svg{position:relative;z-index:1}
+.vh .pulse{position:absolute;inset:4px;border-radius:50%;background:rgba(34,211,238,.4);animation:pls 1.8s ease-out infinite}
+@keyframes pls{from{transform:scale(.6);opacity:.9}to{transform:scale(2.2);opacity:0}}
+path.rflow{animation:rfl .9s linear infinite}
+@keyframes rfl{to{stroke-dashoffset:-15}}
+.lchip{position:absolute;left:10px;bottom:28px;z-index:1000;background:#0b1f5c;color:#fff;border:1px solid #22d3ee;border-radius:14px;padding:7px 13px;font-weight:800;font-size:15px;pointer-events:none;box-shadow:0 4px 14px rgba(0,0,0,.4)}
+.lfb.on{background:linear-gradient(135deg,#22d3ee,#0ea5c6)!important;color:#05263a!important;border-color:#22d3ee!important}

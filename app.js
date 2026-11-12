@@ -405,9 +405,9 @@ function mapSvg(m){
       var a=pj(A[0],A[1]),b=pj(B[0],B[1]),cx=(a[0]+b[0])/2-(b[1]-a[1])*.22,cy=(a[1]+b[1])/2+(b[0]-a[0])*.22,d='M'+a[0]+' '+a[1]+' Q'+Math.round(cx)+' '+Math.round(cy)+' '+b[0]+' '+b[1];
       h+='<path d="'+d+'" fill="none" stroke="#f6dc85" stroke-width="'+Math.max(.8,2*k)+'" stroke-dasharray="'+5*k+' '+4*k+'"/>'+pin(A,'#16a34a')+pin(B,'#dc2626');
       var fl='scale('+(b[0]<a[0]?-ks:ks)+','+ks+')';
-      if(r.s===2&&lv){var q=pj(lv[0],lv[1]);h+='<g transform="translate('+q[0]+','+q[1]+') '+fl+'">'+SC+'</g>'}
-      else if(r.s===2)h+='<g><animateMotion dur="'+(6+n%3)+'s" repeatCount="indefinite" path="'+d+'"/><g transform="'+fl+'">'+SC+'</g></g>';
-      else{var z=r.s===3?b:a;h+='<g transform="translate('+z[0]+','+(z[1]-16*k)+') scale('+ks+')">'+SC+'</g>'+(r.s===3?'<text x="'+b[0]+'" y="'+(b[1]-30*k)+'" text-anchor="middle" font-size="'+14*k+'">✅</text>':'')}
+      if(r.s===2&&lv){var q=pj(lv[0],lv[1]);h+='<g transform="translate('+q[0]+','+q[1]+') '+fl+'">'+(r.ve==='car'?CAR2:SC)+'</g>'}
+      else if(r.s===2)h+='<g><animateMotion dur="'+(6+n%3)+'s" repeatCount="indefinite" path="'+d+'"/><g transform="'+fl+'">'+(r.ve==='car'?CAR2:SC)+'</g></g>';
+      else{var z=r.s===3?b:a;h+='<g transform="translate('+z[0]+','+(z[1]-16*k)+') scale('+ks+')">'+(r.ve==='car'?CAR2:SC)+'</g>'+(r.s===3?'<text x="'+b[0]+'" y="'+(b[1]-30*k)+'" text-anchor="middle" font-size="'+14*k+'">✅</text>':'')}
     }else if(A||B)h+=pin(A||B,'#16a34a');
   });
   if(gps){var g=pj(gps[0],gps[1]);h+='<circle cx="'+g[0]+'" cy="'+g[1]+'" r="'+Math.max(2,5*k)+'" fill="#3b82f6" stroke="#fff" stroke-width="'+1.5*k+'"/>'}
@@ -431,14 +431,14 @@ function lspec(m){
     if(r.aq){var g1=geo(r.aq+', '+an+', Maroc');if(g1&&hav(g1,a)<60)a=g1}
     if(r.bq){var g2=geo(r.bq+', '+bn+', Maroc');if(g2&&hav(g2,b)<60)b=g2}
     roadGet(a,b);var rd=ROAD[ck(a,b)];
-    out.push({a:a,b:b,an:an,bn:bn,s:r.s,live:inMA(r.live)?r.live:null,road:rd?rd.pts:null});
+    out.push({a:a,b:b,an:an,bn:bn,s:r.s,live:inMA(r.live)?r.live:null,road:rd?rd.pts:null,ve:r.ve,km:rd?rd.km:0,mn:rd?rd.min:0});
   });
   return {routes:out,gps:inMA(m.gps)?m.gps:null,key:out.map(function(r){return r.a+'|'+r.b}).join(';')+'#'+LM.fitN};
 }
 function mapView(m){
   if(!LOK()||LM.bad){loadL();return mapSvg(m)}
   LM.spec=lspec(m);
-  return '<div class="lslot"></div><div class="btns lbtns"><button class="b" data-act="lfit">Recentrer le trajet</button><button class="b" data-act="lmaroc">Tout le Maroc</button></div><p class="mut" style="font-size:12px">Carte OpenStreetMap : zoome avec deux doigts ou avec +/−, déplace-la avec le doigt. Internet requis pour le fond de carte.</p>';
+  return '<div class="lslot"></div><div class="btns lbtns"><button class="b" data-act="lfit">Recentrer le trajet</button><button class="b" data-act="lmaroc">Tout le Maroc</button><button class="b lfb'+(LM.follow?' on':'')+'" data-lf="1">🧭 Suivi Waze</button></div><p class="mut" style="font-size:12px">Carte OpenStreetMap : zoome avec deux doigts ou avec +/−, déplace-la avec le doigt. Internet requis pour le fond de carte.</p>';
 }
 function flatBtn(){return (LOK()&&!LM.bad)?'':'<button class="b" style="flex:0 0 auto;min-width:0" data-act="flat">3D / Plat</button>'}
 function lpin(col,t){return L.divIcon({className:'lpin',html:'<div class="pin" style="background:'+col+'"></div><span>'+e(t)+'</span>',iconSize:[0,0]})}
@@ -479,7 +479,7 @@ function tid(o){if(!o.tid){o.tid=Array.prototype.map.call(crypto.getRandomValues
 function dbu(db,id){return db.replace(/\/$/,'')+'/track/'+id+'.json'}
 function fbp(db,id,b){try{fetch(dbu(db,id),{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}).catch(function(){})}catch(e){}}
 function fbg(db,id,cb){try{fetch(dbu(db,id)).then(function(r){return r.json()}).then(cb).catch(function(){})}catch(e){}}
-function pub(o){sec(o);var n=Date.now(),st=stage(o),b={v:o.vendor,vc:vcity(o),cc:o.city||'',p:o.product,s:st,bad:bad(o)?1:0,c:o.courier||'',t:n};b['ev/e'+n]={t:n,x:bad(o)?'Commande annulée ou refusée':EVT[st]};fbp(DB.set.db,tid(o),b)}
+function pub(o){sec(o);var n=Date.now(),st=stage(o),b={v:o.vendor,vc:vcity(o),cc:o.city||'',p:o.product,s:st,bad:bad(o)?1:0,c:o.courier||'',ve:vehOf(o.courier),t:n};b['ev/e'+n]={t:n,x:bad(o)?'Commande annulée ou refusée':EVT[st]};fbp(DB.set.db,tid(o),b)}
 function poll(){PT++;
   if(!DB||!DB.set.db||S.locked||Q.get('t')||Q.get('l')||Q.get('v'))return;
   DB.orders.filter(function(o){return o.tid&&!bad(o)&&stage(o)>=1&&(stage(o)<3||(stage(o)===3&&!o.rt&&PT%12===0))}).slice(-25).forEach(function(o){fbg(DB.set.db,o.tid,function(r){
@@ -499,8 +499,8 @@ function decq(k){try{return JSON.parse(decodeURIComponent(escape(atob(Q.get(k)))
 function vaddr(o){var v=DB.vend.filter(function(x){return x.name===o.vendor})[0];return v?(v.addr||''):''}
 function vcity(o){var v=DB.vend.filter(function(x){return x.name===o.vendor})[0];return v?v.city||'':''}
 function tlink(o,k){var v=DB.vend.filter(function(x){return x.name===o.vendor})[0]||{},base=location.href.split(/[?#]/)[0];
-  sec(o);if(k==='t')return base+'?t='+encq({dc:dcs(o),v:o.vendor,vc:vcity(o),cc:o.city||'',p:o.product,s:stage(o),w:DB.set.phone,c:o.courier||'',db:DB.set.db||'',tid:tid(o)});
-  return base+'?l='+encq({id:o.id,v:o.vendor,vp:v.phone||'',va:v.addr||'',vc:vcity(o),n:o.name,cp:o.phone,ca:o.address||'',cc:o.city||'',p:o.product,m:o.amount||0,w:DB.set.phone,s:stage(o),db:DB.set.db||'',tid:tid(o)})}
+  sec(o);if(k==='t')return base+'?t='+encq({dc:dcs(o),v:o.vendor,vc:vcity(o),cc:o.city||'',p:o.product,s:stage(o),w:DB.set.phone,c:o.courier||'',ve:vehOf(o.courier),db:DB.set.db||'',tid:tid(o)});
+  return base+'?l='+encq({id:o.id,v:o.vendor,vp:v.phone||'',va:v.addr||'',vc:vcity(o),n:o.name,cp:o.phone,ca:o.address||'',cc:o.city||'',p:o.product,m:o.amount||0,w:DB.set.phone,s:stage(o),ve:vehOf(o.courier),db:DB.set.db||'',tid:tid(o)})}
 var CL={},CLT=0;
 function fmt(n){var m=Math.round(n);return m<60?m+' min':Math.floor(m/60)+' h '+(m%60?m%60+' min':'')}
 function renderClient(){
@@ -511,7 +511,7 @@ function renderClient(){
   var evs=Object.keys(m.ev||{}).map(function(k){return m.ev[k]}).sort(function(a,b){return b.t-a.t}),isLive=m.pt&&Date.now()-m.pt<45000;
   solo('<h1>Suivi de ta commande</h1><div class="card"><b>'+e(m.p)+'</b><div class="mut">Vendeur : '+e(m.v)+(m.c?' · Livreur : '+e(m.c):'')+'</div>'+(bd?'<p class="s-Annulé"><b>Livraison annulée ou refusée</b></p>':stepper(s)+'<p><b>'+STV[s]+'</b> '+(isLive?'<span class="live">● en direct</span>':'')+'</p>')+'</div>'
    +(s===2&&!bd&&km?'<div class="grid"><div class="kpi"><span class="mut">Distance restante</span><b>~'+Math.round(km)+' km</b></div><div class="kpi"><span class="mut">Arrivée estimée</span><b>~'+fmt(mins)+'</b></div></div>'+(pc>=0?'<div class="pbar"><i style="width:'+pc+'%"></i></div>':''):'')
-   +mapView({vc:m.vc,cc:m.cc,s:bd?0:s,live:lv})
+   +mapView({ve:m.ve,vc:m.vc,cc:m.cc,s:bd?0:s,live:lv})
    +(evs.length?'<div class="card" style="margin-top:10px"><h2>Étapes</h2>'+evs.map(function(ev){var t=new Date(ev.t);return '<div class="row" style="padding:4px 0"><span>'+e(ev.x)+'</span><span class="mut">'+('0'+t.getHours()).slice(-2)+':'+('0'+t.getMinutes()).slice(-2)+'</span></div>'}).join('')+'</div>':'')
    +(m.w?'<a class="b pri" style="display:block;margin-top:10px" target="_blank" rel="noopener" href="'+wa(m.w,'Bonjour, une question sur ma commande « '+m.p+' ».')+'">'+ico('chat')+' Contacter le service</a>':'')
    +'<p class="mut">'+(d.db?'Cette page se met à jour toute seule.':'Cette page montre l’état au moment de l’envoi. Tu reçois un nouveau lien à chaque étape.')+' Distance et heure d’arrivée sont des estimations.</p>');
@@ -524,7 +524,7 @@ function renderCourier(){
   solo('<h1>Ma mission</h1><div class="card"><b>'+e(d.p)+'</b>'+(d.m?'<div class="kpi" style="margin-top:8px"><span class="mut">À encaisser</span><b>'+fm(+d.m||0)+' dh</b></div>':'')+(CS.ok?'<p class="live">'+CS.ok+'</p>':'')+'</div>'
    +'<div class="card"><h2>1. Retrait chez le vendeur</h2><div>'+e(d.v)+'</div><div class="mut">'+e([d.va,d.vc].filter(Boolean).join(', '))+'</div><div class="btns">'+(d.vp?'<a class="b" href="tel:'+e(d.vp)+'">'+ico('phone')+' Appeler</a>':'')+'<a class="b" target="_blank" rel="noopener" href="'+gm([d.va,d.vc,'Maroc'].filter(Boolean).join(', '))+'">'+ico('pin')+' Itinéraire</a>'+st('En cours','Récupéré ✓','pri')+'</div></div>'
    +'<div class="card"><h2>2. Livraison au client</h2><div>'+e(d.n)+'</div><div class="mut">'+e([d.ca,d.cc].filter(Boolean).join(', '))+(kmc?' · ~'+kmc+' km':'')+'</div><div class="btns"><a class="b" href="tel:'+e(d.cp)+'">'+ico('phone')+' Appeler</a><a class="b" target="_blank" rel="noopener" href="'+gm([d.ca,d.cc,'Maroc'].filter(Boolean).join(', '))+'">'+ico('pin')+' Itinéraire</a></div><div class="btns">'+st('Livré','Livré ✓','ok')+st('Refusé','Refusé','ko')+'</div></div>'
-   +mapView({vc:d.vc,cc:d.cc,s:cs===-1?0:(CS.gps&&cs<3?Math.max(2,cs):cs),gps:CS.gps,live:CS.gps,aq:d.va,bq:d.ca})
+   +mapView({ve:d.ve,vc:d.vc,cc:d.cc,s:cs===-1?0:(CS.gps&&cs<3?Math.max(2,cs):cs),gps:CS.gps,live:CS.gps,aq:d.va,bq:d.ca})
    +'<div class="card" style="margin-top:10px"><h2>Mon GPS</h2><p class="mut">'+e(CS.err||(CS.gps?(lv?'Position partagée en direct avec le client et le vendeur.'+(CS.acc?' Précision ±'+CS.acc+' m.':''):'Position active (point bleu sur la carte).'):'Active le GPS pour partager ta position. Garde l’écran allumé.'))+'</p><div class="btns"><button class="b pri" data-act="cgps">'+ico('pin')+' Activer mon GPS</button>'+(pos&&!lv?'<a class="b" target="_blank" rel="noopener" href="'+wa(d.cp,'Votre livreur est ici : '+pos)+'">Envoyer au client</a>':'')+'</div></div>');
 }
 function wnew(){return mb()+'<div class="card"><h2>Nouvel appel sortant</h2><label>Prénom</label><input id="w-pr"><label>Nom</label><input id="w-n"><label>Contact (téléphone)</label><input id="w-t" inputmode="tel"><label>Adresse</label><input id="w-a"><label>Commande</label><input id="w-c" placeholder="ex : 2 × T-shirt noir M"><label>Statut</label><select id="w-s">'+WST.map(function(x){return '<option>'+x+'</option>'}).join('')+'</select><button class="b pri" style="width:100%" data-act="wadd">Enregistrer</button></div>'}
@@ -563,7 +563,7 @@ function vlinks(x){var l='';
   if(x.site)l+='<a class="b" target="_blank" rel="noopener" href="'+ext(x.site)+'">'+ico('link')+' Lien</a>';
   return l?'<div class="btns">'+l+'</div>':''}
 var STK=['À valider','Validées','En cours de livraison','Livrées'];
-function livlist(){return '<h2>Livreurs ('+DB.cour.length+')</h2>'+DB.cour.map(function(w){return '<div class="card"><div class="row"><b>'+e(w.name)+'</b><span class="mut">'+e(w.city)+'</span></div><div class="mut">'+e(w.prod||'')+(w.price?' · tarif '+w.price+' dh':'')+'</div><div class="btns"><a class="b" target="_blank" rel="noopener" href="'+wa(w.phone,'Bonjour '+w.name+',')+'">'+ico('chat','s')+' Écrire</a><button class="b" data-act="ndel" data-id="'+w.id+'">'+(S.del===w.id?'Confirmer la suppression ?':'Supprimer')+'</button></div></div>'}).join('')}
+function livlist(){return '<h2>Livreurs ('+DB.cour.length+')</h2>'+DB.cour.map(function(w){return '<div class="card"><div class="row"><b>'+e(w.name)+'</b><span class="mut">'+e(w.city)+'</span></div>'+vsel(w)+'<div class="mut">'+e(w.prod||'')+(w.price?' · tarif '+w.price+' dh':'')+'</div><div class="btns"><a class="b" target="_blank" rel="noopener" href="'+wa(w.phone,'Bonjour '+w.name+',')+'">'+ico('chat','s')+' Écrire</a><button class="b" data-act="ndel" data-id="'+w.id+'">'+(S.del===w.id?'Confirmer la suppression ?':'Supprimer')+'</button></div></div>'}).join('')}
 
 function solo(html){document.querySelector('header').style.display='none';$('nav').style.display='none';document.body.style.paddingBottom='20px';$('app').innerHTML=html;lmFlush()}
 function courFilter(){return DB.cour.length?'<select id="tf"><option value="">Tous les livreurs</option>'+DB.cour.map(function(x){return '<option'+(S.tf===x.name?' selected':'')+'>'+e(x.name)+'</option>'}).join('')+'</select>':''}
@@ -576,8 +576,8 @@ function delv(){
   var N=S.notif&&byId(S.notif);
   var h=mb()+(N?nbar(N,true):'')+vsel()+courFilter()+'<div class="g4">'+STK.map(function(n,i){return '<div class="kpi"><span class="mut">'+n+'</span><b>'+cnt[i]+'</b></div>'}).join('')+'</div>';
   var TT=S.trk&&byId(S.trk);
-  if(TT)h+='<div class="card"><div class="row"><h2 style="margin:0">'+e(TT.name)+'</h2>'+flatBtn()+'</div>'+((cfind(vcity(TT))&&cfind(TT.city))?'':'<p class="mut">Renseigne la ville du vendeur (fiche vendeur) et la ville du client pour voir le trajet.</p>')+mapView({vc:vcity(TT),cc:TT.city,s:stage(TT),live:TT.pos,aq:vaddr(TT),bq:TT.address})+(TT.pt&&Date.now()-TT.pt<45000?'<div class="live">● Position du livreur en direct</div>':'')+stepper(stage(TT))+'</div>';
-  else{var am=V_.filter(function(o){return !bad(o)&&stage(o)===2&&cfind(vcity(o))&&cfind(o.city)});h+='<div class="card"><div class="row"><h2 style="margin:0">Carte nationale</h2>'+flatBtn()+'</div><p class="mut">'+am.length+' livraison(s) en cours.</p>'+mapView({list:am.map(function(o){return {vc:vcity(o),cc:o.city,s:2,live:o.pos}})})+'</div>'}
+  if(TT)h+='<div class="card"><div class="row"><h2 style="margin:0">'+e(TT.name)+'</h2>'+flatBtn()+'</div>'+((cfind(vcity(TT))&&cfind(TT.city))?'':'<p class="mut">Renseigne la ville du vendeur (fiche vendeur) et la ville du client pour voir le trajet.</p>')+mapView({ve:vehOf(TT.courier),vc:vcity(TT),cc:TT.city,s:stage(TT),live:TT.pos,aq:vaddr(TT),bq:TT.address})+(TT.pt&&Date.now()-TT.pt<45000?'<div class="live">● Position du livreur en direct</div>':'')+stepper(stage(TT))+'</div>';
+  else{var am=V_.filter(function(o){return !bad(o)&&stage(o)===2&&cfind(vcity(o))&&cfind(o.city)});h+='<div class="card"><div class="row"><h2 style="margin:0">Carte nationale</h2>'+flatBtn()+'</div><p class="mut">'+am.length+' livraison(s) en cours.</p>'+mapView({list:am.map(function(o){return {ve:vehOf(o.courier),vc:vcity(o),cc:o.city,s:2,live:o.pos}})})+'</div>'}
   var card=function(o){
     var s=stage(o),c=DB.cour.filter(function(x){return x.name===o.courier})[0],csel=DB.cour.length?'<select data-cr="1" data-id="'+o.id+'"><option value="">Livreur : —</option>'+DB.cour.map(function(x){return '<option'+(o.courier===x.name?' selected':'')+'>'+e(x.name)+'</option>'}).join('')+'</select>':'';
     var mis='Mission de livraison : '+o.product+' pour '+o.name+'. Ouvre ce lien : '+tlink(o,'l')+'\n\nOu réponds par : SUIVI '+o.id+' Livré   /   SUIVI '+o.id+' Refusé';
@@ -1974,28 +1974,67 @@ var R=[
 "Attribuer un livreur automatiquement (par ville, le moins chargé)¦Assign a courier automatically (by city, least loaded)¦تعيين موزع تلقائياً (حسب المدينة، الأقل انشغالاً)","Publier le suivi à chaque étape¦Publish tracking at each step¦نشر التتبع في كل مرحلة","Me rappeler les appels à passer¦Remind me of calls to make¦ذكّرني بالمكالمات المطلوبة","Sauvegarde automatique chaque semaine (si pas de code)¦Automatic weekly backup (if no code)¦نسخ احتياطي أسبوعي تلقائي (بدون رمز)","Valider moi-même les livraisons signalées à distance (anti-fraude, conseillé)¦Validate remotely reported deliveries myself (anti-fraud, recommended)¦أتحقق بنفسي من التسليمات المبلغ عنها عن بُعد (مكافحة الاحتيال، مُوصى به)",
 "Rien à envoyer pour le moment.¦Nothing to send for now.¦لا شيء للإرسال حالياً.","WhatsApp s’ouvre avec le message prêt : tu n’as qu’à appuyer sur Envoyer.¦WhatsApp opens with the message ready: just tap Send.¦يفتح واتساب والرسالة جاهزة: اضغط فقط على إرسال.","Les avis des clients apparaîtront ici après les livraisons suivies en direct.¦Customer reviews will appear here after live-tracked deliveries.¦ستظهر آراء العملاء هنا بعد التسليمات المتتبعة مباشرةً.",
 "1) Crée un vendeur dans Vendeurs. 2) Ajoute ses commandes dans Commandes → Ajouter (une, collées de WhatsApp ou par liste). 3) Appelle dans l’onglet Appels. Chaque vendeur a 30 commandes d’essai gratuites.¦1) Create a seller in Sellers. 2) Add their orders in Orders → Add (one, pasted from WhatsApp, or by list). 3) Call from the Calls tab. Each seller gets 30 free trial orders.¦1) أنشئ بائعاً في البائعين. 2) أضف طلباته في الطلبات ← إضافة (طلب واحد، أو لصق من واتساب، أو قائمة). 3) اتصل من تبويب المكالمات. لكل بائع 30 طلباً تجريبياً مجانياً."];
-var LN={en:{},ar:{},tz:{}};
+var LN={en:{},ar:{}};
 R.forEach(function(l){var p=l.split('¦');LN.en[p[0]]=p[1];LN.ar[p[0]]=p[2]});
-var GM={en:['Good evening ','Good morning '],ar:['مساء الخير ','صباح الخير '],tz:['ⴰⵣⵓⵍ ','ⴰⵣⵓⵍ ']};
+var GM={en:['Good evening ','Good morning '],ar:['مساء الخير ','صباح الخير ']};
 var PT=[[/^(\d+) commande\(s\) à appeler maintenant$/,{en:function(m){return m[1]+' order(s) to call now'},ar:function(m){return m[1]+' طلب(ات) للاتصال الآن'}}],
  [/^(\d+) (?:commande\(s\) )?en attente$/,{en:function(m){return m[1]+' pending'},ar:function(m){return m[1]+' قيد الانتظار'}}],
- [/^(Bonsoir|Bonjour) (.+)$/,{en:function(m){return GM.en[m[1]==='Bonsoir'?0:1]+m[2]},ar:function(m){return GM.ar[m[1]==='Bonsoir'?0:1]+m[2]},tz:function(m){return GM.tz[0]+m[2]}}]];
+ [/^(Bonsoir|Bonjour) (.+)$/,{en:function(m){return GM.en[m[1]==='Bonsoir'?0:1]+m[2]},ar:function(m){return GM.ar[m[1]==='Bonsoir'?0:1]+m[2]}}]];
 function tr(s,l){var k=s.trim();if(!k)return null;var d=LN[l],v=d&&d[k];if(v)return s.replace(k,function(){return v});
   for(var i=0;i<PT.length;i++){var m=PT[i][0].exec(k),f=PT[i][1][l];if(m&&f)return s.replace(k,function(){return f(m)})}return null}
 function walk(r,l){if(!r)return;var w=document.createTreeWalker(r,NodeFilter.SHOW_TEXT,null),n,L=[];
   while(n=w.nextNode()){var p=n.parentNode&&n.parentNode.nodeName;if(p!=='SCRIPT'&&p!=='STYLE'&&p!=='TEXTAREA')L.push(n)}
   L.forEach(function(n){var t=tr(n.nodeValue,l);if(t)n.nodeValue=t});
   [].forEach.call(r.querySelectorAll('[placeholder],[aria-label],[title]'),function(x){['placeholder','aria-label','title'].forEach(function(a){var v=x.getAttribute(a),t=v&&tr(v,l);if(t)x.setAttribute(a,t)})})}
-var CD={fr:'FR',ar:'AR',en:'EN',tz:'ⵣ'},_rl=render;
-render=function(){_rl();if(!DB||S.locked)return;var l=DB.set.lang||'fr';
-  document.documentElement.dir=l==='ar'?'rtl':'ltr';document.documentElement.lang=l==='tz'?'zgh':l;
+var CD={fr:'FR',ar:'AR',en:'EN'},_rl=render;
+render=function(){_rl();if(!DB||S.locked)return;var l=DB.set.lang||'fr';if(l==='tz'){l=DB.set.lang='fr';save()}
+  document.documentElement.dir=l==='ar'?'rtl':'ltr';document.documentElement.lang=l;
   var hl=$('hl');if(hl)hl.textContent=CD[l]||'FR';if(l!=='fr'){walk($('app'),l);walk($('nav'),l)}};
 document.addEventListener('click',function(ev){var t=ev.target,m=document.querySelector('.lgm');
   if(t.closest&&t.closest('#hl')){ev.stopImmediatePropagation();ev.preventDefault();if(m){m.remove();return}
     m=document.createElement('div');m.className='lgm';var c=DB&&DB.set.lang||'fr';
-    m.innerHTML=[['fr','Français'],['ar','العربية'],['en','English'],['tz','ⵜⴰⵎⴰⵣⵉⵖⵜ']].map(function(x){return '<button data-l="'+x[0]+'"'+(c===x[0]?' class="on"':'')+'>'+x[1]+(c===x[0]?' ✓':'')+'</button>'}).join('');
+    m.innerHTML=[['fr','Français'],['ar','العربية'],['en','English']].map(function(x){return '<button data-l="'+x[0]+'"'+(c===x[0]?' class="on"':'')+'>'+x[1]+(c===x[0]?' ✓':'')+'</button>'}).join('');
     document.body.appendChild(m);return}
   var b=t.closest&&t.closest('.lgm button');
   if(b){ev.stopImmediatePropagation();ev.preventDefault();DB.set.lang=b.getAttribute('data-l');save();m.remove();render();return}
   if(m)m.remove()},true);
 })();
+
+/* ===== 8.0 : suivi façon Waze + scooter / voiture réalistes ===== */
+var SCT='<svg viewBox="0 0 40 64" width="30" height="48"><ellipse cx="20" cy="36" rx="15" ry="27" fill="#000" opacity=".28"/><rect x="17" y="2" width="6" height="13" rx="3" fill="#111"/><rect x="5" y="14" width="30" height="4" rx="2" fill="#333"/><circle cx="5" cy="16" r="2.4" fill="#111"/><circle cx="35" cy="16" r="2.4" fill="#111"/><rect x="14" y="17" width="12" height="30" rx="6" fill="#374151"/><rect x="7" y="42" width="26" height="18" rx="3" fill="#b8921f" stroke="#f6dc85" stroke-width="1.2"/><path d="M12 17Q12 27 16 29M28 17Q28 27 24 29" fill="none" stroke="#0b1b3f" stroke-width="4" stroke-linecap="round"/><ellipse cx="20" cy="31" rx="9" ry="7" fill="#0b1b3f"/><circle cx="20" cy="26" r="6.5" fill="#f6dc85" stroke="#111" stroke-width="1"/><path d="M15.5 24.5Q20 21 24.5 24.5L24.5 26Q20 23.5 15.5 26Z" fill="#111"/><circle cx="20" cy="4" r="2" fill="#fff8c0"/><rect x="16" y="60" width="8" height="2" rx="1" fill="#ef4444"/></svg>';
+var CAR2='<svg viewBox="0 0 40 76" width="32" height="60"><ellipse cx="20" cy="40" rx="17" ry="35" fill="#000" opacity=".28"/><rect x="1" y="13" width="6" height="14" rx="2" fill="#111"/><rect x="33" y="13" width="6" height="14" rx="2" fill="#111"/><rect x="1" y="50" width="6" height="14" rx="2" fill="#111"/><rect x="33" y="50" width="6" height="14" rx="2" fill="#111"/><rect x="5" y="3" width="30" height="70" rx="12" fill="#14213d" stroke="#f6dc85" stroke-width="1.3"/><path d="M9 22Q20 16 31 22L29 31H11Z" fill="#9fd3ff"/><rect x="10" y="31" width="20" height="18" rx="3" fill="#1c2d52"/><rect x="14" y="37" width="12" height="5" rx="1" fill="#f6dc85"/><path d="M11 49H29L31 58Q20 62 9 58Z" fill="#7fb6e6"/><rect x="8" y="4" width="7" height="3" rx="1.5" fill="#fff8c0"/><rect x="25" y="4" width="7" height="3" rx="1.5" fill="#fff8c0"/><rect x="8" y="68" width="7" height="2.5" rx="1" fill="#ef4444"/><rect x="25" y="68" width="7" height="2.5" rx="1" fill="#ef4444"/><rect x="1" y="24" width="5" height="4" rx="1.5" fill="#14213d"/><rect x="34" y="24" width="5" height="4" rx="1.5" fill="#14213d"/></svg>';
+function vehOf(n){var c=DB&&DB.cour.filter(function(x){return x.name===n})[0];return c&&c.veh||'moto'}
+function vsel(w){return '<label>Véhicule</label><select data-vh="'+w.id+'"><option value="moto"'+(w.veh!=='car'?' selected':'')+'>🛵 Scooter</option><option value="car"'+(w.veh==='car'?' selected':'')+'>🚗 Voiture</option></select>'}
+function brg(a,b){var r=Math.PI/180,dl=(b[1]-a[1])*r,y=Math.sin(dl)*Math.cos(b[0]*r),x=Math.cos(a[0]*r)*Math.sin(b[0]*r)-Math.sin(a[0]*r)*Math.cos(b[0]*r)*Math.cos(dl);return (Math.atan2(y,x)/r+360)%360}
+function lsc(v){return L.divIcon({className:'lsc',html:'<div class="vh"><span class="pulse"></span>'+(v==='car'?CAR2:SCT)+'</div>',iconSize:[46,46],iconAnchor:[23,23]})}
+function lrot(mk,h){var el=mk.getElement(),v=el&&el.firstChild;if(v)v.style.transform='rotate('+h+'deg)'}
+function lanim(mk,line,x,l){var d=[0],i;for(i=1;i<line.length;i++)d.push(d[i-1]+hav(line[i-1],line[i]));LM.anims.push({mk:mk,line:line,d:d,tot:d[d.length-1]||1,x:x,l:l})}
+function lstep(ts){
+  if(!LM.el||!LM.el.isConnected){LM.anim=0;return}
+  LM.anims.forEach(function(a){var p=((ts%16000)/16000)*a.tot,i=1;while(i<a.d.length-1&&a.d[i]<p)i++;var s0=a.d[i-1],f=Math.max(0,Math.min(1,(p-s0)/Math.max(1e-6,a.d[i]-s0))),A=a.line[i-1],B=a.line[i],q=[A[0]+(B[0]-A[0])*f,A[1]+(B[1]-A[1])*f],rs=[q].concat(a.line.slice(i));
+    a.mk.setLatLng(q);lrot(a.mk,brg(A,B));a.l.rest.setLatLngs(rs);a.l.flow.setLatLngs(rs);a.l.done.setLatLngs(a.line.slice(0,i).concat([q]));
+    var rm=1-p/a.tot;if(LM.chip)LM.chip.textContent=(a.x.ve==='car'?'🚗 ':'🛵 ')+Math.max(1,Math.round((a.x.mn||a.tot*1.6)*rm))+' min · '+((a.x.km||a.tot)*rm).toFixed(1).replace('.',',')+' km';
+    if(LM.follow)LM.map.panTo(q,{animate:false})});
+  LM.anim=requestAnimationFrame(lstep);
+}
+function lmDraw(){
+  var sp=LM.spec,g=LM.g,all=[];g.clearLayers();LM.anims=[];if(LM.anim){cancelAnimationFrame(LM.anim);LM.anim=0}
+  if(!LM.chip||!LM.chip.isConnected){LM.chip=document.createElement('div');LM.chip.className='lchip';LM.el.appendChild(LM.chip)}
+  LM.chip.style.display=sp.routes.length===1&&sp.routes[0].s===2?'':'none';
+  sp.routes.forEach(function(r){
+    var line=r.road||[r.a,r.b],sl=function(c,w,o,x){return L.polyline(line,Object.assign({color:c,weight:w,opacity:o,lineCap:'round',lineJoin:'round'},x||{})).addTo(g)};
+    sl('#0b1f5c',12,.92);var l={rest:sl('#22d3ee',7,1),flow:sl('#ffffff',3,.95,{dashArray:'1 14',className:'rflow'}),done:L.polyline(r.s===3?line:[],{color:'#9aa4b2',weight:7,opacity:.95,lineCap:'round'}).addTo(g)};
+    if(r.s===3){l.rest.setLatLngs([]);l.flow.setLatLngs([])}
+    L.marker(r.a,{icon:lpin('#16a34a',r.an)}).addTo(g);L.marker(r.b,{icon:lpin('#dc2626',r.bn)}).addTo(g);all.push(r.a,r.b);
+    var mk=L.marker(r.s===3?r.b:r.a,{icon:lsc(r.ve),zIndexOffset:1000,interactive:false}).addTo(g);
+    if(r.s===2){if(r.live){var pv=LM.lv;mk.setLatLng(r.live);if(pv&&hav(pv,r.live)>.005)lrot(mk,brg(pv,r.live));LM.lv=r.live;var kk=hav(r.live,r.b)*1.25;LM.chip.textContent=(r.ve==='car'?'🚗 ':'🛵 ')+Math.max(1,Math.round(kk*(r.ve==='car'?1.2:1.6)))+' min · '+kk.toFixed(1).replace('.',',')+' km';if(LM.follow)LM.map.panTo(r.live,{animate:false})}else lanim(mk,line,r,l)}
+    else lrot(mk,brg(r.a,r.b));
+  });
+  if(sp.gps){L.circleMarker(sp.gps,{radius:8,color:'#ffffff',weight:3,fillColor:'#3b82f6',fillOpacity:1}).addTo(g);all.push(sp.gps)}
+  if(LM.key!==sp.key){LM.key=sp.key;if(all.length)LM.map.fitBounds(all,{padding:[50,50],maxZoom:13});else LM.map.setView([31.8,-7.1],5)}
+  if(LM.anims.length)LM.anim=requestAnimationFrame(lstep);
+}
+document.addEventListener('click',function(ev){var b=ev.target.closest&&ev.target.closest('[data-lf]');if(!b||!LM.map)return;
+  LM.follow=!LM.follow;b.classList.toggle('on',LM.follow);if(LM.follow)LM.map.setZoom(15,{animate:false});else rr()},true);
+document.addEventListener('change',function(ev){var t=ev.target,id=t.getAttribute&&t.getAttribute('data-vh');if(!id)return;
+  var c=DB.cour.filter(function(x){return x.id===id})[0];if(c){c.veh=t.value;save();render()}},true);
