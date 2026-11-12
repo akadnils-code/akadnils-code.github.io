@@ -1,6 +1,6 @@
 /* Confirmation COD 7.8.0 - script principal
    Sections repérées : modules réintégrés de la v3 | v5 : code de livraison, avis, demandes, motifs livreur, sati | v6 : catalogue, créneaux, photo de preuve, notifications, da | v7 : automatisations | v7.2 : QR code + NFC (QR hors ligne, aucune dépendance résea | v7.4 : scanner QR (caméra), tags NFC associés, diagnostic */
-var CIT=200000,KEY='cod_v4',OLDKEY='cod_v1',VER='7.9.3',IT=200000;
+var CIT=200000,KEY='cod_v4',OLDKEY='cod_v1',VER='7.9.4',IT=200000;
 var DEFTPL='Bonjour 👋 [boutique] a essayé de vous joindre pour confirmer votre commande de [produit]. Répondez OUI pour confirmer, ou dites-nous à quelle heure vous rappeler. Merci !';
 var DEFSCRIPT='1) Se présenter : « Bonjour, je vous appelle de la part de [boutique]. »\n2) Confirmer le produit, la quantité, le prix et la livraison.\n3) Confirmer la ville et l’adresse exacte (quartier, repère).\n4) Proposer un produit complémentaire ou un pack.\n5) Rappeler : paiement à la livraison, merci de préparer le montant.';
 var DEFSET={rc:0,db:'',tiles:'',ckey:'',net:[],deals:[],wallet:[],sim:{cpw:200,tc:70,td:80,nv:5,pa:60,pv:90,q:100},cf:5,bn:6,up:12,trial:30,dth:500,dpc:20,minc:100,phone:'',rib:'',holder:'',insta:'',tpl:DEFTPL,script:DEFSCRIPT,lang:'fr',lastBackup:0};
@@ -1907,16 +1907,16 @@ if('serviceWorker' in navigator){window.addEventListener('load',function(){navig
 
 /* ===== 7.8 : accueil style marketplace (structure Jumia, couleurs premium) ===== */
 (function(){
-function MX(due,pe,gm,s,tr){
+function MX(due,pe,gm,s,tr,tc){
   var hr=new Date().getHours(),nm=DB.set.holder||'Confirmation COD',sub=DB.set.phone||(pe.length+' commande(s) en attente');
   var now=new Date(),dt=now.toLocaleDateString('fr-FR')+' • '+now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
   var R=[['calls','phone','Appels',due.length],['ord','box','Commandes',0],['del','truck','Livraison',0],['vend','store','Vendeurs',0],['fin','chart','Finances',0],['tools','box','QR & NFC',0]];
   return '<div class="mx"><div class="gr">'+(hr<5||hr>=18?'Bonsoir':'Bonjour')+' '+e(nm)+'</div><div class="gs">'+e(sub)+'</div>'
    +'<div class="hrow rings">'+R.map(function(r){return '<div class="rg" data-act="tab" data-v="'+r[0]+'"><div class="ring"><div class="rin">'+ico(r[1])+'</div>'+(r[3]?'<span class="rb">'+r[3]+'</span>':'')+'</div><span>'+r[2]+'</span></div>'}).join('')+'</div></div>'
-   +'<div class="mxw"><div class="mxc"><div class="row"><h2>Résumé du mois</h2></div><div class="mut">Solde au <b style="color:#d4742a">'+dt+'</b></div>'
+   +'<div class="mxw"><div class="mxs" id="mxs"><div class="mxc"><div class="row"><h2>Résumé du mois</h2></div><div class="mut">Solde au <b style="color:#d4742a">'+dt+'</b></div>'
    +'<div class="sbx"><div class="sb"><div class="si">'+ico('box')+'</div><span>Confirmation</span><b>'+pct(s.ok,tr)+'</b></div><div class="sb2"><div class="si2">'+ico('chart')+'</div><b>'+fm(gm)+' <small>DH</small></b><span>Gagné ce mois</span></div></div>'
    +'<div class="mut" style="text-align:center;margin:6px 0 14px">'+(due.length?due.length+' commande(s) à appeler maintenant':'Aucun appel urgent, tout est à jour')+'</div>'
-   +'<div class="btns"><button class="b pri" data-act="goto" data-v="calls">'+ico('phone','s')+' Appeler</button><button class="b" data-act="goto" data-v="ord" data-s="add">Ajouter</button><button class="b" data-act="tab" data-v="fin">Finances</button></div></div></div>';
+   +'<div class="btns"><button class="b pri" data-act="goto" data-v="calls">'+ico('phone','s')+' Appeler</button><button class="b" data-act="goto" data-v="ord" data-s="add">Ajouter</button><button class="b" data-act="tab" data-v="fin">Finances</button></div></div>'+'<div class="mxc"><div class="row"><h2>Livraison</h2></div><div class="mut">Ce mois-ci</div><div class="sbx"><div class="sb"><div class="si">'+ico('truck')+'</div><span>Taux de livraison</span><b>'+pct(s.liv,s.liv+s.ref)+'</b></div><div class="sb2"><div class="si2">'+ico('box')+'</div><b>'+(s.ref||0)+' <small>refusées</small></b></div></div><div class="mut" style="text-align:center;margin:6px 0 14px">Suivi en direct de tes livreurs</div><div class="btns"><button class="b pri" data-act="tab" data-v="del">Livraisons</button><button class="b" data-act="tab" data-v="ord">Commandes</button></div></div>'+'<div class="mxc"><div class="row"><h2>Finances</h2></div><div class="mut">Ce mois-ci</div><div class="sbx"><div class="sb"><div class="si">'+ico('chart')+'</div><span>À encaisser</span><b>'+fm(tc||0)+' <small>DH</small></b></div><div class="sb2"><div class="si2">'+ico('store')+'</div><b>'+fm(gm)+' <small>DH</small></b><span>Gagné ce mois</span></div></div><div class="mut" style="text-align:center;margin:6px 0 14px">Chez tes vendeurs</div><div class="btns"><button class="b pri" data-act="tab" data-v="fin">Finances</button><button class="b" data-act="tab" data-v="vend">Vendeurs</button></div></div>'+'</div><div class="dots" id="mdots"><i class="on" data-mi="0"></i><i data-mi="1"></i><i data-mi="2"></i></div></div>';
 }
 var _rh=render;
 var NM=['Automatisations','Satisfaction clients','Pour commencer'];
@@ -1939,7 +1939,7 @@ render=function(){
          ['g2','Gagné ce mois',fm(gm)+' dh','Voir les finances →','fin'],
          ['g3','Livraison (mois)',pct(s.liv,s.liv+s.ref),'Voir les livraisons →','del']];
   var L=(due.length?due:pe).slice(0,8);
-  var h=MX(due,pe,gm,s,tr)+'<label class="hsr">'+ico('search')+'<input id="hq" placeholder="Rechercher une commande, un client…" enterkeyhint="search"></label>'
+  var h=MX(due,pe,gm,s,tr,tc)+'<label class="hsr">'+ico('search')+'<input id="hq" placeholder="Rechercher une commande, un client…" enterkeyhint="search"></label>'
    +'<div class="bnr" id="bnr">'+B.map(function(b){return '<div class="bn '+b[0]+'" data-act="tab" data-v="'+b[4]+'"><div><small>'+b[1]+'</small><strong>'+b[2]+'</strong></div><span class="go">'+b[3]+'</span></div>'}).join('')+'</div>'
    +'<div class="dots" id="dots">'+B.map(function(_,i){return '<i'+(i?'':' class="on"')+'></i>'}).join('')+'</div>'
    +'<div class="dk"><h3>TON ACTIVITÉ, EN DIRECT</h3><div class="hrow">'
@@ -1949,6 +1949,9 @@ render=function(){
    +(L.length?'<div class="hrow">'+L.map(function(x){return '<div class="oc"><div class="ph0">'+e((x.name||'?').charAt(0).toUpperCase())+'<a class="plus" href="tel:'+e(x.phone)+'" aria-label="Appeler">'+ico('phone')+'</a></div><div class="on1">'+e(x.name)+'</div><div class="mut">'+e(x.product||'—')+'</div><div class="mut">'+e(x.city||'')+(x.amount?' · <b>'+fm(x.amount)+' dh</b>':'')+'</div></div>'}).join('')+'</div>':'<p class="mut" style="color:#f6dc85">Ajoute ta première commande pour la voir ici.</p>')
    +'</div>';
   $('app').insertAdjacentHTML('afterbegin',h);
+  var ms=$('mxs'),md=$('mdots');
+  if(ms&&md){ms.addEventListener('scroll',function(){var i=Math.round(ms.scrollLeft/(ms.firstChild.offsetWidth+12));[].forEach.call(md.children,function(x,k){x.className=k===i?'on':''})});
+    [].forEach.call(md.children,function(x,k){x.addEventListener('click',function(){ms.scrollTo({left:k*(ms.firstChild.offsetWidth+12),behavior:'smooth'})})})}
   var bn=$('bnr'),d=$('dots');
   if(bn)bn.addEventListener('scroll',function(){var i=Math.round(bn.scrollLeft/(bn.firstChild.offsetWidth+12));[].forEach.call(d.children,function(x,k){x.className=k===i?'on':''})});
 };
@@ -1959,7 +1962,7 @@ document.addEventListener('keydown',function(ev){var t=ev.target;if(t.id==='hq'&
 (function(){
 var R=[
 "Accueil¦Home¦الرئيسية","Appels¦Calls¦المكالمات","Commandes¦Orders¦الطلبات","Livraison¦Delivery¦التوصيل","Compte¦Account¦الحساب","Vendeurs¦Sellers¦البائعون","Finances¦Finance¦المالية",
-"Résumé du mois¦Monthly summary¦ملخص الشهر","Confirmation¦Confirmation¦التأكيد","Gagné ce mois¦Earned this month¦أرباح هذا الشهر","Confirmation (mois)¦Confirmation (month)¦التأكيد (الشهر)","Livraison (mois)¦Delivery (month)¦التوصيل (الشهر)",
+"Résumé du mois¦Monthly summary¦ملخص الشهر","Taux de livraison¦Delivery rate¦نسبة التسليم","refusées¦refused¦مرفوضة","Ce mois-ci¦This month¦هذا الشهر","Suivi en direct de tes livreurs¦Live tracking of your couriers¦تتبع مباشر لموزعيك","Livraisons¦Deliveries¦التوصيلات","Chez tes vendeurs¦With your sellers¦لدى البائعين","Confirmation¦Confirmation¦التأكيد","Gagné ce mois¦Earned this month¦أرباح هذا الشهر","Confirmation (mois)¦Confirmation (month)¦التأكيد (الشهر)","Livraison (mois)¦Delivery (month)¦التوصيل (الشهر)",
 "Ajouter¦Add¦إضافة","Appeler¦Call¦اتصال","Appeler →¦Call →¦اتصال ←","Voir les finances →¦View finances →¦عرض المالية ←","Voir les livraisons →¦View deliveries →¦عرض التوصيلات ←","À appeler maintenant¦To call now¦للاتصال الآن",
 "Aucun appel urgent, tout est à jour¦No urgent calls, all up to date¦لا مكالمات عاجلة، كل شيء محدّث","Rechercher une commande, un client…¦Search an order or a customer…¦ابحث عن طلب أو عميل…","TON ACTIVITÉ, EN DIRECT¦YOUR ACTIVITY, LIVE¦نشاطك مباشرةً",
 "Programmés¦Scheduled¦مجدولة","Rappels à venir¦Upcoming reminders¦تذكيرات قادمة","À encaisser¦To collect¦للتحصيل","Chez les vendeurs¦With sellers¦لدى البائعين","Taux de confirmation¦Confirmation rate¦نسبة التأكيد","Appels à passer¦Calls to make¦مكالمات للإجراء",

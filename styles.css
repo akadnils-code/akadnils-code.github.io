@@ -239,3 +239,12 @@ path.rflow{animation:rfl .9s linear infinite}
 .poi .pm i{font-style:normal;font-size:11px;font-weight:700;background:rgba(255,255,255,.92);color:#111;border-radius:8px;padding:1px 6px;margin-top:2px;white-space:nowrap;max-width:110px;overflow:hidden;text-overflow:ellipsis}
 .poibox{position:absolute;left:10px;right:10px;top:10px;z-index:1000;background:rgba(11,31,92,.94);color:#fff;border:1px solid #d4af37;border-radius:16px;padding:10px 14px;font-size:13px;pointer-events:none;box-shadow:0 6px 18px rgba(0,0,0,.4)}
 .poibox b{font-size:16px;display:block;margin-bottom:4px;color:#f6dc85}
+
+/* ===== 8.4 : cartes du haut à faire glisser (façon Max it) ===== */
+.mxw:before,.mxw:after{display:none!important}
+.mxw{margin:-64px 0 12px}
+.mxs{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y;margin:0 -14px;padding:0 14px 22px;scrollbar-width:none;overscroll-behavior-x:contain}
+.mxs::-webkit-scrollbar{display:none}
+.mxs .mxc{flex:0 0 92%;scroll-snap-align:center;scroll-snap-stop:always;box-shadow:0 10px 22px rgba(7,11,20,.22)}
+.mxw>.dots{margin:-6px 0 0}
+.mxw>.dots i{cursor:pointer}
