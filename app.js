@@ -1,6 +1,6 @@
 /* Confirmation COD 7.8.0 - script principal
    Sections repérées : modules réintégrés de la v3 | v5 : code de livraison, avis, demandes, motifs livreur, sati | v6 : catalogue, créneaux, photo de preuve, notifications, da | v7 : automatisations | v7.2 : QR code + NFC (QR hors ligne, aucune dépendance résea | v7.4 : scanner QR (caméra), tags NFC associés, diagnostic */
-var CIT=200000,KEY='cod_v4',OLDKEY='cod_v1',VER='7.9.2',IT=200000;
+var CIT=200000,KEY='cod_v4',OLDKEY='cod_v1',VER='7.9.3',IT=200000;
 var DEFTPL='Bonjour 👋 [boutique] a essayé de vous joindre pour confirmer votre commande de [produit]. Répondez OUI pour confirmer, ou dites-nous à quelle heure vous rappeler. Merci !';
 var DEFSCRIPT='1) Se présenter : « Bonjour, je vous appelle de la part de [boutique]. »\n2) Confirmer le produit, la quantité, le prix et la livraison.\n3) Confirmer la ville et l’adresse exacte (quartier, repère).\n4) Proposer un produit complémentaire ou un pack.\n5) Rappeler : paiement à la livraison, merci de préparer le montant.';
 var DEFSET={rc:0,db:'',tiles:'',ckey:'',net:[],deals:[],wallet:[],sim:{cpw:200,tc:70,td:80,nv:5,pa:60,pv:90,q:100},cf:5,bn:6,up:12,trial:30,dth:500,dpc:20,minc:100,phone:'',rib:'',holder:'',insta:'',tpl:DEFTPL,script:DEFSCRIPT,lang:'fr',lastBackup:0};
@@ -438,7 +438,7 @@ function lspec(m){
 function mapView(m){
   if(!LOK()||LM.bad){loadL();return mapSvg(m)}
   LM.spec=lspec(m);
-  return '<div class="lslot"></div><div class="btns lbtns"><button class="b" data-act="lfit">Recentrer le trajet</button><button class="b" data-act="lmaroc">Tout le Maroc</button><button class="b lfb'+(LM.follow?' on':'')+'" data-lf="1">🧭 Suivi Waze</button></div>'+simUI()+'<p class="mut" style="font-size:12px">Carte OpenStreetMap : zoome avec deux doigts ou avec +/−, déplace-la avec le doigt. Internet requis pour le fond de carte.</p>';
+  return '<div class="lslot"></div><div class="btns lbtns"><button class="b" data-act="lfit">Recentrer le trajet</button><button class="b" data-act="lmaroc">Tout le Maroc</button><button class="b lfb'+(LM.follow?' on':'')+'" data-lf="1">🧭 Suivi Waze</button><button class="b" data-poi="1">📍 Zoom sur la destination</button></div>'+simUI()+'<p class="mut" style="font-size:12px">Carte OpenStreetMap : zoome avec deux doigts ou avec +/−, déplace-la avec le doigt. Internet requis pour le fond de carte.</p>';
 }
 function flatBtn(){return (LOK()&&!LM.bad)?'':'<button class="b" style="flex:0 0 auto;min-width:0" data-act="flat">3D / Plat</button>'}
 function lpin(col,t){return L.divIcon({className:'lpin',html:'<div class="pin" style="background:'+col+'"></div><span>'+e(t)+'</span>',iconSize:[0,0]})}
@@ -2014,7 +2014,8 @@ function lstep(ts){
   LM.anims.forEach(function(a){var D=a.x.sim?Math.min(70000,Math.max(18000,a.tot*2500)):16000,p=((ts%D)/D)*a.tot,i=1;while(i<a.d.length-1&&a.d[i]<p)i++;var s0=a.d[i-1],f=Math.max(0,Math.min(1,(p-s0)/Math.max(1e-6,a.d[i]-s0))),A=a.line[i-1],B=a.line[i],q=[A[0]+(B[0]-A[0])*f,A[1]+(B[1]-A[1])*f],rs=[q].concat(a.line.slice(i));
     a.mk.setLatLng(q);lrot(a.mk,brg(A,B));a.l.rest.setLatLngs(rs);a.l.flow.setLatLngs(rs);a.l.done.setLatLngs(a.line.slice(0,i).concat([q]));
     var rm=1-p/a.tot;if(LM.chip)LM.chip.textContent=(a.x.ve==='car'?'🚗 ':'🛵 ')+Math.max(1,Math.round((a.x.mn||a.tot*1.6)*rm))+' min · '+((a.x.km||a.tot)*rm).toFixed(1).replace('.',',')+' km';
-    if(LM.follow){var z=LM.fz||15;if(LM.map.getZoom()!==z)LM.map.setZoom(z,{animate:false});LM.map.panTo(q,{animate:false})}});
+    if(rm<.06&&!LM.zd){LM.zd=1;poiZoom(a.line[a.line.length-1])}if(rm>.5&&LM.zd===1){LM.zd=0;poiOff()}
+    if(LM.follow&&!LM.zd){var z=LM.fz||15;if(LM.map.getZoom()!==z)LM.map.setZoom(z,{animate:false});LM.map.panTo(q,{animate:false})}});
   LM.anim=requestAnimationFrame(lstep);
 }
 function lmDraw(){
@@ -2063,3 +2064,26 @@ function vsc(){if(!LM.map||!LM.el)return;var z=LM.map.getZoom();LM.el.style.setP
 var _ld=lmDraw;lmDraw=function(){_ld();vsc()};
 document.addEventListener('click',function(ev){var b=ev.target.closest&&ev.target.closest('[data-sim=go]');if(!b)return;SIM.on=SIM.on?0:1;SIM.id++;LM.follow=!!SIM.on;LM.key='';render()},true);
 document.addEventListener('change',function(ev){var t=ev.target,k=t.getAttribute&&t.getAttribute('data-sim');if(!k||k==='go')return;SIM[k]=t.value;if(SIM.on)SIM.id++;LM.key='';render()},true);
+
+/* ===== 8.3 : zoom sur la destination (maison, immeuble, commerces de proximité) ===== */
+var PK={cafe:['☕','Café'],restaurant:['🍽️','Restaurant'],fast_food:['🍔','Fast-food'],bank:['🏦','Banque'],atm:['🏦','Distributeur'],pharmacy:['💊','Pharmacie'],bakery:['🥖','Boulangerie'],hairdresser:['💈','Coiffeur'],beauty:['💅','Salon de beauté'],barber:['💈','Coiffeur'],supermarket:['🛒','Supermarché'],convenience:['🛒','Épicerie'],grocery:['🛒','Épicerie'],greengrocer:['🥕','Primeur'],butcher:['🥩','Boucherie'],clothes:['👕','Vêtements'],mobile_phone:['📱','Téléphonie'],kiosk:['🏪','Kiosque']};
+function poiParse(j,d){var bl=null,L=[];(j.elements||[]).forEach(function(x){var t=x.tags||{};
+  if(x.type==='way'&&t.building){var g=(x.geometry||[]).map(function(p){return [p.lat,p.lon]});if(!bl||g.length>bl.g.length)bl={t:t,g:g};return}
+  if(x.type==='node'){var k=t.amenity&&PK[t.amenity]?t.amenity:t.shop&&PK[t.shop]?t.shop:null,p=k?PK[k]:t.shop?['🏪','Commerce']:null;if(!p)return;L.push({ic:p[0],lb:p[1],n:t.name||'',m:Math.round(hav(d,[x.lat,x.lon])*1000),ll:[x.lat,x.lon]})}});
+  L.sort(function(a,b){return a.m-b.m});
+  var b=bl&&bl.t.building,lv=bl&&parseInt(bl.t['building:levels']),ty=!bl?['📍','Adresse']:/^(house|detached|semidetached_house|terrace|bungalow|villa)$/.test(b)?['🏠','Maison']:/^(apartments|residential|dormitory|flats)$/.test(b)||lv>=4?['🏢','Immeuble']:/^(commercial|retail|supermarket|kiosk|shop)$/.test(b)?['🏪','Local commercial']:lv&&lv<=2?['🏠','Maison probable']:['🏢','Bâtiment'];
+  return {ty:ty,g:bl?bl.g:null,L:L.slice(0,8)}}
+function poiOff(){if(LM.pg){LM.pg.clearLayers()}if(LM.pbox)LM.pbox.style.display='none'}
+function poiZoom(d){if(!LM.map)return;LM.zd=LM.zd||2;if(!LM.pg)LM.pg=L.layerGroup().addTo(LM.map);if(!LM.pbox||!LM.pbox.isConnected){LM.pbox=document.createElement('div');LM.pbox.className='poibox';LM.el.appendChild(LM.pbox)}
+  poiOff();LM.pbox.style.display='';LM.pbox.innerHTML='<b>📍 Destination</b><div>Recherche des lieux autour…</div>';LM.map.setView(d,18,{animate:true});
+  var kk=d[0].toFixed(4)+','+d[1].toFixed(4),go=function(r){if(!LM.pg||!LM.zd)return;poiOff();LM.pbox.style.display='';
+    if(r.g)L.polygon(r.g,{color:'#d4af37',weight:3,fillColor:'#f6dc85',fillOpacity:.4}).addTo(LM.pg);
+    L.marker(d,{icon:L.divIcon({className:'poi',html:'<div class="pm big"><b>'+r.ty[0]+'</b><i>'+r.ty[1]+'</i></div>',iconSize:[44,44],iconAnchor:[22,22]}),zIndexOffset:900}).addTo(LM.pg);
+    r.L.forEach(function(p){L.marker(p.ll,{icon:L.divIcon({className:'poi',html:'<div class="pm"><b>'+p.ic+'</b><i>'+e(p.n||p.lb)+'</i></div>',iconSize:[34,34],iconAnchor:[17,17]})}).addTo(LM.pg)});
+    LM.pbox.innerHTML='<b>'+r.ty[0]+' '+r.ty[1]+'</b>'+(r.L.length?r.L.slice(0,5).map(function(p){return '<div>'+p.ic+' '+e(p.n||p.lb)+' · '+p.m+' m</div>'}).join(''):'<div>Aucun commerce repéré à proximité.</div>')};
+  LM.pc=LM.pc||{};if(LM.pc[kk])return go(LM.pc[kk]);
+  var q='[out:json][timeout:12];(way(around:35,'+d[0]+','+d[1]+')[building];node(around:120,'+d[0]+','+d[1]+')[amenity~"^(cafe|restaurant|fast_food|bank|atm|pharmacy|bakery)$"];node(around:120,'+d[0]+','+d[1]+')[shop];);out geom 60;';
+  fetch('https://overpass-api.de/api/interpreter',{method:'POST',body:'data='+encodeURIComponent(q)}).then(function(r){return r.json()}).then(function(j){var r=poiParse(j,d);LM.pc[kk]=r;go(r)}).catch(function(){if(LM.pbox)LM.pbox.innerHTML='<b>📍 Destination</b><div>Détails indisponibles (connexion ou service saturé). Réessaie.</div>'})}
+document.addEventListener('click',function(ev){var b=ev.target.closest&&ev.target.closest('[data-poi]');if(!b||!LM.map)return;
+  if(LM.zd){LM.zd=0;poiOff();LM.key='';rr();return}
+  var sp=LM.spec&&LM.spec.routes[0];if(sp){LM.follow=false;poiZoom(sp.b)}},true);
