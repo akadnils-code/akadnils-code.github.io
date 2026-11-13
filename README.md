@@ -1,4 +1,4 @@
-# All In One — Amk Logistique (v8.5.0)
+# All In One — Amk Logistique (v8.6.2)
 Application web installable (PWA) de confirmation, livraison et suivi des commandes paiement à la livraison (COD) au Maroc.
 Données chiffrées sur le téléphone, suivi en direct et import automatique via Firebase (facultatifs).
 
@@ -9,6 +9,18 @@ Hors site : import-gmail.gs (Google Apps Script), GUIDE-MISE-EN-SERVICE.md, READ
 ## Mise à jour depuis Android
 1. GitHub > dépôt > Add file > Upload files : envoyer les fichiers ci-dessus, puis Commit changes.
 2. Rouvrir l'appli deux fois (mise à jour du cache). Le numéro de version s'affiche en haut.
+
+## Changements v8.6.1
+- Habillage noir / orange inspiré de « Max it » (Orange Maroc) ; la photo de profil, si présente, colore l’en-tête, le fond et le menu.
+- Rôles (cloud.js) : le rôle du compte est connu dès le démarrage, même hors ligne. Un livreur ne voit que Livraison, un vendeur que Commandes, sans Compte ni Finances.
+- Limite : cette garde est dans l’interface. L’isolation réelle des données demande les règles RLS Supabase (voir README).
+
+## Changements v8.6.0
+- Affichage plus compact (textes, cartes, boutons, menu du bas, carte) et compatible iPhone / Android / tous navigateurs.
+- Accueil : carte des livraisons en cours par ville + bouton « Me géolocaliser » (aussi sur la carte de suivi Livraison).
+- Adresses modifiables : bouton « Modifier adresse » sur chaque commande (nom, téléphone, adresse, ville + adresse du vendeur).
+- Accueil : carte « À vérifier » (adresse manquante, ville inconnue, sans livreur, +48 h non livrée, numéro en double).
+- Couleurs de l’en-tête, du fond, du menu et de la barre du navigateur calculées d’après la photo de profil.
 
 ## Changements v8.5.0 (réorganisation)
 - En-tête : ta photo (ou tes initiales) ouvre Mon profil.

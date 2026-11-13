@@ -1,6 +1,6 @@
 /* All In One 8.3.0 - script principal
    Sections repérées : modules réintégrés de la v3 | v5 : code de livraison, avis, demandes, motifs livreur, sati | v6 : catalogue, créneaux, photo de preuve, notifications, da | v7 : automatisations | v7.2 : QR code + NFC (QR hors ligne, aucune dépendance résea | v7.4 : scanner QR (caméra), tags NFC associés, diagnostic */
-var CIT=200000,KEY='cod_v4',OLDKEY='cod_v1',VER='8.5.0',IT=200000;
+var CIT=200000,KEY='cod_v4',OLDKEY='cod_v1',VER='8.6.2',IT=200000;
 var DEFTPL='Bonjour 👋 [boutique] a essayé de vous joindre pour confirmer votre commande de [produit]. Répondez OUI pour confirmer, ou dites-nous à quelle heure vous rappeler. Merci !';
 var DEFSCRIPT='1) Se présenter : « Bonjour, je vous appelle de la part de [boutique]. »\n2) Confirmer le produit, la quantité, le prix et la livraison.\n3) Confirmer la ville et l’adresse exacte (quartier, repère).\n4) Proposer un produit complémentaire ou un pack.\n5) Rappeler : paiement à la livraison, merci de préparer le montant.';
 var DEFSET={rc:0,db:'',tiles:'',ckey:'',net:[],deals:[],wallet:[],sim:{cpw:200,tc:70,td:80,nv:5,pa:60,pv:90,q:100},cf:5,bn:6,up:12,trial:30,dth:500,dpc:20,minc:100,phone:'',rib:'',holder:'',insta:'',pt:'',pco:'',pe:'',pc:'',pphoto:'',tpl:DEFTPL,script:DEFSCRIPT,lang:'fr',lastBackup:0};
@@ -2274,3 +2274,144 @@ render=function(){_ra();
 document.addEventListener('click',function(ev){var t=ev.target.closest&&ev.target.closest('[data-bio],[data-imp]');if(!t)return;
   if(t.hasAttribute('data-imp'))return impPull(1);var v=t.getAttribute('data-bio');v==='on'?bioEnable():v==='off'?bioOff():bioUnlock()},true);
 document.addEventListener('change',function(ev){var t=ev.target;if(!DB||!t.id)return;if(t.id==='iem'){DB.set.iemail=t.value.trim().slice(0,80);save()}else if(t.id==='ivd'){DB.set.ivendor=t.value.trim().slice(0,60);save()}},true);
+
+/* ===== 8.6.0 : carte d'accueil + géolocalisation, adresses modifiables, contrôles croisés, couleurs du profil ===== */
+(function(){
+var HM={el:null,map:null,g:null,me:null,acc:null,tries:0},LMS={me:null,acc:null},TH={k:''};
+function okL(){return !!(window.L&&window.L.map)}
+function geoErr(er){var c=er&&er.code;return c===1?'Localisation refusée. Autorise-la dans les réglages (iPhone : Réglages › Confidentialité › Service de localisation ; Android : Chrome › Paramètres du site › Localisation).':c===2?'Position introuvable. Active le GPS ou sors en extérieur.':c===3?'Délai dépassé. Réessaie.':'Géolocalisation indisponible sur cet appareil.'}
+function locate(map,store,btn){
+  if(!navigator.geolocation||!window.isSecureContext){toast(!navigator.geolocation?geoErr():'La géolocalisation demande une adresse https.');return}
+  var t0=btn?btn.textContent:'';if(btn){btn.disabled=true;btn.textContent='…'}
+  var done=function(){if(btn){btn.disabled=false;btn.textContent=t0}};
+  navigator.geolocation.getCurrentPosition(function(p){
+    var ll=[p.coords.latitude,p.coords.longitude],r=Math.min(p.coords.accuracy||50,2000);
+    try{
+      if(store.me)store.me.setLatLng(ll);else store.me=L.circleMarker(ll,{radius:8,color:'#fff',weight:3,fillColor:'#3b82f6',fillOpacity:1}).addTo(map);
+      if(store.acc){store.acc.setLatLng(ll);store.acc.setRadius(r)}else store.acc=L.circle(ll,{radius:r,color:'#3b82f6',weight:1,fillOpacity:.12}).addTo(map);
+      map.setView(ll,r>800?13:15)}catch(x){}
+    done()},function(er){toast(geoErr(er));done()},{enableHighAccuracy:true,timeout:15000,maximumAge:30000})}
+/* --- carte de l'accueil --- */
+function active(o){try{return !bad(o)&&(o.status==='En attente'||(o.status==='Confirmé'&&stage(o)<3))}catch(x){return false}}
+function hmFlush(){
+  var slot=$('hmslot');if(!slot)return;
+  if(!okL()){var n=$('hmn');if(n)n.textContent='Chargement de la carte…';if(HM.tries++<6)setTimeout(function(){if($('hmslot')&&!HM.map)hmFlush()},1500);return}
+  try{
+    var n2=$('hmn');if(n2)n2.textContent='';
+    if(!HM.el){HM.el=document.createElement('div');HM.el.className='lmap hm'}
+    slot.appendChild(HM.el);
+    if(!HM.map){HM.map=L.map(HM.el,{zoomControl:true,minZoom:4,maxZoom:18}).setView([31.8,-7.1],5);L.tileLayer(tileUrl(),{subdomains:'abcd',maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(HM.map);HM.g=L.layerGroup().addTo(HM.map)}
+    HM.map.invalidateSize();HM.g.clearLayers();
+    var by={},pts=[];
+    DB.orders.forEach(function(o){if(!active(o))return;var c=cfind(o.city);if(!c)return;var k=c[2];by[k]=by[k]||{c:c,n:0};by[k].n++});
+    Object.keys(by).forEach(function(k){var b=by[k],ll=[b.c[0],b.c[1]];pts.push(ll);
+      L.circleMarker(ll,{radius:7+Math.min(10,b.n*2),color:'#fff',weight:2,fillColor:'#d4af37',fillOpacity:.95}).bindTooltip(k+' · '+b.n,{permanent:b.n>0&&Object.keys(by).length<9}).addTo(HM.g)});
+    if(HM.me)pts.push(HM.me.getLatLng());
+    if(pts.length&&!HM.fit){HM.fit=1;HM.map.fitBounds(pts,{padding:[40,40],maxZoom:11})}
+  }catch(x){}
+}
+function homeMap(){
+  var A=$('app');if(!A||$('hmc'))return;
+  var c=document.createElement('div');c.className='card';c.id='hmc';
+  c.innerHTML='<div class="row"><h2 style="margin:0">Carte des livraisons</h2><button class="b sm pri" data-hm="loc" style="flex:0 0 auto;min-width:0">📍 Me géolocaliser</button></div><div id="hmslot" class="lslot"></div><div class="mut" id="hmn"></div>';
+  var g=A.querySelector('.grid');if(g&&g.parentNode===A)g.parentNode.insertBefore(c,g.nextSibling);else A.appendChild(c);
+  hmFlush()}
+/* bouton sur la carte de suivi (Livraison) */
+function lmCtl(){
+  if(!okL()||!LM||!LM.map||LM.__loc===LM.map)return;LM.__loc=LM.map;
+  var C=L.Control.extend({options:{position:'topright'},onAdd:function(){var b=L.DomUtil.create('button','locbtn');b.type='button';b.title='Me géolocaliser';b.setAttribute('aria-label','Me géolocaliser');b.textContent='📍';L.DomEvent.disableClickPropagation(b);L.DomEvent.on(b,'click',function(ev){L.DomEvent.stop(ev);locate(LM.map,LMS,null)});return b}});
+  new C().addTo(LM.map)}
+/* --- contrôles croisés (admin) --- */
+function checks(){
+  var L1=[],ph={},now=Date.now();
+  DB.orders.forEach(function(o){if(!active(o))return;var k=String(o.phone||'');ph[k]=(ph[k]||0)+1});
+  DB.orders.forEach(function(o){if(!active(o))return;var p=[];
+    if(!o.address||!o.city)p.push('adresse ou ville manquante');
+    else if(!cfind(o.city))p.push('ville non reconnue (pas de carte)');
+    if(o.status==='Confirmé'&&!o.courier)p.push('sans livreur');
+    var t=Date.parse(o.cdate||'');if(o.status==='Confirmé'&&t&&now-t>2*864e5)p.push('confirmée depuis +48 h, non livrée');
+    if(ph[String(o.phone||'')]>1)p.push('numéro en double');
+    if(p.length)L1.push({o:o,t:p.join(' · ')})});
+  return L1}
+function homeChecks(){
+  var A=$('app'),m=$('hmc');if(!A||$('ctl'))return;var l=checks();if(!l.length)return;
+  var c=document.createElement('div');c.className='card';c.id='ctl';
+  c.innerHTML='<h2>À vérifier ('+l.length+')</h2>'+l.slice(0,6).map(function(x){return '<div class="row" style="padding:5px 0;gap:8px"><span style="min-width:0"><b>'+e(x.o.name)+'</b><div class="mut">'+e(x.t)+'</div></span><button class="b sm" data-ae="'+e(x.o.id)+'" style="flex:0 0 auto;min-width:0">✏️</button></div>'}).join('')+(l.length>6?'<div class="mut">+ '+(l.length-6)+' autre(s) dans Commandes.</div>':'');
+  if(m&&m.parentNode)m.parentNode.insertBefore(c,m.nextSibling);else A.appendChild(c)}
+/* --- adresses modifiables --- */
+function addEditBtns(){
+  var A=$('app');if(!A||!DB)return;
+  var ns=A.querySelectorAll('[data-act][data-id]');
+  for(var i=0;i<ns.length;i++){
+    var id=ns[i].getAttribute('data-id'),c=ns[i].closest('.card');if(!c||c.querySelector('[data-ae]'))continue;
+    if(!byId(id))continue;
+    var b=document.createElement('button');b.className='b sm';b.setAttribute('data-ae',id);b.textContent='✏️ Modifier adresse';
+    var bs=c.querySelectorAll('.btns');(bs.length?bs[bs.length-1]:c).appendChild(b)}}
+function openAE(id){
+  var o=byId(id);if(!o)return;var v=null;try{v=vget(o.vendor)}catch(x){}
+  var h='<h2>Modifier la commande</h2><label>Nom du client</label><input id="ae-n" value="'+e(o.name)+'"><label>Téléphone</label><input id="ae-p" inputmode="tel" value="'+e(o.phone)+'"><label>Adresse de livraison</label><input id="ae-a" value="'+e(o.address)+'"><label>Ville</label><input id="ae-c" list="mc" value="'+e(o.city)+'">';
+  if(v)h+='<h2 style="margin-top:10px">Retrait chez '+e(v.name)+'</h2><label>Adresse du vendeur</label><input id="ae-va" value="'+e(v.addr||'')+'"><label>Ville du vendeur</label><input id="ae-vc" list="mc" value="'+e(v.city||'')+'">';
+  h+='<div class="btns"><button class="b pri" data-ae-do="'+e(id)+'">Enregistrer</button><button class="b" data-ae-x="1">Annuler</button></div>';
+  ovl(h)}
+function saveAE(id){
+  var o=byId(id);if(!o)return;var n=$('ae-n').value.trim(),m=mph($('ae-p').value);
+  if(!n)return toast('Le nom est obligatoire.');if(!m)return toast('Numéro marocain invalide (06… ou 07…).');
+  o.name=n;o.phone=m;o.address=$('ae-a').value.trim();o.city=$('ae-c').value.trim();
+  var v=null;try{v=vget(o.vendor)}catch(x){}
+  if(v&&$('ae-va')){v.addr=$('ae-va').value.trim();v.city=$('ae-vc').value.trim()}
+  save();qclose();try{if(o.tid)pub(o)}catch(x){}render();toast('Modifié ✅')}
+document.addEventListener('click',function(ev){
+  var t=ev.target.closest&&ev.target.closest('[data-hm],[data-ae],[data-ae-do],[data-ae-x]');if(!t)return;
+  ev.preventDefault();ev.stopPropagation();
+  if(t.hasAttribute('data-hm')){if(HM.map)locate(HM.map,HM,t);else toast('Carte pas encore chargée.')}
+  else if(t.hasAttribute('data-ae'))openAE(t.getAttribute('data-ae'));
+  else if(t.hasAttribute('data-ae-do'))saveAE(t.getAttribute('data-ae-do'));
+  else qclose()},true);
+/* --- couleurs d'après la photo de profil --- */
+function rgb2hsl(r,g,b){r/=255;g/=255;b/=255;var mx=Math.max(r,g,b),mn=Math.min(r,g,b),h=0,s=0,l=(mx+mn)/2,d=mx-mn;if(d){s=l>.5?d/(2-mx-mn):d/(mx+mn);h=mx===r?(g-b)/d+(g<b?6:0):mx===g?(b-r)/d+2:(r-g)/d+4;h*=60}return [h,s,l]}
+function hsl2hex(h,s,l){var a=s*Math.min(l,1-l),f=function(n){var k=(n+h/30)%12,c=l-a*Math.max(-1,Math.min(k-3,9-k,1));return ('0'+Math.round(255*c).toString(16)).slice(-2)};return '#'+f(0)+f(8)+f(4)}
+function setMeta(c){var ms=document.querySelectorAll('meta[name="theme-color"]');if(!ms.length){var m=document.createElement('meta');m.name='theme-color';document.head.appendChild(m);ms=[m]}for(var i=0;i<ms.length;i++){ms[i].removeAttribute('media');ms[i].setAttribute('content',c)}}
+function themeApply(){
+  var ph=(DB&&DB.set&&DB.set.pphoto)||'',k=ph?ph.length+ph.slice(-24):'';if(k===TH.k)return;TH.k=k;
+  var st=$('pcol');
+  if(!ph){if(st)st.remove();setMeta('#111111');return}
+  var im=new Image();im.onload=function(){try{
+    var cv=document.createElement('canvas');cv.width=cv.height=24;var cx=cv.getContext('2d');cx.drawImage(im,0,0,24,24);
+    var d=cx.getImageData(0,0,24,24).data,B12=[],n;
+    for(n=0;n<12;n++)B12.push({w:0,r:0,g:0,b:0});
+    for(var i=0;i<d.length;i+=4){var R=d[i],G=d[i+1],B=d[i+2],mx=Math.max(R,G,B),mn=Math.min(R,G,B),s=mx?(mx-mn)/mx:0,l=(mx+mn)/510;if(l<.1||l>.92)continue;var wt=.1+s*s*3,bi=Math.floor(rgb2hsl(R,G,B)[0]/30)%12,q=B12[bi];q.w+=wt;q.r+=R*wt;q.g+=G*wt;q.b+=B*wt}
+    var ord=B12.map(function(x,k){return {k:k,w:x.w}}).sort(function(a,b){return b.w-a.w});
+    if(!ord[0].w)return;
+    var top=ord[0].k,sec=null;
+    for(n=1;n<12;n++){var dk=Math.abs(ord[n].k-top);dk=Math.min(dk,12-dk);if(ord[n].w>ord[0].w*.12&&dk>=2){sec=ord[n].k;break}}
+    var col=function(k){var x=B12[k];return rgb2hsl(x.r/x.w,x.g/x.w,x.b/x.w)};
+    var c_1=col(top),c_2=sec==null?[(c_1[0]+35)%360,c_1[1],c_1[2]]:col(sec);
+    var h=c_1[0],s2=Math.max(.35,Math.min(.85,c_1[1])),h2=c_2[0],s3=Math.max(.3,Math.min(.85,c_2[1]));
+    var c1=hsl2hex(h,s2,.30),c2=hsl2hex(h,s2,.18),hi=hsl2hex(h,s2,.5);
+    var bgA=hsl2hex(h,s2,.82),bgB=hsl2hex(h2,s3,.9),dkA=hsl2hex(h,s2*.8,.2),dkB=hsl2hex(h2,s3*.8,.1);
+    var css=':root{--pc:'+c1+';--pc-d:'+c2+';--bgA:'+bgA+';--bgB:'+bgB+';--bg:'+bgB+'}@media (prefers-color-scheme:dark){:root{--bgA:'+dkA+';--bgB:'+dkB+';--bg:'+dkB+'}}'
+      +'html,body{background-color:var(--bgB)!important}body{background-image:linear-gradient(160deg,var(--bgA),var(--bgB) 70%)!important;background-attachment:fixed;background-repeat:no-repeat;min-height:100vh}'
+      +'header{background:linear-gradient(135deg,'+c2+','+c1+')!important;border-bottom-color:'+hi+'!important}'
+      +'nav{background:hsla('+Math.round(h)+','+Math.round(s2*100)+'%,13%,.95)!important;border-color:'+hi+'!important}'
+      +'.seg button.on,.chip.on{background:'+c1+'!important;color:#fff!important;border-color:'+c1+'!important}';
+    var el=$('pcol');if(!el){el=document.createElement('style');el.id='pcol';document.head.appendChild(el)}el.textContent=css;setMeta(c2)
+  }catch(x){}};
+  im.src=ph}
+var _r10=render;
+render=function(){_r10();
+  if(!DB||S.locked||Q.get('t')||Q.get('l')||Q.get('v'))return;
+  try{if(S.tab==='home'){homeMap();homeChecks()}addEditBtns();lmCtl();themeApply()}catch(x){}};
+})();
+
+/* ===== 8.6.1 : rôles (garde d'interface) : livreur et vendeur n'ont que l'onglet qui les concerne ===== */
+(function(){
+function rl(){try{var r=window.cloudRole&&window.cloudRole();return r==='courier'||r==='vendor'?r:null}catch(x){return null}}
+var _rg=render;
+render=function(){var r=rl();if(r&&DB&&!S.locked&&!Q.get('t')&&!Q.get('l')&&!Q.get('v')){var ok=r==='courier'?'del':'ord';if(S.tab!==ok){S.tab=ok;S.sub='';S.vsel='';S.edit=''}}
+  _rg();
+  if(!r||!DB||S.locked||Q.get('t')||Q.get('l')||Q.get('v'))return;
+  try{var ok2=r==='courier'?'del':'ord',ns=document.querySelectorAll('nav button');for(var i=0;i<ns.length;i++)if(ns[i].getAttribute('data-v')!==ok2)ns[i].style.display='none';
+    var hs=$('hs');if(hs)hs.style.display='none';
+    var bs=document.querySelectorAll('#app [data-ae],#app [data-act="edit"],#app [data-act="goto"]');for(var j=0;j<bs.length;j++)bs[j].style.display='none';
+    document.body.setAttribute('data-role',r)}catch(x){}};
+})();
