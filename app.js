@@ -1,6 +1,6 @@
 /* All In One 8.3.0 - script principal
    Sections repérées : modules réintégrés de la v3 | v5 : code de livraison, avis, demandes, motifs livreur, sati | v6 : catalogue, créneaux, photo de preuve, notifications, da | v7 : automatisations | v7.2 : QR code + NFC (QR hors ligne, aucune dépendance résea | v7.4 : scanner QR (caméra), tags NFC associés, diagnostic */
-var CIT=200000,KEY='cod_v4',OLDKEY='cod_v1',VER='8.6.2',IT=200000;
+var CIT=200000,KEY='cod_v4',OLDKEY='cod_v1',VER='8.7.0',IT=200000;
 var DEFTPL='Bonjour 👋 [boutique] a essayé de vous joindre pour confirmer votre commande de [produit]. Répondez OUI pour confirmer, ou dites-nous à quelle heure vous rappeler. Merci !';
 var DEFSCRIPT='1) Se présenter : « Bonjour, je vous appelle de la part de [boutique]. »\n2) Confirmer le produit, la quantité, le prix et la livraison.\n3) Confirmer la ville et l’adresse exacte (quartier, repère).\n4) Proposer un produit complémentaire ou un pack.\n5) Rappeler : paiement à la livraison, merci de préparer le montant.';
 var DEFSET={rc:0,db:'',tiles:'',ckey:'',net:[],deals:[],wallet:[],sim:{cpw:200,tc:70,td:80,nv:5,pa:60,pv:90,q:100},cf:5,bn:6,up:12,trial:30,dth:500,dpc:20,minc:100,phone:'',rib:'',holder:'',insta:'',pt:'',pco:'',pe:'',pc:'',pphoto:'',tpl:DEFTPL,script:DEFSCRIPT,lang:'fr',lastBackup:0};
@@ -2303,7 +2303,7 @@ function hmFlush(){
     if(!HM.map){HM.map=L.map(HM.el,{zoomControl:true,minZoom:4,maxZoom:18}).setView([31.8,-7.1],5);L.tileLayer(tileUrl(),{subdomains:'abcd',maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(HM.map);HM.g=L.layerGroup().addTo(HM.map)}
     HM.map.invalidateSize();HM.g.clearLayers();
     var by={},pts=[];
-    DB.orders.forEach(function(o){if(!active(o))return;var c=cfind(o.city);if(!c)return;var k=c[2];by[k]=by[k]||{c:c,n:0};by[k].n++});
+    DB.orders.forEach(function(o){if(!active(o))return;if(o.lat!=null&&o.lng!=null&&isFinite(o.lat)&&isFinite(o.lng)){var pl=[+o.lat,+o.lng];pts.push(pl);L.circleMarker(pl,{radius:6,color:'#fff',weight:2,fillColor:'#3b82f6',fillOpacity:1}).bindTooltip(String(o.name||'')).addTo(HM.g)}var c=cfind(o.city);if(!c)return;var k=c[2];by[k]=by[k]||{c:c,n:0};by[k].n++});
     Object.keys(by).forEach(function(k){var b=by[k],ll=[b.c[0],b.c[1]];pts.push(ll);
       L.circleMarker(ll,{radius:7+Math.min(10,b.n*2),color:'#fff',weight:2,fillColor:'#d4af37',fillOpacity:.95}).bindTooltip(k+' · '+b.n,{permanent:b.n>0&&Object.keys(by).length<9}).addTo(HM.g)});
     if(HM.me)pts.push(HM.me.getLatLng());
@@ -2352,13 +2352,17 @@ function openAE(id){
   var h='<h2>Modifier la commande</h2><label>Nom du client</label><input id="ae-n" value="'+e(o.name)+'"><label>Téléphone</label><input id="ae-p" inputmode="tel" value="'+e(o.phone)+'"><label>Adresse de livraison</label><input id="ae-a" value="'+e(o.address)+'"><label>Ville</label><input id="ae-c" list="mc" value="'+e(o.city)+'">';
   if(v)h+='<h2 style="margin-top:10px">Retrait chez '+e(v.name)+'</h2><label>Adresse du vendeur</label><input id="ae-va" value="'+e(v.addr||'')+'"><label>Ville du vendeur</label><input id="ae-vc" list="mc" value="'+e(v.city||'')+'">';
   h+='<div class="btns"><button class="b pri" data-ae-do="'+e(id)+'">Enregistrer</button><button class="b" data-ae-x="1">Annuler</button></div>';
-  ovl(h)}
+  var ov=ovl(h),ia=ov.querySelector('#ae-a'),iv=ov.querySelector('#ae-va');
+  [[ia,o],[iv,v]].forEach(function(p){var el=p[0],src=p[1];if(!el)return;el.dataset.init='1';el.dataset.pl=el.value;if(src&&src.lat!=null&&src.lat!==''&&isFinite(src.lat)&&src.lng!=null&&isFinite(src.lng)){el.dataset.lat=src.lat;el.dataset.lng=src.lng}});
+  if(window.__sugDecorate)window.__sugDecorate(ov)}
 function saveAE(id){
   var o=byId(id);if(!o)return;var n=$('ae-n').value.trim(),m=mph($('ae-p').value);
   if(!n)return toast('Le nom est obligatoire.');if(!m)return toast('Numéro marocain invalide (06… ou 07…).');
   o.name=n;o.phone=m;o.address=$('ae-a').value.trim();o.city=$('ae-c').value.trim();
   var v=null;try{v=vget(o.vendor)}catch(x){}
   if(v&&$('ae-va')){v.addr=$('ae-va').value.trim();v.city=$('ae-vc').value.trim()}
+  var da=$('ae-a');if(da&&da.dataset.lat){o.lat=+da.dataset.lat;o.lng=+da.dataset.lng}else{delete o.lat;delete o.lng}
+  var dv=$('ae-va');if(v&&dv){if(dv.dataset.lat){v.lat=+dv.dataset.lat;v.lng=+dv.dataset.lng}else{delete v.lat;delete v.lng}}
   save();qclose();try{if(o.tid)pub(o)}catch(x){}render();toast('Modifié ✅')}
 document.addEventListener('click',function(ev){
   var t=ev.target.closest&&ev.target.closest('[data-hm],[data-ae],[data-ae-do],[data-ae-x]');if(!t)return;
@@ -2414,4 +2418,156 @@ render=function(){var r=rl();if(r&&DB&&!S.locked&&!Q.get('t')&&!Q.get('l')&&!Q.g
     var hs=$('hs');if(hs)hs.style.display='none';
     var bs=document.querySelectorAll('#app [data-ae],#app [data-act="edit"],#app [data-act="goto"]');for(var j=0;j<bs.length;j++)bs[j].style.display='none';
     document.body.setAttribute('data-role',r)}catch(x){}};
+})();
+
+/* ===== 8.7.0 : suggestions d'adresses et de villes + repère sur la carte ===== */
+(function(){
+var TYPES=['Rue ','Boulevard ','Avenue ','Route ','Quartier ','Lotissement ','Résidence ','Immeuble ','Hay ','Derb ','Rond-point ','Place ','Impasse ','Cité ','Villa ','Douar '];
+var CITYOF={'e-a':'e-c','f-a':'f-c','ae-a':'ae-c','ae-va':'ae-vc'},ADR=/^(e-a|f-a|w-a|b-a|ae-a|ae-va)$/,CTY=/^(e-c|f-c|v-c|n-c|ae-c|ae-vc)$/;
+var BX=null,CUR=null,TM=null,AB=null,CACHE={},PK=null,PF=null;
+function isAddr(el){return !!el&&el.tagName==='INPUT'&&(ADR.test(el.id)||el.getAttribute('data-vf')==='addr')}
+function isCity(el){return !!el&&el.tagName==='INPUT'&&(CTY.test(el.id)||el.getAttribute('data-vf')==='city')}
+function canPin(el){return isAddr(el)&&el.id!=='w-a'&&el.id!=='b-a'}
+function nz(s){s=String(s||'').toLowerCase();try{s=s.normalize('NFD').replace(/[\u0300-\u036f]/g,'')}catch(x){}return s}
+function okL2(){return !!(window.L&&window.L.map)}
+function cityVal(el){var c=null;if(CITYOF[el.id])c=$(CITYOF[el.id]);else if(el.getAttribute('data-vf')==='addr'){c=document.querySelector('input[data-vf="city"]')}return c?c.value.trim():''}
+function num(v){return v!=null&&v!==''&&isFinite(v)}
+/* --- suggestions locales (hors ligne) --- */
+function localCity(q){var n=nz(q),o=[];(MCN||[]).forEach(function(c){var k=nz(c);if(k.indexOf(n)===0)o.unshift({t:c,kind:'ville'});else if(k.indexOf(n)>0)o.push({t:c,kind:'ville'})});return o.slice(0,6)}
+function localAddr(q,city){
+  var n=nz(q),out=[],seen={};
+  if(n.length<=14&&n.indexOf(' ')<0)TYPES.forEach(function(t){var k=nz(t);if(k.indexOf(n)===0&&k.trim()!==n)out.push({t:t,kind:'type'})});
+  var pool=[];
+  DB.orders.forEach(function(o){if(o.address&&(!city||nz(o.city)===nz(city)))pool.push([o.address,o.lat,o.lng])});
+  DB.vend.forEach(function(v){if(v.addr)pool.push([v.addr,v.lat,v.lng])});
+  pool.forEach(function(p){var k=nz(p[0]);if(seen[k]||k===n||k.indexOf(n)<0||out.length>=9)return;seen[k]=1;out.push({t:p[0],lat:num(p[1])?+p[1]:null,lng:num(p[2])?+p[2]:null,kind:'hist'})});
+  return out}
+/* --- suggestions en ligne (OpenStreetMap / Nominatim) --- */
+function remote(q,city,cityMode,cb){
+  var key=(cityMode?'c|':'a|')+nz(q)+'|'+nz(city);if(CACHE[key])return cb(CACHE[key]);
+  if(AB){try{AB.abort()}catch(x){}}
+  AB=window.AbortController?new AbortController():null;
+  var url='https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=6&countrycodes=ma&accept-language=fr&q='+encodeURIComponent(cityMode?q:(q+(city?', '+city:'')+', Maroc'));
+  fetch(url,AB?{signal:AB.signal}:{}).then(function(r){return r.json()}).then(function(j){
+    var out=[],seen={};(j||[]).forEach(function(r){var a=r.address||{},ct=a.city||a.town||a.village||a.municipality||a.county||'',t;
+      if(cityMode){t=ct||r.name||''}
+      else{var st=a.road||a.pedestrian||a.footway||a.path||'',sub=a.suburb||a.neighbourhood||a.quarter||a.city_district||'';
+        t=[((a.house_number?a.house_number+' ':'')+st).trim(),sub].filter(Boolean).join(', ');if(!t)t=(r.name||String(r.display_name||'').split(',').slice(0,2).join(',')).trim()}
+      if(!t||seen[nz(t)])return;seen[nz(t)]=1;out.push({t:t,city:ct,lat:+r.lat,lng:+r.lon,kind:'net'})});
+    CACHE[key]=out;cb(out)}).catch(function(){cb([])})}
+/* --- liste déroulante --- */
+function position(){
+  if(!BX||!CUR)return;var r=CUR.getBoundingClientRect(),vh=window.innerHeight,below=vh-r.bottom,h=Math.min(260,BX.scrollHeight);
+  BX.style.left=Math.max(6,r.left)+'px';BX.style.width=Math.min(r.width,window.innerWidth-12)+'px';
+  if(below<h+10&&r.top>below){BX.style.top='auto';BX.style.bottom=(vh-r.top+2)+'px'}else{BX.style.bottom='auto';BX.style.top=(r.bottom+2)+'px'}}
+function hide(){if(BX)BX.style.display='none';CUR=null}
+function show(el,items){
+  if(!items.length){hide();return}
+  if(!BX){BX=document.createElement('div');BX.className='sgb';BX.addEventListener('mousedown',function(ev){ev.preventDefault()});document.body.appendChild(BX)}
+  CUR=el;BX._it=items;
+  BX.innerHTML=items.map(function(it,i){return '<button type="button" class="sgi" data-sgi="'+i+'"><span>'+e(it.t)+'</span><small>'+(it.kind==='hist'?'déjà utilisée':it.kind==='net'?'📍 carte':it.kind==='type'?'type de voie':'ville')+'</small></button>'}).join('');
+  BX.style.display='block';position()}
+function suggest(el,cityMode){
+  clearTimeout(TM);var q=el.value.trim();if(q.length<2){hide();return}
+  var loc=cityMode?localCity(q):localAddr(q,cityVal(el));show(el,loc);
+  if(q.length<3||(cityMode&&loc.length>=4))return;
+  TM=setTimeout(function(){remote(q,cityVal(el),cityMode,function(net){
+    if(document.activeElement!==el)return;var seen={},all=[];
+    loc.concat(net).forEach(function(it){var k=nz(it.t);if(seen[k])return;seen[k]=1;all.push(it)});show(el,all.slice(0,9))})},500)}
+function mark(el){var r=el.nextElementSibling;if(r&&r.className==='pinrow'){var s=r.querySelector('span');if(s)s.textContent=el.dataset.lat?'✅ Repère enregistré':''}}
+function pick(it){
+  var el=CUR;if(!el)return;el.value=it.t;el.dataset.init='1';
+  if(num(it.lat)&&num(it.lng)){el.dataset.lat=it.lat;el.dataset.lng=it.lng;el.dataset.pl=it.t}else{delete el.dataset.lat;delete el.dataset.lng;el.dataset.pl=it.t}
+  if(el.getAttribute('data-vf')==='addr'){var v=vid(S.vsel);if(v){if(el.dataset.lat){v.lat=+el.dataset.lat;v.lng=+el.dataset.lng}else{delete v.lat;delete v.lng}}}
+  if(it.city&&isAddr(el)){var c=CITYOF[el.id]?$(CITYOF[el.id]):document.querySelector('input[data-vf="city"]');if(c&&!c.value){c.value=it.city;c.dispatchEvent(new Event('change',{bubbles:true}))}}
+  el.dispatchEvent(new Event('change',{bubbles:true}));hide();mark(el)}
+/* --- initialisation des champs (repère existant + bouton carte) --- */
+function prep(el){
+  el.dataset.init='1';var src=null;
+  if(el.id==='e-a'){var b=el.closest('.card');b=b&&b.querySelector('[data-act="esave"]');src=b&&byId(b.getAttribute('data-id'))}
+  else if(el.getAttribute('data-vf')==='addr')src=vid(S.vsel);
+  if(src&&num(src.lat)&&num(src.lng)){el.dataset.lat=src.lat;el.dataset.lng=src.lng}
+  el.dataset.pl=el.value}
+function decorate(root){
+  var ins=(root||document).querySelectorAll('input');
+  for(var i=0;i<ins.length;i++){var el=ins[i];
+    if(isCity(el))el.removeAttribute('list');
+    if(!canPin(el))continue;
+    if(!el.dataset.init)prep(el);
+    var nx=el.nextElementSibling;if(nx&&nx.className==='pinrow'){mark(el);continue}
+    if(!el.id)el.id='pinadr';
+    var d=document.createElement('div');d.className='pinrow';d.innerHTML='<button type="button" class="b sm" data-pin="'+el.id+'">📍 Marquer le repère sur la carte</button><span class="mut"></span>';
+    el.parentNode.insertBefore(d,el.nextSibling);mark(el)}}
+/* --- sélecteur de repère --- */
+function closePk(){if(PK){try{PK.map.remove()}catch(x){}PK.o.remove();PK=null}}
+function setM(ll){PK.ll=ll;if(PK.mk)PK.mk.setLatLng(ll);else{PK.mk=L.marker(ll,{draggable:true,icon:L.divIcon({className:'pkpin',html:'📍',iconSize:[30,30],iconAnchor:[15,28]})}).addTo(PK.map);PK.mk.on('dragend',function(){var p=PK.mk.getLatLng();PK.ll=[p.lat,p.lng]})}}
+function pkMsg(m){var s=PK&&PK.o.querySelector('[data-pk-s]');if(s)s.textContent=m||''}
+function pkFind(){
+  var el=PK.el,q=el.value.trim();if(!q){pkMsg('Écris d’abord l’adresse.');return}
+  pkMsg('Recherche…');var c=cityVal(el);
+  fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=ma&accept-language=fr&q='+encodeURIComponent(q+(c?', '+c:'')+', Maroc')).then(function(r){return r.json()}).then(function(j){
+    if(!PK)return;if(j&&j[0]){var ll=[+j[0].lat,+j[0].lon];setM(ll);PK.map.setView(ll,17);pkMsg('Vérifie et ajuste le point si besoin.')}else pkMsg('Adresse introuvable : touche la carte pour placer le repère.')}).catch(function(){pkMsg('Pas de connexion : touche la carte pour placer le repère.')})}
+function pkLoc(){
+  if(!navigator.geolocation||!window.isSecureContext)return pkMsg('Position indisponible.');
+  pkMsg('Localisation…');navigator.geolocation.getCurrentPosition(function(p){if(!PK)return;var ll=[p.coords.latitude,p.coords.longitude];setM(ll);PK.map.setView(ll,17);pkMsg('')},function(){pkMsg('Localisation refusée ou impossible.')},{enableHighAccuracy:true,timeout:15000,maximumAge:30000})}
+function pkOpen(el){
+  if(!okL2())return toast('Carte pas encore chargée, réessaie dans un instant.');
+  closePk();
+  var o=document.createElement('div');o.className='pkw';
+  o.innerHTML='<div class="pkc"><h2>Marquer le repère</h2><p class="mut" style="margin:0 0 6px">Touche la carte ou glisse le point 📍 sur l’endroit exact.</p><div class="pkm"></div><div class="btns"><button type="button" class="b sm" data-pk="loc">📍 Ma position</button><button type="button" class="b sm" data-pk="find">🔎 Chercher l’adresse</button></div><div class="mut" data-pk-s style="min-height:16px"></div><div class="btns"><button type="button" class="b pri" data-pk="ok">Valider</button><button type="button" class="b" data-pk="no">Annuler</button></div></div>';
+  document.body.appendChild(o);
+  var c0=num(el.dataset.lat)?[+el.dataset.lat,+el.dataset.lng]:null,cf=cfind(cityVal(el));
+  var map=L.map(o.querySelector('.pkm'),{zoomControl:true,minZoom:4,maxZoom:19}).setView(c0||(cf?[cf[0],cf[1]]:[31.8,-7.1]),c0?17:(cf?13:5));
+  L.tileLayer(tileUrl(),{subdomains:'abcd',maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(map);
+  PK={el:el,o:o,map:map,mk:null,ll:c0};if(c0)setM(c0);
+  map.on('click',function(ev){setM([ev.latlng.lat,ev.latlng.lng])});
+  setTimeout(function(){if(PK)PK.map.invalidateSize()},200);
+  if(!c0&&el.value.trim().length>3)pkFind()}
+function pkOk(){
+  if(!PK||!PK.ll)return toast('Touche la carte pour placer le repère.');
+  var el=PK.el,ll=PK.ll;el.dataset.lat=ll[0];el.dataset.lng=ll[1];el.dataset.init='1';el.dataset.pl=el.value;
+  if(el.getAttribute('data-vf')==='addr'){var v=vid(S.vsel);if(v){v.lat=ll[0];v.lng=ll[1];save()}}
+  closePk();mark(el);
+  if(!el.value.trim()){fetch('https://nominatim.openstreetmap.org/reverse?format=jsonv2&addressdetails=1&zoom=18&accept-language=fr&lat='+ll[0]+'&lon='+ll[1]).then(function(r){return r.json()}).then(function(r){
+    var a=(r&&r.address)||{},t=[((a.house_number?a.house_number+' ':'')+(a.road||'')).trim(),a.suburb||a.neighbourhood||a.quarter||''].filter(Boolean).join(', ');
+    if(t&&!el.value.trim()){el.value=t;el.dataset.pl=t;el.dispatchEvent(new Event('change',{bubbles:true}))}
+    var c=CITYOF[el.id]?$(CITYOF[el.id]):null,ct=a.city||a.town||a.village||'';if(c&&!c.value&&ct)c.value=ct}).catch(function(){})}
+  else el.dispatchEvent(new Event('change',{bubbles:true}));
+  toast('Repère enregistré 📍')}
+/* --- événements --- */
+document.addEventListener('input',function(ev){
+  var el=ev.target;
+  if(isAddr(el)){
+    if(el.dataset.pl!==undefined&&el.value!==el.dataset.pl&&el.dataset.lat){delete el.dataset.lat;delete el.dataset.lng;mark(el);
+      if(el.getAttribute('data-vf')==='addr'){var v=vid(S.vsel);if(v){delete v.lat;delete v.lng}}}
+    suggest(el,false)}
+  else if(isCity(el)){el.removeAttribute('list');suggest(el,true)}},true);
+document.addEventListener('focusin',function(ev){var el=ev.target;if(isCity(el))el.removeAttribute('list');if(canPin(el)&&!el.dataset.init)prep(el)},true);
+document.addEventListener('focusout',function(){setTimeout(function(){var a=document.activeElement;if(!a||a!==CUR)hide()},250)},true);
+window.addEventListener('resize',position);window.addEventListener('scroll',function(){if(BX&&BX.style.display==='block')position()},true);
+document.addEventListener('click',function(ev){
+  var t=ev.target.closest&&ev.target.closest('.sgi,[data-pin],[data-pk],[data-act="esave"],[data-act="add"]');if(!t)return;
+  if(t.classList.contains('sgi')){ev.preventDefault();ev.stopPropagation();var it=BX&&BX._it&&BX._it[+t.getAttribute('data-sgi')];if(it)pick(it);return}
+  if(t.hasAttribute('data-pin')){ev.preventDefault();ev.stopPropagation();var el=$(t.getAttribute('data-pin'));if(el)pkOpen(el);return}
+  if(t.hasAttribute('data-pk')){ev.preventDefault();ev.stopPropagation();var k=t.getAttribute('data-pk');if(k==='ok')pkOk();else if(k==='no')closePk();else if(k==='loc')pkLoc();else if(k==='find')pkFind();return}
+  var a=t.getAttribute('data-act');
+  if(a==='esave'){var o=byId(t.getAttribute('data-id')),f=$('e-a');if(o&&f&&f.dataset.init){if(num(f.dataset.lat)){o.lat=+f.dataset.lat;o.lng=+f.dataset.lng}else{delete o.lat;delete o.lng}}}
+  else if(a==='add'){var g=$('f-a');PF=g&&num(g.dataset.lat)?{lat:+g.dataset.lat,lng:+g.dataset.lng,a:g.value.trim()}:null;setTimeout(function(){PF=null},0)}},true);
+/* nouvelle commande : on garde le repère choisi */
+var _ao=addOrder;
+addOrder=function(){var r=_ao.apply(this,arguments);if(r==='ok'&&PF){var o=DB.orders[DB.orders.length-1];if(o&&o.address===PF.a){o.lat=PF.lat;o.lng=PF.lng}}return r};
+/* lien livreur : coordonnées exactes si un repère existe */
+var _tl=tlink;
+tlink=function(o,k){var u=_tl(o,k);if(k!=='l')return u;
+  try{var i=u.indexOf('?l='),d=JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(u.slice(i+3)))))),v=null;try{v=vget(o.vendor)}catch(x){}
+    if(num(o.lat)&&num(o.lng))d.cl=[+o.lat,+o.lng];if(v&&num(v.lat)&&num(v.lng))d.vl=[+v.lat,+v.lng];
+    return u.slice(0,i)+'?l='+encq(d)}catch(x){return u}};
+var _rcz=renderCourier;
+renderCourier=function(){_rcz();
+  try{var d=decq('l');if(!d)return;var as=document.querySelectorAll('a[href*="google.com/maps/dir"]'),ft=function(c){return c&&num(c[0])&&num(c[1])?'https://www.google.com/maps/dir/?api=1&destination='+c[0]+','+c[1]:''};
+    if(as[0]&&ft(d.vl))as[0].href=ft(d.vl);if(as[1]&&ft(d.cl))as[1].href=ft(d.cl)}catch(x){}};
+/* branchement sur le rendu */
+window.__sugDecorate=decorate;
+var _rs=render;
+render=function(){hide();_rs();if(!DB||S.locked||Q.get('t')||Q.get('l'))return;try{decorate($('app'))}catch(x){}};
 })();

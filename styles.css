@@ -384,3 +384,14 @@ nav button.on .i{color:#ff7900!important;filter:none}
 .kpi b{color:var(--tx)}
 .card{border-radius:14px;box-shadow:0 2px 10px rgba(0,0,0,.06)}
 .locbtn,.mctl button{border-color:#ff7900;color:#ff7900;background:rgba(17,17,17,.92)}
+
+/* ===== 8.7.0 : suggestions d'adresses, repère sur la carte ===== */
+.sgb{position:fixed;z-index:300;display:none;max-height:260px;overflow:auto;-webkit-overflow-scrolling:touch;background:var(--card);color:var(--tx);border:1px solid var(--br);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.sgi{display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%;min-height:44px;padding:8px 12px;border:0;border-bottom:1px solid var(--br);background:none;color:inherit;font:inherit;font-size:14px;text-align:left;cursor:pointer}
+.sgi:last-child{border-bottom:0}.sgi:active{background:rgba(255,121,0,.15)}
+.sgi small{color:var(--mut);font-size:11px;flex:0 0 auto}
+.pinrow{display:flex;align-items:center;gap:8px;margin:-2px 0 8px;flex-wrap:wrap}.pinrow .b{flex:0 0 auto;min-width:0}.pinrow span{font-size:12px;color:var(--ok)}
+.pkw{position:fixed;top:0;right:0;bottom:0;left:0;z-index:150;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:10px}
+.pkc{background:var(--card);color:var(--tx);border-radius:16px;padding:12px;width:100%;max-width:520px;max-height:100%;overflow:auto}
+.pkm{height:320px;height:min(50vh,400px);border-radius:12px;overflow:hidden;margin-bottom:8px;position:relative;z-index:0;isolation:isolate}
+.pkpin{font-size:28px;line-height:1;background:none;border:0;filter:drop-shadow(0 2px 2px rgba(0,0,0,.4))}

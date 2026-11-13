@@ -1,4 +1,4 @@
-# All In One — Amk Logistique (v8.6.2)
+# All In One — Amk Logistique (v8.7.0)
 Application web installable (PWA) de confirmation, livraison et suivi des commandes paiement à la livraison (COD) au Maroc.
 Données chiffrées sur le téléphone, suivi en direct et import automatique via Firebase (facultatifs).
 
@@ -9,6 +9,11 @@ Hors site : import-gmail.gs (Google Apps Script), GUIDE-MISE-EN-SERVICE.md, READ
 ## Mise à jour depuis Android
 1. GitHub > dépôt > Add file > Upload files : envoyer les fichiers ci-dessus, puis Commit changes.
 2. Rouvrir l'appli deux fois (mise à jour du cache). Le numéro de version s'affiche en haut.
+
+## Changements v8.7.0
+- Saisie d’adresse : suggestions de types de voie (rue, boulevard, avenue, route, quartier…), d’adresses déjà utilisées et d’adresses OpenStreetMap ; suggestions de villes.
+- Bouton « Marquer le repère sur la carte » sous chaque adresse (commande, vendeur, ajout) : le point est gardé avec la commande ou le vendeur.
+- Le lien livreur utilise le repère exact pour l’itinéraire ; la carte d’accueil l’affiche.
 
 ## Changements v8.6.1
 - Habillage noir / orange inspiré de « Max it » (Orange Maroc) ; la photo de profil, si présente, colore l’en-tête, le fond et le menu.
