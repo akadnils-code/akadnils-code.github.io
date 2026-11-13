@@ -1,4 +1,4 @@
-# All In One — Amk Logistique (v8.2.0)
+# All In One — Amk Logistique (v8.3.0)
 Application web installable (PWA) de confirmation, livraison et suivi des commandes paiement à la livraison (COD) au Maroc.
 Données chiffrées sur le téléphone, suivi en direct et import automatique via Firebase (facultatifs).
 
@@ -17,6 +17,10 @@ Hors site : import-gmail.gs (Google Apps Script), GUIDE-MISE-EN-SERVICE.md, READ
 ## Changements v8.2.0 (étape 1 : fondations cloud)
 - Nouveau fichier cloud.js : compte, création d’entreprise et copie des données vers Supabase (Réglages → Compte cloud).
 - L’application reste locale d’abord ; le cloud est pour l’instant une copie. Voir supabase/GUIDE-ETAPE-1.md.
+
+## Changements v8.3.0 (étape 2a : synchronisation)
+- Synchronisation automatique entre appareils (commandes, vendeurs, livreurs, paiements, liste noire) : Réglages → Compte cloud → Synchronisation.
+- Dernier envoi gagne, par enregistrement ; une modification locale non envoyée n’est jamais écrasée. Les images restent locales (étape 2c).
 
 ## Fonctions
 Appels et WhatsApp « en un mot » avec mémo de rappel · commandes · suivi de livraison (carte, simulation, preuve photo GPS) · avis 1 à 5 · finances et rapport hebdomadaire · import automatique · verrouillage par code, empreinte ou visage · arabe / anglais (partiel).
