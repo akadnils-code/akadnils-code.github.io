@@ -1,6 +1,6 @@
-/* Confirmation COD 7.8.0 - script principal
+/* All In One 7.8.0 - script principal
    Sections repérées : modules réintégrés de la v3 | v5 : code de livraison, avis, demandes, motifs livreur, sati | v6 : catalogue, créneaux, photo de preuve, notifications, da | v7 : automatisations | v7.2 : QR code + NFC (QR hors ligne, aucune dépendance résea | v7.4 : scanner QR (caméra), tags NFC associés, diagnostic */
-var CIT=200000,KEY='cod_v4',OLDKEY='cod_v1',VER='8.0.1',IT=200000;
+var CIT=200000,KEY='cod_v4',OLDKEY='cod_v1',VER='8.1.1',IT=200000;
 var DEFTPL='Bonjour 👋 [boutique] a essayé de vous joindre pour confirmer votre commande de [produit]. Répondez OUI pour confirmer, ou dites-nous à quelle heure vous rappeler. Merci !';
 var DEFSCRIPT='1) Se présenter : « Bonjour, je vous appelle de la part de [boutique]. »\n2) Confirmer le produit, la quantité, le prix et la livraison.\n3) Confirmer la ville et l’adresse exacte (quartier, repère).\n4) Proposer un produit complémentaire ou un pack.\n5) Rappeler : paiement à la livraison, merci de préparer le montant.';
 var DEFSET={rc:0,db:'',tiles:'',ckey:'',net:[],deals:[],wallet:[],sim:{cpw:200,tc:70,td:80,nv:5,pa:60,pv:90,q:100},cf:5,bn:6,up:12,trial:30,dth:500,dpc:20,minc:100,phone:'',rib:'',holder:'',insta:'',tpl:DEFTPL,script:DEFSCRIPT,lang:'fr',lastBackup:0};
@@ -250,7 +250,7 @@ function statement(v){
 }
 function invoice(v){
   var b=vbal(v),os=DB.orders.filter(function(o){return o.vendor===v.name&&earned(o)>0}).sort(function(a,c){return (a.cdate||a.date)<(c.cdate||c.date)?-1:1});
-  return '<div class="btns noprint"><button class="b full" data-act="invback">← Retour</button><button class="b pri full" data-act="print">Imprimer / enregistrer en PDF</button></div><div class="inv" style="margin-top:10px"><h2>Relevé de commissions</h2><div>'+e(DB.set.holder||'Confirmation COD')+(DB.set.phone?' · '+e(DB.set.phone):'')+'</div><div>Vendeur : <b>'+e(v.name)+'</b> · Édité le '+today()+'</div><div class="wrap" style="margin-top:10px"><table><tr><th>Date</th><th>Client</th><th>Produit</th><th class="n">Confirm.</th><th class="n">Livraison</th><th class="n">Vente add.</th><th class="n">Total</th></tr>'
+  return '<div class="btns noprint"><button class="b full" data-act="invback">← Retour</button><button class="b pri full" data-act="print">Imprimer / enregistrer en PDF</button></div><div class="inv" style="margin-top:10px"><h2>Relevé de commissions</h2><div>'+e(DB.set.holder||'Amk Logistique')+(DB.set.phone?' · '+e(DB.set.phone):'')+'</div><div>Vendeur : <b>'+e(v.name)+'</b> · Édité le '+today()+'</div><div class="wrap" style="margin-top:10px"><table><tr><th>Date</th><th>Client</th><th>Produit</th><th class="n">Confirm.</th><th class="n">Livraison</th><th class="n">Vente add.</th><th class="n">Total</th></tr>'
    +os.map(function(o){return '<tr><td>'+e(o.cdate||o.date)+'</td><td>'+e(o.name.split(' ')[0])+'</td><td>'+e(o.product)+(o.tr?' (essai)':'')+'</td><td class="n">'+fm(o.fc||0)+'</td><td class="n">'+fm(o.fd||0)+'</td><td class="n">'+fm(o.fu||0)+'</td><td class="n">'+fm(earned(o))+'</td></tr>'}).join('')
    +'<tr><th colspan="6">Total facturé</th><th class="n">'+fm(b.ea)+' dh</th></tr><tr><th colspan="6">Paiements reçus</th><th class="n">'+fm(b.got)+' dh</th></tr><tr><th colspan="6">'+(b.bal<0?'Reste à payer':'Crédit restant')+'</th><th class="n">'+fm(Math.abs(b.bal))+' dh</th></tr></table></div>'+(b.bal<0&&DB.set.rib?'<p>Virement : '+e(DB.set.holder||'')+' · RIB '+e(DB.set.rib)+'</p>':'')+'</div>';
 }
@@ -479,7 +479,7 @@ function tid(o){if(!o.tid){o.tid=Array.prototype.map.call(crypto.getRandomValues
 function dbu(db,id){return db.replace(/\/$/,'')+'/track/'+id+'.json'}
 function fbp(db,id,b){try{fetch(dbu(db,id),{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}).catch(function(){})}catch(e){}}
 function fbg(db,id,cb){try{fetch(dbu(db,id)).then(function(r){return r.json()}).then(cb).catch(function(){})}catch(e){}}
-function pub(o){sec(o);var n=Date.now(),st=stage(o),b={v:o.vendor,vc:vcity(o),cc:o.city||'',p:o.product,s:st,bad:bad(o)?1:0,c:o.courier||'',ve:vehOf(o.courier),t:n};b['ev/e'+n]={t:n,x:bad(o)?'Commande annulée ou refusée':EVT[st]};fbp(DB.set.db,tid(o),b)}
+function pub(o){var sp=sec(o);var n=Date.now(),st=stage(o),b={v:o.vendor,vc:vcity(o),cc:o.city||'',p:o.product,s:st,bad:bad(o)?1:0,c:o.courier||'',ve:vehOf(o.courier),t:n};b['ev/e'+n]={t:n,x:bad(o)?'Commande annulée ou refusée':EVT[st]};if(st===3){b.dc=dcs(o);var db_=DB.set.db,id_=tid(o);sp.then(function(){fbp(db_,id_,b)})}else fbp(DB.set.db,tid(o),b)}
 function poll(){PT++;
   if(!DB||!DB.set.db||S.locked||Q.get('t')||Q.get('l')||Q.get('v'))return;
   DB.orders.filter(function(o){return o.tid&&!bad(o)&&stage(o)>=1&&(stage(o)<3||(stage(o)===3&&!o.rt&&PT%12===0))}).slice(-25).forEach(function(o){fbg(DB.set.db,o.tid,function(r){
@@ -797,7 +797,7 @@ function boot(){
 var RS={n:0},LK='',PT=0,LT='',IP=null;
 function dcode(d){return String((d&&d.dc)||'')}
 function dcs(o){if(!o.dc){o.dc=String(100000+crypto.getRandomValues(new Uint32Array(1))[0]%900000);save()}return o.dc}
-function sec(o){try{if(DB.set.db&&o.vendor!==undefined){fetch(DB.set.db.replace(/\/$/,'')+'/secret/'+tid(o)+'/ck.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(dcs(o))}).catch(function(){})}}catch(e){}}
+function sec(o){try{if(DB.set.db&&o.vendor!==undefined){return fetch(DB.set.db.replace(/\/$/,'')+'/secret/'+tid(o)+'/ck.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(dcs(o))}).catch(function(){})}}catch(e){}return Promise.resolve()}
 function sdel(dk,code,ok,ko){var n=Date.now(),b={s:3,dc:String(code),t:n};b['ev/e'+n]={t:n,x:'Colis livré'};try{fetch(dbu(dk.db,dk.tid),{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}).then(function(r){if(r.ok)ok();else ko(r.status)}).catch(function(){ko(0)})}catch(e){ko(0)}}
 function toast(m){var x=document.createElement('div');x.className='tst';x.textContent=m;document.body.appendChild(x);setTimeout(function(){x.remove()},3200)}
 function conf(){var c=['#d4af37','#15803d','#1d4ed8','#dc2626','#f6dc85'];for(var i=0;i<26;i++){var p=document.createElement('i');p.className='cf';p.style.cssText='left:'+Math.random()*100+'vw;background:'+c[i%5]+';animation-delay:'+Math.random()*.6+'s';document.body.appendChild(p);setTimeout(function(q){q.remove()},3400,p)}}
@@ -845,7 +845,7 @@ document.addEventListener('click',function(ev){
   else if(a==='crf'&&dk){CS.rf=1;CS.ac=0;renderCourier()}
   else if(a==='cok'&&dk){var c=($('cdin').value||'').trim();
     if(!dk.db){CS.cm='Suivi en direct (Firebase) requis pour valider le code.';renderCourier();return 2}
-    sdel(dk,c,function(){deliverOk(dk)},function(st){CS.cm=st===0?'Réseau indisponible, réessaie.':'Code incorrect. Redemande-le au client.';CS.sh=1;renderCourier();setTimeout(function(){CS.sh=0},500)})}
+    sdel(dk,c,function(){deliverOk(dk)},function(st){CS.cm=st===0?'Réseau indisponible, réessaie.':''+(st===429?'Trop d’essais : mission bloquée 30 min. Contacte le vendeur pour un nouveau code.':'Code incorrect, il reste '+attLeft(dk.tid)+' essai(s). Redemande-le au client.')+'';CS.sh=1;renderCourier();setTimeout(function(){CS.sh=0},500)})}
   else if(a==='crs'&&dk&&dk.db){CS.rf=0;var k=t.getAttribute('data-k'),b4={r:v.slice(0,40),t:n};
     if(k==='r'){cfire('Refusé');b4['ev/e'+(n+1)]={t:n+1,x:'Livraison échouée : '+v}}else{b4['ev/e'+n]={t:n,x:'Livreur : '+v+', nouvelle tentative prévue'};CS.ok='Signalé ✓'}
     fbp(dk.db,dk.tid,b4);renderCourier()}
@@ -1908,7 +1908,7 @@ if('serviceWorker' in navigator){window.addEventListener('load',function(){navig
 /* ===== 7.8 : accueil style marketplace (structure Jumia, couleurs premium) ===== */
 (function(){
 function MX(due,pe,gm,s,tr,tc){
-  var hr=new Date().getHours(),nm=DB.set.holder||'Confirmation COD',sub=DB.set.phone||(pe.length+' commande(s) en attente'),now=new Date(),dt=now.toLocaleDateString('fr-FR')+' • '+now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),
+  var hr=new Date().getHours(),nm=DB.set.holder||'Amk Logistique',sub=DB.set.phone||(pe.length+' commande(s) en attente'),now=new Date(),dt=now.toLocaleDateString('fr-FR')+' • '+now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),
   bt=function(l,t,p,x){return '<button class="b'+(p?' pri':'')+'" data-act="'+(x?'goto':'tab')+'" data-v="'+t+'"'+(x||'')+'>'+l+'</button>'},
   bx=function(i,l,v,i2,v2,l2){return '<div class="sbx"><div class="sb"><div class="si">'+ico(i)+'</div><span>'+l+'</span><b>'+v+'</b></div><div class="sb2"><div class="si2">'+ico(i2)+'</div><b>'+v2+'</b><span>'+l2+'</span></div></div>'},
   cd=function(t,sb,body,btns){return '<div class="mxc"><h2>'+t+'</h2><div class="mut">'+sb+'</div>'+body+'<div class="btns">'+btns+'</div></div>'};
@@ -2178,3 +2178,49 @@ render=function(){if(TMAP[S.tab]){ST[TMAP[S.tab][0]]=TMAP[S.tab][1];S.tab=TMAP[S
 document.addEventListener('click',function(ev){var b=ev.target.closest&&ev.target.closest('[data-st]');if(!b)return;var i=+b.getAttribute('data-st');ST[S.tab]=i;
   [].forEach.call(b.parentNode.children,function(x,k){x.className=k===i?'on':''});var a0=$('st0'),a1=$('st1');if(a0)a0.hidden=!!i;if(a1)a1.hidden=!i;
   window.scrollTo({top:0});if(typeof LM!=='undefined'&&LM.map)setTimeout(function(){LM.map.invalidateSize()},60)},true);
+
+/* ===== 8.9 : Commandes compactes + Compte en sous-onglets ===== */
+var SG={more:0},MG=[['Gestion',['Gestion','Ventes & marché','Pilotage']],['Terrain',['Outils terrain','Appels']],['Admin',['Administration']]];
+function cptSeg(A,i){var cur=-1;[].slice.call(A.children).forEach(function(c){if(c.classList&&c.classList.contains('sec')){var t=(c.textContent||'').trim();cur=-1;MG.forEach(function(g,k){if(g[1].indexOf(t)>=0)cur=k})}c.hidden=cur>=0&&cur!==i})}
+function ordCompact(A){[].slice.call(A.querySelectorAll('.card')).forEach(function(c){var s=c.querySelector('select[data-st]');if(!s||c.querySelector('details.oc2'))return;
+  var ch=[].slice.call(c.children),k=-1;ch.forEach(function(x,j){if(x===s||x.contains(s))k=j});var rest=ch.slice(k+1);if(!rest.length)return;
+  var d=document.createElement('details');d.className='oc2';d.innerHTML='<summary>Détails & actions</summary>';rest.forEach(function(x){d.appendChild(x)});c.appendChild(d)})}
+var _r9=render;
+render=function(){_r9();if(!DB||S.locked||Q.get('t')||Q.get('l')||Q.get('v'))return;var A=$('app');if(!A)return;
+  if(S.tab==='more'){var i=SG.more||0;A.insertAdjacentHTML('afterbegin','<div class="seg">'+MG.map(function(g,k){return '<button data-sg="'+k+'"'+(k===i?' class="on"':'')+'>'+g[0]+'</button>'}).join('')+'</div>');cptSeg(A,i)}
+  else if(S.tab==='ord'&&S.sub!=='add')ordCompact(A)};
+document.addEventListener('click',function(ev){var b=ev.target.closest&&ev.target.closest('[data-sg]');if(!b)return;SG.more=+b.getAttribute('data-sg');render();window.scrollTo({top:0})},true);
+
+/* ===== 8.9b : All In One · Amk Logistique : code limité à 3 essais, empreinte / visage, import automatique ===== */
+var _sd0=sdel;
+function attGet(t){try{var r=JSON.parse(localStorage.getItem('cod_att_'+t)||'{"n":0,"u":0}');return r.u&&r.u<Date.now()?{n:0,u:0}:r}catch(x){return {n:0,u:0}}}
+function attLeft(t){return Math.max(0,3-attGet(t).n)}
+sdel=function(dk,code,ok,ko){var r=attGet(dk.tid);if(r.n>=3)return ko(429);
+  _sd0(dk,code,function(){try{localStorage.removeItem('cod_att_'+dk.tid)}catch(x){}ok()},function(st){if(st!==0){r.n++;r.u=Date.now()+18e5;try{localStorage.setItem('cod_att_'+dk.tid,JSON.stringify(r))}catch(x){}return ko(r.n>=3?429:st)}ko(st)})};
+function rnd(n){return crypto.getRandomValues(new Uint8Array(n))}
+function kvPut(k,v){return idbOpen().then(function(d){return new Promise(function(res,rej){var tx=d.transaction('kv','readwrite');v===null?tx.objectStore('kv').delete(k):tx.objectStore('kv').put(v,k);tx.oncomplete=res;tx.onerror=rej})})}
+function kvGet(k){return idbOpen().then(function(d){return new Promise(function(res,rej){var q=d.transaction('kv').objectStore('kv').get(k);q.onsuccess=function(){q.result?res(q.result):rej()};q.onerror=rej})})}
+function bioEnable(){if(!K)return toast('Crée d’abord un code PIN (Compte → Admin → Sécurité).');if(!window.PublicKeyCredential||!navigator.credentials)return toast('Appareil non compatible.');
+  navigator.credentials.create({publicKey:{challenge:rnd(32),rp:{name:'All In One · Amk Logistique'},user:{id:rnd(16),name:'amk',displayName:'Amk Logistique'},pubKeyCredParams:[{type:'public-key',alg:-7},{type:'public-key',alg:-257}],authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required'},timeout:60000}})
+   .then(function(c){return kvPut('bioK',K).then(function(){localStorage.setItem('cod_bio',b64(new Uint8Array(c.rawId)));toast('Empreinte / visage activés ✅');render()})}).catch(function(){toast('Activation annulée ou impossible.')})}
+function bioOff(){try{localStorage.removeItem('cod_bio')}catch(x){}kvPut('bioK',null).catch(function(){});toast('Empreinte / visage désactivés.');render()}
+function bioUnlock(){var id=localStorage.getItem('cod_bio');if(!id||!ST)return;
+  navigator.credentials.get({publicKey:{challenge:rnd(32),allowCredentials:[{type:'public-key',id:ub64(id)}],userVerification:'required',timeout:60000}}).then(function(){return kvGet('bioK')})
+   .then(function(k){return crypto.subtle.decrypt({name:'AES-GCM',iv:ub64(ST.iv)},k,ub64(ST.ct)).then(function(pt){DB=fix(JSON.parse(dec.decode(pt)));K=k;SALT=ub64(ST.salt);CIT=ST.it||IT;S.locked=false;S.msg='';render()})})
+   .catch(function(){S.msg='Empreinte / visage indisponible : utilise ton code.';render()})}
+var IMPB=0;
+function impPull(man){var db=DB&&DB.set.db,k=DB&&DB.set.ikey;if(!db||!k||IMPB)return man&&toast('Renseigne d’abord le lien Firebase (Réglages → Suivi en direct).');IMPB=1;var u=db.replace(/\/$/,'')+'/import/'+k;
+  fetch(u+'.json').then(function(r){return r.json()}).then(function(d){IMPB=0;if(!d||typeof d!=='object')return man&&toast('Aucune nouvelle commande.');var n=0,x=0;
+    Object.keys(d).slice(0,50).forEach(function(id){var o=d[id]||{},r=addOrder(String(o.vendor||DB.set.ivendor||'Boutique').slice(0,60),String(o.name||'').slice(0,80),String(o.phone||''),String(o.product||'').slice(0,120),String(o.address||'').slice(0,160),{city:String(o.city||'').slice(0,40),amount:+o.amount||0,channel:String(o.source||'Import').slice(0,30)});
+      r==='ok'?n++:x++;fetch(u+'/'+encodeURIComponent(id)+'.json',{method:'DELETE'}).catch(function(){})});
+    if(n){save();render();toast(n+' commande(s) importée(s) ✅')}else if(man)toast(x+' ignorée(s) (doublon ou numéro invalide).')}).catch(function(){IMPB=0;man&&toast('Import impossible : vérifie ta connexion.')})}
+var _ra=render;
+render=function(){_ra();
+  if(S.locked||!DB){if(localStorage.getItem('cod_bio')&&!$('bio-btn')){var c=document.querySelector('.lock .card');if(c)c.insertAdjacentHTML('afterbegin','<button class="b pri full" id="bio-btn" data-bio="unlock" style="margin-bottom:12px">🔐 Empreinte / visage</button>')}return}
+  if(!window.__impT){window.__impT=setInterval(function(){if(!document.hidden&&DB)impPull()},60000);setTimeout(function(){impPull()},2500)}
+  if(S.tab==='set'&&!Q.get('t')&&!Q.get('l')&&!Q.get('v')&&!$('imp-card')){var A=$('app'),on=!!localStorage.getItem('cod_bio');if(!DB.set.ikey){DB.set.ikey=b64(rnd(18)).replace(/[^A-Za-z0-9]/g,'x');save()}
+    A.insertAdjacentHTML('beforeend','<div class="card" id="bio-card"><h2>🔐 Empreinte / visage</h2><p class="mut">'+(on?'Activés : tu peux déverrouiller l’appli avec ton empreinte ou ton visage. Ton code reste valable.':'Déverrouille l’appli sans taper ton code. L’empreinte et le visage ne quittent jamais ton téléphone.')+'</p><button class="b'+(on?'':' pri')+' full" data-bio="'+(on?'off':'on')+'">'+(on?'Désactiver':'Activer')+'</button></div>'
+     +'<div class="card" id="imp-card"><h2>📥 Import automatique</h2><p class="mut">Les commandes de tes boutiques (YouCan, Shopify, WooCommerce, Storeino…) arrivent toutes seules, via l’e-mail ou le webhook relié à ton Firebase.</p><label>Clé d’import (à copier dans le script)</label><input readonly value="'+e(DB.set.ikey)+'" onclick="this.select()"><label>E-mail de réception des commandes</label><input id="iem" placeholder="à créer, ex. commandes@…" value="'+e(DB.set.iemail||'')+'"><label>Boutique par défaut</label><input id="ivd" placeholder="Boutique" value="'+e(DB.set.ivendor||'')+'"><button class="b pri full" style="margin-top:10px" data-imp="1">Importer maintenant</button></div>')}};
+document.addEventListener('click',function(ev){var t=ev.target.closest&&ev.target.closest('[data-bio],[data-imp]');if(!t)return;
+  if(t.hasAttribute('data-imp'))return impPull(1);var v=t.getAttribute('data-bio');v==='on'?bioEnable():v==='off'?bioOff():bioUnlock()},true);
+document.addEventListener('change',function(ev){var t=ev.target;if(!DB||!t.id)return;if(t.id==='iem'){DB.set.iemail=t.value.trim().slice(0,80);save()}else if(t.id==='ivd'){DB.set.ivendor=t.value.trim().slice(0,60);save()}},true);

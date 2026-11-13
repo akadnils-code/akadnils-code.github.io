@@ -1,20 +1,17 @@
 {
-  "id": "./index.html",
-  "name": "Confirmation COD",
-  "short_name": "COD Pro",
-  "description": "Confirmation des commandes COD, suivi des ventes et réseau grossistes/acheteurs.",
-  "lang": "fr",
-  "dir": "ltr",
-  "start_url": "./index.html",
+  "name": "All In One · Amk Logistique",
+  "short_name": "All In One",
+  "description": "Confirmation, livraison et suivi des commandes COD au Maroc.",
+  "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "orientation": "any",
-  "categories": ["business","productivity"],
-  "background_color": "#0f1319",
+  "orientation": "portrait",
+  "background_color": "#14213d",
   "theme_color": "#14213d",
+  "lang": "fr",
   "icons": [
-    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
-    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png"},
     {"src": "icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
   ]
 }

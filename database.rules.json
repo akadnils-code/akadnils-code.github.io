@@ -2,24 +2,71 @@
   "rules": {
     ".read": false,
     ".write": false,
+
     "track": {
       "$id": {
-        ".read": true,
-        ".write": "$id.matches(/^[a-z0-9]{24,48}$/)",
+        ".read": "$id.matches(/^[a-z0-9]{24,48}$/)",
+        ".write": "$id.matches(/^[a-z0-9]{24,48}$/) && (newData.exists() || !data.child('s').exists())",
         ".validate": "newData.hasChildren()",
         "v":   {".validate": "newData.isString() && newData.val().length <= 80"},
         "vc":  {".validate": "newData.isString() && newData.val().length <= 60"},
         "cc":  {".validate": "newData.isString() && newData.val().length <= 60"},
         "p":   {".validate": "newData.isString() && newData.val().length <= 160"},
         "c":   {".validate": "newData.isString() && newData.val().length <= 80"},
+        "ve":  {".validate": "newData.isString() && newData.val().length <= 20"},
         "r":   {".validate": "newData.isString() && newData.val().length <= 40"},
-        "s":   {".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 3"},
+        "fb":  {".validate": "newData.isString() && newData.val().length <= 120"},
+        "rq":  {".validate": "newData.isString() && newData.val().length <= 120"},
+        "rt":  {".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 5"},
         "bad": {".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1"},
         "t":   {".validate": "newData.isNumber()"},
         "pt":  {".validate": "newData.isNumber()"},
-        "pos": {"0": {".validate": "newData.isNumber()"}, "1": {".validate": "newData.isNumber()"}, "$o": {".validate": false}},
-        "ev":  {"$e": {"t": {".validate": "newData.isNumber()"}, "x": {".validate": "newData.isString() && newData.val().length <= 120"}, "$o": {".validate": false}}},
+        "dc":  {".validate": "newData.isString() && newData.val().matches(/^[0-9]{6}$/)"},
+        "s": {
+          ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 3 && (newData.val() < 3 || data.val() === 3 || (newData.parent().child('dc').isString() && newData.parent().child('dc').val() === root.child('secret').child($id).child('ck').val()))"
+        },
+        "pos": {
+          "0": {".validate": "newData.isNumber() && newData.val() >= -90 && newData.val() <= 90"},
+          "1": {".validate": "newData.isNumber() && newData.val() >= -180 && newData.val() <= 180"},
+          "$o": {".validate": false}
+        },
+        "ev": {
+          "$e": {
+            ".validate": "$e.matches(/^[A-Za-z0-9_-]{1,30}$/)",
+            "t": {".validate": "newData.isNumber()"},
+            "x": {".validate": "newData.isString() && newData.val().length <= 120"},
+            "$o": {".validate": false}
+          }
+        },
         "$other": {".validate": false}
+      }
+    },
+
+    "secret": {
+      "$id": {
+        "ck": {
+          ".write": "$id.matches(/^[a-z0-9]{24,48}$/) && newData.isString() && newData.val().matches(/^[0-9]{6}$/) && (!data.exists() || data.val() === newData.val())",
+          ".validate": "newData.isString() && newData.val().matches(/^[0-9]{6}$/)"
+        }
+      }
+    },
+
+    "import": {
+      "$key": {
+        ".read": "$key.matches(/^[A-Za-z0-9]{20,64}$/)",
+        "$id": {
+          ".write": "$key.matches(/^[A-Za-z0-9]{20,64}$/) && $id.length <= 64 && (!data.exists() || !newData.exists())",
+          ".validate": "newData.hasChildren(['phone'])",
+          "vendor":  {".validate": "newData.isString() && newData.val().length <= 60"},
+          "name":    {".validate": "newData.isString() && newData.val().length <= 80"},
+          "phone":   {".validate": "newData.isString() && newData.val().length <= 30"},
+          "product": {".validate": "newData.isString() && newData.val().length <= 120"},
+          "address": {".validate": "newData.isString() && newData.val().length <= 160"},
+          "city":    {".validate": "newData.isString() && newData.val().length <= 40"},
+          "source":  {".validate": "newData.isString() && newData.val().length <= 30"},
+          "amount":  {".validate": "newData.isNumber() || (newData.isString() && newData.val().length <= 20)"},
+          "$other":  {".validate": "newData.isNumber() || (newData.isString() && newData.val().length <= 200)"}
+        }
       }
     }
   }
