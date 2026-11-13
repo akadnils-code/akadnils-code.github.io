@@ -304,3 +304,28 @@ details.more[open]>summary:after{content:"▴"}
 .seg button{flex:1;border:0;background:none;font:inherit;font-weight:700;font-size:14px;padding:10px 6px;border-radius:99px;color:var(--mut);cursor:pointer}
 .seg button.on{background:linear-gradient(135deg,#f6dc85,#d4af37);color:#1a1405}
 [hidden]{display:none!important}
+
+/* ---------- carte de profil (v8.4.0) ---------- */
+.pfc{position:relative;overflow:hidden;text-align:center;color:#fff;border-radius:24px;padding:26px 18px 18px;margin-bottom:10px;background:radial-gradient(120% 90% at 100% 0,rgba(212,175,55,.32),transparent 55%),linear-gradient(145deg,#0b1224,#14213d 60%,#1d3160);border:1px solid rgba(212,175,55,.45);box-shadow:0 14px 34px rgba(11,18,36,.28)}
+.pfc:before{content:"";position:absolute;inset:0 0 auto 0;height:4px;background:linear-gradient(90deg,#f6dc85,#d4af37,#b8921f)}
+.pfa{width:96px;height:96px;margin:0 auto 12px;border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden;background:linear-gradient(135deg,#f6dc85,#d4af37 60%,#b8921f);color:#1a1405;font-size:34px;font-weight:800;border:3px solid rgba(255,255,255,.9);box-shadow:0 8px 20px rgba(0,0,0,.35)}
+.pfa img{width:100%;height:100%;object-fit:cover;display:block}
+.pfa svg{width:44px;height:44px}
+.pfn{font-size:21px;font-weight:800;letter-spacing:.01em;word-break:break-word}
+.pfr{margin-top:2px;font-size:13.5px;color:#f6dc85;font-weight:650}
+.pfm{margin:14px 0 4px;font-size:13px;color:rgba(255,255,255,.72)}
+.pfs{display:flex;flex-direction:column;gap:8px;margin-top:16px;text-align:start}
+.pfl{display:flex;align-items:center;gap:10px;min-height:44px;padding:8px 12px;border-radius:14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:#fff;text-decoration:none;font-size:14.5px;word-break:break-word}
+.pfl:active{background:rgba(255,255,255,.16)}
+.pfl svg{flex:none;width:20px;height:20px;color:#f6dc85}
+.pfl span{min-width:0}
+.pfc .i{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+/* ---------- v8.5.0 : avatar d'en-tête, onglets Réglages ---------- */
+header #hs{padding:0;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.hav{width:100%;height:100%;min-width:38px;min-height:38px;display:flex;align-items:center;justify-content:center;border-radius:inherit;overflow:hidden;color:var(--gold2)}
+.hav img{width:100%;height:100%;object-fit:cover;display:block}
+.hav b{font-size:14px;font-weight:800;letter-spacing:.02em}
+.hav svg{width:22px;height:22px}
+.seg.s4{padding:3px;gap:2px}
+.seg.s4 button{font-size:13px;padding:9px 2px;min-width:0;white-space:nowrap}

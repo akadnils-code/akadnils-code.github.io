@@ -1,4 +1,4 @@
-# All In One — Amk Logistique (v8.3.0)
+# All In One — Amk Logistique (v8.5.0)
 Application web installable (PWA) de confirmation, livraison et suivi des commandes paiement à la livraison (COD) au Maroc.
 Données chiffrées sur le téléphone, suivi en direct et import automatique via Firebase (facultatifs).
 
@@ -9,6 +9,17 @@ Hors site : import-gmail.gs (Google Apps Script), GUIDE-MISE-EN-SERVICE.md, READ
 ## Mise à jour depuis Android
 1. GitHub > dépôt > Add file > Upload files : envoyer les fichiers ci-dessus, puis Commit changes.
 2. Rouvrir l'appli deux fois (mise à jour du cache). Le numéro de version s'affiche en haut.
+
+## Changements v8.5.0 (réorganisation)
+- En-tête : ta photo (ou tes initiales) ouvre Mon profil.
+- Menu Compte regroupé : Pilotage de l’activité · Développement commercial · Outils terrain · Prospection · Profil & paramètres.
+- Réglages en 4 volets : Profil · Activité (tarifs, messages) · Sécurité (code, biométrie, sauvegarde) · Connexions (suivi, import, cloud).
+- Doublons supprimés : livreurs (une seule gestion, dans Réseau professionnel), formulaire d’article (Catalogue produits), export Excel (Finances), tableaux ville/canal (Finances), mémo de rappel (Relances WhatsApp), avis clients (une seule note moyenne, dans Livraison → Preuves & avis).
+- Nom, société, téléphone, e-mail et ville du profil alimentent l’accueil et les relevés de commissions.
+
+## Changements v8.4.0 (profil)
+- Réglages → onglet **Profil** : carte de profil (photo, nom, fonction, société, téléphone/WhatsApp, e-mail, ville, Instagram), enregistrement, « Ajouter à mes contacts » (.vcf) et partage.
+- Le nom, le téléphone, l’Instagram et le RIB sont ceux déjà utilisés pour les relevés et les liens vendeurs.
 
 ## Changements v8.1.2 (étape 0 : filet de sécurité)
 - Version alignée partout (appli, cache du service worker, README).
