@@ -1,6 +1,6 @@
 /* Confirmation COD 7.8.0 - script principal
    Sections repérées : modules réintégrés de la v3 | v5 : code de livraison, avis, demandes, motifs livreur, sati | v6 : catalogue, créneaux, photo de preuve, notifications, da | v7 : automatisations | v7.2 : QR code + NFC (QR hors ligne, aucune dépendance résea | v7.4 : scanner QR (caméra), tags NFC associés, diagnostic */
-var CIT=200000,KEY='cod_v4',OLDKEY='cod_v1',VER='7.9.9',IT=200000;
+var CIT=200000,KEY='cod_v4',OLDKEY='cod_v1',VER='8.0.1',IT=200000;
 var DEFTPL='Bonjour 👋 [boutique] a essayé de vous joindre pour confirmer votre commande de [produit]. Répondez OUI pour confirmer, ou dites-nous à quelle heure vous rappeler. Merci !';
 var DEFSCRIPT='1) Se présenter : « Bonjour, je vous appelle de la part de [boutique]. »\n2) Confirmer le produit, la quantité, le prix et la livraison.\n3) Confirmer la ville et l’adresse exacte (quartier, repère).\n4) Proposer un produit complémentaire ou un pack.\n5) Rappeler : paiement à la livraison, merci de préparer le montant.';
 var DEFSET={rc:0,db:'',tiles:'',ckey:'',net:[],deals:[],wallet:[],sim:{cpw:200,tc:70,td:80,nv:5,pa:60,pv:90,q:100},cf:5,bn:6,up:12,trial:30,dth:500,dpc:20,minc:100,phone:'',rib:'',holder:'',insta:'',tpl:DEFTPL,script:DEFSCRIPT,lang:'fr',lastBackup:0};
@@ -1908,16 +1908,26 @@ if('serviceWorker' in navigator){window.addEventListener('load',function(){navig
 /* ===== 7.8 : accueil style marketplace (structure Jumia, couleurs premium) ===== */
 (function(){
 function MX(due,pe,gm,s,tr,tc){
-  var hr=new Date().getHours(),nm=DB.set.holder||'Confirmation COD',sub=DB.set.phone||(pe.length+' commande(s) en attente');
-  var now=new Date(),dt=now.toLocaleDateString('fr-FR')+' • '+now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-  var R=[['calls','phone','Appels',due.length],['ord','box','Commandes',0],['del','truck','Livraison',0],['fin','chart','Finances',0],['wa','phone','WhatsApp',DB.orders.filter(function(o){return o.status==='En attente'&&o.wa&&callDue(o)}).length]];
-  return '<div class="mx"><div class="gr">'+(hr<5||hr>=18?'Bonsoir':'Bonjour')+' '+e(nm)+'</div><div class="gs">'+e(sub)+'</div>'
-   +'<div class="hrow rings">'+R.map(function(r){return '<div class="rg" data-act="tab" data-v="'+r[0]+'"><div class="ring"><div class="rin">'+ico(r[1])+'</div>'+(r[3]?'<span class="rb">'+r[3]+'</span>':'')+'</div><span>'+r[2]+'</span></div>'}).join('')+'</div></div>'
-   +'<div class="mxw"><div class="mxs" id="mxs"><div class="mxc"><div class="row"><h2>Résumé du mois</h2></div><div class="mut">Solde au <b style="color:#d4742a">'+dt+'</b></div>'
-   +'<div class="sbx"><div class="sb"><div class="si">'+ico('box')+'</div><span>Confirmation</span><b>'+pct(s.ok,tr)+'</b></div><div class="sb2"><div class="si2">'+ico('chart')+'</div><b>'+fm(gm)+' <small>DH</small></b><span>Gagné ce mois</span></div></div>'
-   +'<div class="mut" style="text-align:center;margin:6px 0 14px">'+(due.length?due.length+' commande(s) à appeler maintenant':'Aucun appel urgent, tout est à jour')+'</div>'
-   +'<div class="btns"><button class="b pri" data-act="goto" data-v="calls">'+ico('phone','s')+' Appeler</button><button class="b" data-act="goto" data-v="ord" data-s="add">Ajouter</button><button class="b" data-act="tab" data-v="fin">Finances</button></div></div>'+'<div class="mxc"><div class="row"><h2>Livraison</h2></div><div class="mut">Ce mois-ci</div><div class="sbx"><div class="sb"><div class="si">'+ico('truck')+'</div><span>Taux de livraison</span><b>'+pct(s.liv,s.liv+s.ref)+'</b></div><div class="sb2"><div class="si2">'+ico('box')+'</div><b>'+(s.ref||0)+' <small>refusées</small></b></div></div><div class="mut" style="text-align:center;margin:6px 0 14px">Suivi en direct de tes livreurs</div><div class="btns"><button class="b pri" data-act="tab" data-v="del">Livraisons</button><button class="b" data-act="tab" data-v="ord">Commandes</button></div></div>'+'<div class="mxc"><div class="row"><h2>Finances</h2></div><div class="mut">Ce mois-ci</div><div class="sbx"><div class="sb"><div class="si">'+ico('chart')+'</div><span>À encaisser</span><b>'+fm(tc||0)+' <small>DH</small></b></div><div class="sb2"><div class="si2">'+ico('store')+'</div><b>'+fm(gm)+' <small>DH</small></b><span>Gagné ce mois</span></div></div><div class="mut" style="text-align:center;margin:6px 0 14px">Chez tes vendeurs</div><div class="btns"><button class="b pri" data-act="tab" data-v="fin">Finances</button><button class="b" data-act="tab" data-v="vend">Vendeurs</button></div></div>'+'</div><div class="dots" id="mdots"><i class="on" data-mi="0"></i><i data-mi="1"></i><i data-mi="2"></i></div></div>';
+  var hr=new Date().getHours(),nm=DB.set.holder||'Confirmation COD',sub=DB.set.phone||(pe.length+' commande(s) en attente'),now=new Date(),dt=now.toLocaleDateString('fr-FR')+' • '+now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),
+  bt=function(l,t,p,x){return '<button class="b'+(p?' pri':'')+'" data-act="'+(x?'goto':'tab')+'" data-v="'+t+'"'+(x||'')+'>'+l+'</button>'},
+  bx=function(i,l,v,i2,v2,l2){return '<div class="sbx"><div class="sb"><div class="si">'+ico(i)+'</div><span>'+l+'</span><b>'+v+'</b></div><div class="sb2"><div class="si2">'+ico(i2)+'</div><b>'+v2+'</b><span>'+l2+'</span></div></div>'},
+  cd=function(t,sb,body,btns){return '<div class="mxc"><h2>'+t+'</h2><div class="mut">'+sb+'</div>'+body+'<div class="btns">'+btns+'</div></div>'};
+  return '<div class="mx"><div class="gr">'+(hr<5||hr>=18?'Bonsoir':'Bonjour')+' '+e(nm)+'</div><div class="gs">'+e(sub)+'</div></div>'
+   +'<div class="mxw"><div class="deck" id="deck">'
+   +cd('Résumé du mois','Solde au <b style="color:#d4742a">'+dt+'</b>',bx('box','Confirmation',pct(s.ok,tr),'chart',fm(gm)+' <small>DH</small>','Gagné'),bt('Appeler ('+due.length+')','calls',1)+bt('WhatsApp','wa')+bt('Ajouter','ord',0,' data-s="add"'))
+   +cd('Livraison','Ce mois-ci',bx('truck','Taux de livraison',pct(s.liv,s.liv+s.ref),'box',(s.ref||0)+' <small>refusées</small>','Refus'),bt('Suivi','del',1)+bt('Preuves','pod'))
+   +cd('Finances','Ce mois-ci',bx('chart','À encaisser',fm(tc||0)+' <small>DH</small>','store',DB.vend.length,'Vendeurs'),bt('Finances','fin',1))
+   +'</div><div class="dots" id="mdots"><i class="on"></i><i></i><i></i></div></div>';
 }
+function deckInit(){var d=$('deck'),md=$('mdots');if(!d)return;var cs=[].slice.call(d.children),o=cs.map(function(_,i){return i}),x0=null,top=function(){return cs[o[0]]},
+  pos=function(){o.forEach(function(ci,p){cs[ci].setAttribute('data-p',p);cs[ci].style.transform=''});if(md)[].forEach.call(md.children,function(x,k){x.className=k===o[0]?'on':''})},next=function(){o.push(o.shift());pos()};
+  pos();
+  d.addEventListener('pointerdown',function(ev){if(ev.target.closest('button,a'))return;var c=ev.target.closest('.mxc');if(c!==top())return;x0=ev.clientX;c.classList.add('drag');try{c.setPointerCapture(ev.pointerId)}catch(x){}});
+  d.addEventListener('pointermove',function(ev){if(x0===null)return;var dx=ev.clientX-x0;top().style.transform='translateX('+dx+'px) rotate('+dx/18+'deg)'});
+  var up=function(ev){if(x0===null)return;var dx=ev.clientX-x0,c=top();x0=null;c.classList.remove('drag');
+    if(Math.abs(dx)>70){c.style.transform='translateX('+(dx>0?130:-130)+'%) rotate('+(dx>0?18:-18)+'deg)';setTimeout(function(){c.style.transition='none';next();void c.offsetWidth;c.style.transition=''},260)}else c.style.transform=''};
+  d.addEventListener('pointerup',up);d.addEventListener('pointercancel',up);
+  if(md)[].forEach.call(md.children,function(x,k){x.addEventListener('click',function(){var n=0;while(o[0]!==k&&n++<3)next()})})}
 var _rh=render;
 var NM=['Automatisations','Satisfaction clients','Pour commencer'];
 function crds(){return [].slice.call($('app').querySelectorAll('.card')).filter(function(c){var h=c.querySelector('h2');return h&&NM.indexOf(h.textContent.trim())>=0})}
@@ -1931,27 +1941,15 @@ render=function(){
     [].forEach.call($('nav').children,function(b){b.classList.toggle('on',b.getAttribute('data-v')==='more')});return}
   if(!DB||S.locked||Q.get('t')||Q.get('l')||Q.get('v')||S.tab!=='home')return;
   crds().forEach(function(x){x.remove()});
-  var A0=$('app'),ch=[].slice.call(A0.children);if(ch.length){var dt=document.createElement('details');dt.className='more';dt.innerHTML='<summary>Plus de détails</summary>';ch.forEach(function(c){dt.appendChild(c)});A0.appendChild(dt)}
+  [].slice.call($('app').children).forEach(function(c){c.remove()});
   var o=DB.orders,mo=today().slice(0,7),pe=o.filter(function(x){return x.status==='En attente'}),due=pe.filter(callDue),
   om=o.filter(function(x){return (x.date||'').slice(0,7)===mo}),s=stats(om),tr=s.n-s.pe,
   gm=o.filter(function(x){return (x.cdate||'').slice(0,7)===mo}).reduce(function(a,x){return a+earned(x)},0),
   tc=0;DB.vend.forEach(function(v){var b=vbal(v).bal;if(b<0)tc-=b});
-  var B=[['g1','À appeler maintenant',due.length,'Appeler →','calls'],
-         ['g2','Gagné ce mois',fm(gm)+' dh','Voir les finances →','fin'],
-         ['g3','Livraison (mois)',pct(s.liv,s.liv+s.ref),'Voir les livraisons →','del'],['g2','Rapport de la semaine','📊 7 jours','Ouvrir le rapport →','rap']];
-  var L=(due.length?due:pe).slice(0,5);
-  var h=MX(due,pe,gm,s,tr,tc)+'<label class="hsr">'+ico('search')+'<input id="hq" placeholder="Rechercher une commande, un client…" enterkeyhint="search"></label>'
-   +'<div class="fl"><div class="row"><h3>Appels à passer</h3><span class="arrb" data-act="tab" data-v="calls">→</span></div><div class="pill">'+ico('phone','s')+' '+pe.length+' en attente</div>'
-   +(L.length?'<div class="hrow">'+L.map(function(x){return '<div class="oc"><div class="ph0">'+e((x.name||'?').charAt(0).toUpperCase())+'<a class="plus" href="tel:'+e(x.phone)+'" aria-label="Appeler">'+ico('phone')+'</a></div><div class="on1">'+e(x.name)+'</div><div class="mut">'+e(x.product||'—')+'</div><div class="mut">'+e(x.city||'')+(x.amount?' · <b>'+fm(x.amount)+' dh</b>':'')+'</div></div>'}).join('')+'</div>':'<p class="mut" style="color:#f6dc85">Ajoute ta première commande pour la voir ici.</p>')
-   +'</div>';
+  var h=MX(due,pe,gm,s,tr,tc);
   $('app').insertAdjacentHTML('afterbegin',h);
-  var ms=$('mxs'),md=$('mdots');
-  if(ms&&md){ms.addEventListener('scroll',function(){var i=Math.round(ms.scrollLeft/(ms.firstChild.offsetWidth+12));[].forEach.call(md.children,function(x,k){x.className=k===i?'on':''})});
-    [].forEach.call(md.children,function(x,k){x.addEventListener('click',function(){ms.scrollTo({left:k*(ms.firstChild.offsetWidth+12),behavior:'smooth'})})})}
-  var bn=$('bnr'),d=$('dots');
-  if(bn)bn.addEventListener('scroll',function(){var i=Math.round(bn.scrollLeft/(bn.firstChild.offsetWidth+12));[].forEach.call(d.children,function(x,k){x.className=k===i?'on':''})});
-};
-document.addEventListener('keydown',function(ev){var t=ev.target;if(t.id==='hq'&&ev.key==='Enter'){S.tab='ord';S.sub='list';S.q=t.value;S.sf='';S.vendor='';render()}});
+  deckInit();
+  };
 })();
 
 /* ===== 7.9 : menu langue (FR / AR / EN / Tamazight) ===== */
@@ -2168,17 +2166,15 @@ document.addEventListener('click',function(ev){var t=ev.target,q=t.closest&&t.cl
   if(s){var y=oid(s.getAttribute('data-ps'));if(!y||!y.pod)return;fetch(y.pod.i).then(function(b){return b.blob()}).then(function(b){var f=new File([b],'preuve-'+y.name+'.jpg',{type:'image/jpeg'});
     if(navigator.canShare&&navigator.canShare({files:[f]}))navigator.share({files:[f],text:'Preuve de livraison · '+y.name+' · '+new Date(y.pod.ts).toLocaleString('fr-FR')});else{var l=document.createElement('a');l.href=y.pod.i;l.download=f.name;l.click()}})}},true);
 
-/* ===== 8.8 : chaque nouveauté dans son onglet (Appels, Livraison, Finances) ===== */
-var _r8=render,TMAP={wa:['calls','sec-wa'],rap:['fin','sec-rap'],pod:['del','sec-pod']},TB={
-  calls:{id:'sec-wa',f:function(){return waHTML()},c:[['top','📞 Appels'],['sec-wa','💬 WhatsApp en un mot']]},
-  del:{id:'sec-pod',f:function(){return podHTML()},c:[['top','🛵 Suivi'],['sec-pod','📸 Preuve & avis']]},
-  fin:{id:'sec-rap',f:function(){return rapHTML()},c:[['top','💰 Finances'],['sec-rap','📊 Rapport de la semaine']]}};
-render=function(){if(TMAP[S.tab]){S.go=TMAP[S.tab][1];S.tab=TMAP[S.tab][0]}
+/* ===== 8.8 : sous-onglets (une vue à la fois : on supprime la surcharge) ===== */
+var _r8=render,TMAP={wa:['calls',1],rap:['fin',1],pod:['del',1]},ST={},TB={calls:{f:waHTML,n:['📞 À appeler','💬 WhatsApp']},del:{f:podHTML,n:['🛵 Suivi','📸 Preuve & avis']},fin:{f:rapHTML,n:['💰 Finances','📊 Rapport']}};
+render=function(){if(TMAP[S.tab]){ST[TMAP[S.tab][0]]=TMAP[S.tab][1];S.tab=TMAP[S.tab][0]}
   _r8();if(!DB||S.locked||Q.get('t')||Q.get('l')||Q.get('v'))return;
-  var T=TB[S.tab],A=$('app');if(!T||!A)return;
-  A.insertAdjacentHTML('afterbegin','<div class="tbar">'+T.c.map(function(c){return '<button data-go="'+c[0]+'">'+c[1]+'</button>'}).join('')+'</div>');
-  A.insertAdjacentHTML('beforeend','<div id="'+T.id+'" class="xs">'+T.f().replace(/<button class="b full sm"[^>]*>← Compte<\/button>/,'')+'</div>');
-  if(window.trAll)window.trAll(A);
-  if(S.go){var g=$(S.go);S.go='';if(g)setTimeout(function(){g.scrollIntoView({behavior:'smooth',block:'start'})},60)}};
-document.addEventListener('click',function(ev){var b=ev.target.closest&&ev.target.closest('[data-go]');if(!b)return;var i=b.getAttribute('data-go');
-  if(i==='top')window.scrollTo({top:0,behavior:'smooth'});else{var g=$(i);if(g)g.scrollIntoView({behavior:'smooth',block:'start'})}},true);
+  var T=TB[S.tab],A=$('app');if(!T||!A)return;var i=ST[S.tab]||0,w0=document.createElement('div'),w1=document.createElement('div');
+  w0.id='st0';w1.id='st1';[].slice.call(A.children).forEach(function(c){w0.appendChild(c)});
+  w1.innerHTML=T.f().replace(/<button class="b full sm"[^>]*>← Compte<\/button>/,'');w0.hidden=!!i;w1.hidden=!i;
+  A.insertAdjacentHTML('afterbegin','<div class="seg">'+T.n.map(function(t,k){return '<button data-st="'+k+'"'+(k===i?' class="on"':'')+'>'+t+'</button>'}).join('')+'</div>');
+  A.appendChild(w0);A.appendChild(w1);if(window.trAll)window.trAll(w1)};
+document.addEventListener('click',function(ev){var b=ev.target.closest&&ev.target.closest('[data-st]');if(!b)return;var i=+b.getAttribute('data-st');ST[S.tab]=i;
+  [].forEach.call(b.parentNode.children,function(x,k){x.className=k===i?'on':''});var a0=$('st0'),a1=$('st1');if(a0)a0.hidden=!!i;if(a1)a1.hidden=!i;
+  window.scrollTo({top:0});if(typeof LM!=='undefined'&&LM.map)setTimeout(function(){LM.map.invalidateSize()},60)},true);

@@ -271,8 +271,8 @@ label.b input{display:none}
 .card,.bn,.dk,.fl,.mxw,.hsr{animation:fu .5s cubic-bezier(.2,.7,.2,1) both}
 .card{border-radius:24px;border:1px solid rgba(212,175,55,.22);box-shadow:0 1px 0 rgba(255,255,255,.65) inset,0 12px 30px rgba(11,18,36,.09)}
 .card:active,.hq:active,.dc:active{transform:scale(.99)}
-.b.pri{position:relative;overflow:hidden}
-.b.pri:after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.5) 50%,transparent 65%);transform:translateX(-120%);animation:shn 4s ease-in-out infinite;pointer-events:none}
+.mxc .b.pri{position:relative;overflow:hidden}
+.deck .mxc .b.pri:after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.5) 50%,transparent 65%);transform:translateX(-120%);animation:shn 4s ease-in-out infinite;pointer-events:none}
 @keyframes shn{to{transform:translateX(120%)}}
 body{background-image:radial-gradient(900px 380px at 50% -140px,rgba(212,175,55,.16),transparent 70%);background-repeat:no-repeat}
 nav button.on .i{filter:drop-shadow(0 0 6px rgba(212,175,55,.7))}
@@ -292,3 +292,15 @@ details.more>summary::-webkit-details-marker{display:none}
 details.more>summary:after{content:"▾";color:#a98319;font-size:18px}
 details.more[open]>summary:after{content:"▴"}
 .rings{justify-content:space-between}
+
+/* ===== 9.0 : pile de cartes + sous-onglets ===== */
+.deck{display:grid;padding-bottom:36px}
+.deck>.mxc{grid-area:1/1;min-height:292px;touch-action:pan-y;user-select:none;-webkit-user-select:none;transition:transform .4s cubic-bezier(.2,.8,.2,1),opacity .3s;will-change:transform;animation:none}
+.deck>.mxc[data-p="0"]{z-index:3}
+.deck>.mxc[data-p="1"]{z-index:2;transform:translateY(16px) scale(.95);opacity:.96;pointer-events:none}
+.deck>.mxc[data-p="2"]{z-index:1;transform:translateY(32px) scale(.9);opacity:.88;pointer-events:none}
+.deck>.mxc.drag{transition:none}
+.seg{display:flex;background:var(--card);border:1px solid rgba(212,175,55,.45);border-radius:99px;padding:4px;margin:0 0 14px;box-shadow:var(--sh)}
+.seg button{flex:1;border:0;background:none;font:inherit;font-weight:700;font-size:14px;padding:10px 6px;border-radius:99px;color:var(--mut);cursor:pointer}
+.seg button.on{background:linear-gradient(135deg,#f6dc85,#d4af37);color:#1a1405}
+[hidden]{display:none!important}
