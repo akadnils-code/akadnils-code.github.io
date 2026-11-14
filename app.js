@@ -1,6 +1,6 @@
 /* All In One 8.3.0 - script principal
    Sections repérées : modules réintégrés de la v3 | v5 : code de livraison, avis, demandes, motifs livreur, sati | v6 : catalogue, créneaux, photo de preuve, notifications, da | v7 : automatisations | v7.2 : QR code + NFC (QR hors ligne, aucune dépendance résea | v7.4 : scanner QR (caméra), tags NFC associés, diagnostic */
-var CIT=200000,KEY='cod_v4',OLDKEY='cod_v1',VER='9.0.0',IT=200000;
+var CIT=200000,KEY='cod_v4',OLDKEY='cod_v1',VER='9.1.0',IT=200000;
 var OM={},CXS={l:null};
 var DEFTPL='Bonjour 👋 [boutique] a essayé de vous joindre pour confirmer votre commande de [produit]. Répondez OUI pour confirmer, ou dites-nous à quelle heure vous rappeler. Merci !';
 var DEFSCRIPT='1) Se présenter : « Bonjour, je vous appelle de la part de [boutique]. »\n2) Confirmer le produit, la quantité, le prix et la livraison.\n3) Confirmer la ville et l’adresse exacte (quartier, repère).\n4) Proposer un produit complémentaire ou un pack.\n5) Rappeler : paiement à la livraison, merci de préparer le montant.';
@@ -268,12 +268,12 @@ function finv(){
    +(cn?'<div class="card"><h2>Par livreur</h2><div class="wrap"><table><tr><th>Livreur</th><th class="n">Cmd</th><th class="n">Livré</th><th class="n">Refusé</th><th class="n">Taux</th></tr>'+cn+'</table></div></div>':'')
    +'<div class="card"><h2>Export Excel</h2><div class="btns"><button class="b pri" data-act="xls">'+ico('dl','s')+' Excel (.xlsx)</button></div></div>';
 }
-function hdrAv(){var s=DB.set,nm=(s.holder||'').trim(),ini=(nm.split(/\s+/).map(function(w){return w.charAt(0)}).slice(0,2).join('')||'').toUpperCase();return '<span class="hav">'+(ini?'<b>'+e(ini)+'</b>':ico('user'))+'</span>'}
+function hdrAv(){var s=DB.set,nm=(s.holder||'').trim(),ini=(nm.split(/\s+/).map(function(w){return w.charAt(0)}).slice(0,2).join('')||'').toUpperCase();return '<span class="hav">'+(s.pphoto?'<img src="'+s.pphoto+'" alt="">':(ini?'<b>'+e(ini)+'</b>':ico('user')))+'</span>'}
 function instaUrl(v){v=String(v||'').trim();if(!v)return '';if(/^https?:\/\//i.test(v))return v;return 'https://instagram.com/'+encodeURIComponent(v.replace(/^@/,''))}
 function vcard(){var s=DB.set,n=(s.holder||'').trim(),p=n.split(/\s+/),fn=p[0]||'',ln=p.slice(1).join(' ');
   var q=function(x){return String(x||'').replace(/\\/g,'\\\\').replace(/\r?\n/g,'\\n').replace(/,/g,'\\,').replace(/;/g,'\\;')};
   var L=['BEGIN:VCARD','VERSION:3.0','N:'+q(ln)+';'+q(fn)+';;;','FN:'+q(n)];
-  if(s.pco)L.push('ORG:'+q(s.pco));if(s.pt)L.push('TITLE:'+q(s.pt));if(s.phone)L.push('TEL;TYPE=CELL:'+q(s.phone));if(s.pe)L.push('EMAIL:'+q(s.pe));if(s.pc)L.push('ADR;TYPE=WORK:;;;'+q(s.pc)+';;;');if(s.insta)L.push('URL:'+q(instaUrl(s.insta)));
+  if(s.pco)L.push('ORG:'+q(s.pco));if(s.pt)L.push('TITLE:'+q(s.pt));if(s.phone)L.push('TEL;TYPE=CELL:'+q(s.phone));if(s.pe)L.push('EMAIL:'+q(s.pe));if(s.pc||s.pa)L.push('ADR;TYPE=WORK:;;'+q(s.pa)+';'+q(s.pc)+';;'+q(s.pcp)+';Maroc');if(s.plat!=null&&s.plat!==''&&isFinite(s.plat))L.push('GEO:'+s.plat+';'+s.plng);if(s.insta)L.push('URL:'+q(instaUrl(s.insta)));
   var m=String(s.pphoto||'').match(/^data:image\/jpeg;base64,([A-Za-z0-9+\/=]+)$/);if(m)L.push('PHOTO;ENCODING=b;TYPE=JPEG:'+m[1]);
   L.push('END:VCARD');
   return L.map(function(l){var o=[];while(l.length>74){o.push(l.slice(0,74));l=' '+l.slice(74)}o.push(l);return o.join('\r\n')}).join('\r\n')+'\r\n'}
@@ -281,13 +281,13 @@ function profv(){
   var s=DB.set,nm=(s.holder||'').trim(),ini=(nm.split(/\s+/).map(function(w){return w.charAt(0)}).slice(0,2).join('')||'').toUpperCase();
   var av='<div class="pfa">'+(s.pphoto?'<img src="'+s.pphoto+'" alt="">':(ini?'<span>'+e(ini)+'</span>':ico('user')))+'</div>';
   var row=function(i,v,h){return v?'<a class="pfl" '+(h?'href="'+e(h)+'" target="_blank" rel="noopener"':'')+'>'+ico(i)+'<span>'+e(v)+'</span></a>':''};
-  var rows=row('phone',s.phone,s.phone?'tel:'+String(s.phone).replace(/[^\d+]/g,''):'')+row('chat',s.phone?'WhatsApp':'',s.phone?'https://wa.me/'+waNum(s.phone):'')+row('mail',s.pe,s.pe?'mailto:'+s.pe:'')+row('pin',s.pc,'')+row('link',s.insta,instaUrl(s.insta));
+  var rows=row('phone',s.phone,s.phone?'tel:'+String(s.phone).replace(/[^\d+]/g,''):'')+row('chat',s.phone?'WhatsApp':'',s.phone?'https://wa.me/'+waNum(s.phone):'')+row('mail',s.pe,s.pe?'mailto:'+s.pe:'')+row('pin',[s.pa,[s.pcp,s.pc].filter(Boolean).join(' ')].filter(Boolean).join(', '),(s.plat!=null&&s.plat!==''&&isFinite(s.plat))?'https://www.google.com/maps/dir/?api=1&destination='+s.plat+','+s.plng:'')+row('link',s.insta,instaUrl(s.insta));
   var card='<div class="pfc">'+av+'<div class="pfn">'+e(nm||'Ton nom')+'</div>'+(s.pt||s.pco?'<div class="pfr">'+e([s.pt,s.pco].filter(Boolean).join(' · '))+'</div>':'')+(rows?'<div class="pfs">'+rows+'</div>':'<p class="pfm">Complète ton profil ci-dessous pour remplir ta carte.</p>')+'</div>';
   var f=function(id,k,l,x){return '<label>'+l+'</label><input id="'+id+'" data-set="'+k+'" value="'+e(s[k]||'')+'" '+(x||'')+'>'};
   return card
    +'<div class="btns" style="margin:0 0 10px"><button class="b pri" data-act="vcf">'+ico('user','s')+' Ajouter à mes contacts</button><button class="b" data-act="pshare">'+ico('share','s')+' Partager</button></div>'
    +'<div class="card"><h2>Photo</h2><div class="btns" style="margin-top:0"><label class="b">'+ico('cam','s')+' '+(s.pphoto?'Changer la photo':'Choisir une photo')+'<input type="file" accept="image/*" data-photo="me"></label>'+(s.pphoto?'<button class="b ko" data-act="mphdel">Retirer</button>':'')+'</div></div>'
-   +'<div class="card"><h2>Mes informations</h2>'+f('pf-n','holder','Nom (aussi utilisé pour les relevés)','autocomplete="name"')+f('pf-t','pt','Fonction','placeholder="Ex. Confirmateur, Gérant"')+f('pf-co','pco','Société','autocomplete="organization"')+f('pf-p','phone','Téléphone / WhatsApp','inputmode="tel" autocomplete="tel"')+f('pf-e','pe','E-mail','type="email" inputmode="email" autocomplete="email"')+f('pf-c','pc','Ville','autocomplete="address-level2"')+f('pf-i','insta','Instagram','placeholder="@moncompte"')+f('pf-r','rib','RIB pour les virements','inputmode="numeric"')
+   +'<div class="card"><h2>Mes informations</h2>'+f('pf-n','holder','Nom (aussi utilisé pour les relevés)','autocomplete="name"')+f('pf-t','pt','Fonction','placeholder="Ex. Confirmateur, Gérant"')+f('pf-co','pco','Société','autocomplete="organization"')+f('pf-p','phone','Téléphone / WhatsApp','inputmode="tel" autocomplete="tel"')+f('pf-e','pe','E-mail','type="email" inputmode="email" autocomplete="email"')+f('pf-a','pa','Adresse postale (rue, quartier)','autocomplete="off" placeholder="Commence à écrire, puis choisis dans la liste"')+f('pf-cp','pcp','Code postal','inputmode="numeric" autocomplete="postal-code"')+f('pf-c','pc','Ville','autocomplete="off"')+f('pf-i','insta','Instagram','placeholder="@moncompte"')+f('pf-r','rib','RIB pour les virements','inputmode="numeric"')
    +'<button class="b pri full" data-act="psave">Enregistrer mon profil</button><p class="mut" style="margin-top:8px">Ces informations restent sur cet appareil et sont incluses dans ta sauvegarde. Ton téléphone sert aussi aux liens de commande des vendeurs.</p></div>';
 }
 function bioCard(){var on=!!localStorage.getItem('cod_bio');return '<div class="card" id="bio-card"><h2>Déverrouillage biométrique</h2><p class="mut">'+(on?'Activé : tu peux déverrouiller l’appli avec ton empreinte ou ton visage. Ton code reste valable.':'Déverrouille l’appli sans taper ton code. L’empreinte et le visage ne quittent jamais ton téléphone.')+'</p><button class="b'+(on?'':' pri')+' full" data-bio="'+(on?'off':'on')+'">'+(on?'Désactiver':'Activer')+'</button></div>'}
@@ -669,18 +669,16 @@ function xact(a,t,id,o,g){
   if(0){}
   else if(a==='sp'){var spv=t.getAttribute('data-v');S.sp='pasc'.indexOf(spv)>=0?spv:'p'}
   else if(a==='mphdel'){DB.set.pphoto='';S.msg='Photo retirée.'}
-  else if(a==='psave'){var PM={'pf-n':'holder','pf-t':'pt','pf-co':'pco','pf-p':'phone','pf-e':'pe','pf-c':'pc','pf-i':'insta','pf-r':'rib'},bad=0;Object.keys(PM).forEach(function(i){var el=g(i);if(!el)return;var v=el.value.trim();if(i==='pf-e'&&v&&!/^\S+@\S+\.\S+$/.test(v)){bad=1;return}DB.set[PM[i]]=v});if(bad){mk('E-mail invalide : le reste a été enregistré.',1);save();render();return 2}S.msg='Profil enregistré ✓'}
+  else if(a==='psave'){var PM={'pf-n':'holder','pf-t':'pt','pf-co':'pco','pf-p':'phone','pf-e':'pe','pf-c':'pc','pf-a':'pa','pf-cp':'pcp','pf-i':'insta','pf-r':'rib'},bad=0;Object.keys(PM).forEach(function(i){var el=g(i);if(!el)return;var v=el.value.trim();if(i==='pf-e'&&v&&!/^\S+@\S+\.\S+$/.test(v)){bad=1;return}DB.set[PM[i]]=v});if(bad){mk('E-mail invalide : le reste a été enregistré.',1);save();render();return 2}S.msg=(DB.set.pa&&!(DB.set.plat!=null&&DB.set.plat!==''))?'Profil enregistré ✓ · ⚠ Adresse non vérifiée : choisis une suggestion dans la liste.':'Profil enregistré ✓'}
   else if(a==='vcf'){if(!(DB.set.holder||'').trim()){mk('Renseigne d’abord ton nom.',1)}else{dl(new Blob([vcard()],{type:'text/vcard'}),(DB.set.holder.trim().replace(/[^\w\-]+/g,'_')||'contact')+'.vcf');S.msg='Fiche contact téléchargée : ouvre-la pour l’ajouter à tes contacts.'}}
-  else if(a==='pshare'){var ps=DB.set,pn=(ps.holder||'').trim();if(!pn){mk('Renseigne d’abord ton nom.',1);render();return 2}var ptx=[pn,[ps.pt,ps.pco].filter(Boolean).join(' · '),ps.phone?'Tél / WhatsApp : '+ps.phone:'',ps.pe?'E-mail : '+ps.pe:'',ps.pc?ps.pc:'',ps.insta?'Instagram : '+instaUrl(ps.insta):''].filter(Boolean).join('\n');
-    if(navigator.share){var pf=null;try{pf=new File([vcard()],'contact.vcf',{type:'text/vcard'})}catch(x){}var pd={title:pn,text:ptx};if(pf&&navigator.canShare&&navigator.canShare({files:[pf]}))pd.files=[pf];navigator.share(pd).catch(function(){})}
-    else if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(ptx).then(function(){toast('Carte copiée.')},function(){toast('Copie impossible.')})}else toast('Partage indisponible sur cet appareil.');return 2}
-  else if(a==='demoon'){if(DB.orders.some(function(x){return x.demo})){S.msg='Les données de démo sont déjà chargées.';return 1}
+  else if(a==='pshare'){window.__pshare();return 2}
+  else if(a==='demoon'){if(DB.orders.some(function(x){return x.demo})){window.__demoVend();S.msg='Démo mise à jour : 5 boutiques avec adresse GPS et QR code.';return 1}
     var dv=[{id:uid(),name:'Boutique Atlas (démo)',phone:'0600000001',city:'Casablanca',insta:'',tiktok:'',fb:'',cat:'Mode',notes:'',ver:false,fees:null,reg:0,arts:[],demo:1},{id:uid(),name:'Maroc Gadgets (démo)',phone:'0600000002',city:'Rabat',insta:'',tiktok:'',fb:'',cat:'High-tech',notes:'',ver:false,fees:null,reg:0,arts:[],demo:1}];
     dv.forEach(function(v){DB.vend.push(v)});
     DB.cour.push({id:uid(),name:'Karim livreur (démo)',phone:'0600000003',city:'Casablanca',price:25,prod:'',demo:1});
     var P=[['Sara Alaoui','Robe d’été','Casablanca','En attente',0,299],['Youssef Bennani','Écouteurs sans fil','Rabat','En attente',0,199],['Imane Tazi','Montre connectée','Casablanca','Confirmé',0,350],['Omar El Fassi','Sac à main','Marrakech','Confirmé',1,420],['Nadia Cherkaoui','Coque téléphone','Fès','Confirmé',1,79],['Hamza Idrissi','Chargeur rapide','Tanger','Annulé',0,120],['Salma Berrada','Parfum 50 ml','Casablanca','Confirmé',0,260],['Reda Lahlou','Casque gamer','Rabat','En attente',0,380]];
     P.forEach(function(p,i){DB.orders.push({id:uid(),date:today(),ts:Date.now()-i*3600000,vendor:dv[i%2].name,name:p[0]+' (démo)',phone:'060000'+(1000+i),product:p[1],address:'Adresse de démonstration '+(i+1),city:p[2],channel:'Instagram',amount:p[5],upsell:0,status:p[3],attempts:0,delivery:'',courier:p[4]?'Karim livreur (démo)':'',note:'',reason:p[3]==='Annulé'?'Client injoignable':'',cb:0,demo:1})});
-    S.msg='Données de démonstration chargées (8 commandes, 2 vendeurs, 1 livreur).';return 1}
+    window.__demoVend();S.msg='Démo chargée : 8 commandes, 5 boutiques (GPS + QR), 1 livreur.';return 1}
   else if(a==='demooff'){DB.orders=DB.orders.filter(function(x){return !x.demo});DB.vend=DB.vend.filter(function(x){return !x.demo});DB.cour=DB.cour.filter(function(x){return !x.demo});S.msg='Données de démonstration supprimées. Vos vraies données sont intactes.';return 1}
   else if(a==='pubo'){if(o&&DB.set.db)pub(o);return 2;}
   else if(a==='mz'){var zv=t.getAttribute('data-v');if(zv==='+')S.mz=Math.min(4,(S.mz||1)*1.6);else if(zv==='-')S.mz=Math.max(.5,(S.mz||1)*.6);else{S.full=!S.full;S.mz=1}rr();return 2;}
@@ -2338,7 +2336,7 @@ function homeChecks(){
   var A=$('app'),m=$('hmc');if(!A||$('ctl'))return;var l=checks();if(!l.length)return;
   var c=document.createElement('div');c.className='card';c.id='ctl';
   c.innerHTML='<h2>À vérifier ('+l.length+')</h2>'+l.slice(0,6).map(function(x){return '<div class="row" style="padding:5px 0;gap:8px"><span style="min-width:0"><b>'+e(x.o.name)+'</b><div class="mut">'+e(x.t)+'</div></span><button class="b sm" data-ae="'+e(x.o.id)+'" style="flex:0 0 auto;min-width:0">✏️</button></div>'}).join('')+(l.length>6?'<div class="mut">+ '+(l.length-6)+' autre(s) dans Commandes.</div>':'');
-  if(m&&m.parentNode)m.parentNode.insertBefore(c,m.nextSibling);else A.appendChild(c)}
+  if(m&&m.parentNode)m.parentNode.insertBefore(c,m.nextSibling);else{var sh=$('shc');if(sh&&sh.parentNode)sh.parentNode.insertBefore(c,sh.nextSibling);else A.appendChild(c)}}
 /* --- adresses modifiables --- */
 function addEditBtns(){
   var A=$('app');if(!A||!DB)return;
@@ -2405,7 +2403,7 @@ function themeApply(){
 var _r10=render;
 render=function(){_r10();
   if(!DB||S.locked||Q.get('t')||Q.get('l')||Q.get('v'))return;
-  try{if(S.tab==='home'){homeMap();homeChecks()}addEditBtns();lmCtl();themeApply()}catch(x){}};
+  try{if(S.tab==='home'){homeShops();homeChecks()}addEditBtns();lmCtl();themeApply()}catch(x){}};
 })();
 
 /* ===== 8.6.1 : rôles (garde d'interface) : livreur et vendeur n'ont que l'onglet qui les concerne ===== */
@@ -2424,7 +2422,7 @@ render=function(){var r=rl();if(r&&DB&&!S.locked&&!Q.get('t')&&!Q.get('l')&&!Q.g
 /* ===== 8.7.0 : suggestions d'adresses et de villes + repère sur la carte ===== */
 (function(){
 var TYPES=['Rue ','Boulevard ','Avenue ','Route ','Quartier ','Lotissement ','Résidence ','Immeuble ','Hay ','Derb ','Rond-point ','Place ','Impasse ','Cité ','Villa ','Douar '];
-var CITYOF={'e-a':'e-c','f-a':'f-c','ae-a':'ae-c','ae-va':'ae-vc'},ADR=/^(e-a|f-a|w-a|b-a|ae-a|ae-va)$/,CTY=/^(e-c|f-c|v-c|n-c|ae-c|ae-vc)$/;
+var CITYOF={'e-a':'e-c','f-a':'f-c','ae-a':'ae-c','ae-va':'ae-vc','pf-a':'pf-c'},ADR=/^(e-a|f-a|w-a|b-a|ae-a|ae-va|pf-a)$/,CTY=/^(e-c|f-c|v-c|n-c|ae-c|ae-vc|pf-c)$/;
 var BX=null,CUR=null,TM=null,AB=null,CACHE={},PK=null,PF=null;
 function isAddr(el){return !!el&&el.tagName==='INPUT'&&(ADR.test(el.id)||el.getAttribute('data-vf')==='addr')}
 function isCity(el){return !!el&&el.tagName==='INPUT'&&(CTY.test(el.id)||el.getAttribute('data-vf')==='city')}
@@ -2448,14 +2446,21 @@ function remote(q,city,cityMode,cb){
   var key=(cityMode?'c|':'a|')+nz(q)+'|'+nz(city);if(CACHE[key])return cb(CACHE[key]);
   if(AB){try{AB.abort()}catch(x){}}
   AB=window.AbortController?new AbortController():null;
-  var url='https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=6&countrycodes=ma&accept-language=fr&q='+encodeURIComponent(cityMode?q:(q+(city?', '+city:'')+', Maroc'));
+  var url='https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=8&countrycodes=ma&accept-language=fr&q='+encodeURIComponent(cityMode?q:(q+(city?', '+city:'')+', Maroc'));
   fetch(url,AB?{signal:AB.signal}:{}).then(function(r){return r.json()}).then(function(j){
     var out=[],seen={};(j||[]).forEach(function(r){var a=r.address||{},ct=a.city||a.town||a.village||a.municipality||a.county||'',t;
       if(cityMode){t=ct||r.name||''}
       else{var st=a.road||a.pedestrian||a.footway||a.path||'',sub=a.suburb||a.neighbourhood||a.quarter||a.city_district||'';
         t=[((a.house_number?a.house_number+' ':'')+st).trim(),sub].filter(Boolean).join(', ');if(!t)t=(r.name||String(r.display_name||'').split(',').slice(0,2).join(',')).trim()}
-      if(!t||seen[nz(t)])return;seen[nz(t)]=1;out.push({t:t,city:ct,lat:+r.lat,lng:+r.lon,kind:'net'})});
-    CACHE[key]=out;cb(out)}).catch(function(){cb([])})}
+      if(!t||seen[nz(t)])return;seen[nz(t)]=1;out.push({t:t,city:ct,cp:a.postcode||'',lat:+r.lat,lng:+r.lon,kind:'net'})});
+    ph(q,city,cityMode,out,function(all){CACHE[key]=all;cb(all)})}).catch(function(){ph(q,city,cityMode,[],cb)})}
+function ph(q,city,cityMode,base,cb){
+  if(cityMode||!window.fetch)return cb(base);
+  fetch('https://photon.komoot.io/api/?lang=fr&limit=6&bbox=-17.3,20.5,-0.9,36.2&q='+encodeURIComponent(q+(city?' '+city:''))).then(function(r){return r.json()}).then(function(j){
+    var out=[],seen={};((j&&j.features)||[]).forEach(function(f){var p=f.properties||{},g=f.geometry&&f.geometry.coordinates;if(!g||p.countrycode&&p.countrycode!=='MA')return;
+      var st=p.street||(p.osm_key==='highway'?p.name:''),t=st?((p.housenumber?p.housenumber+' ':'')+st+(p.district||p.locality?', '+(p.district||p.locality):'')):'';if(!t)return;
+      var k=nz(t);if(seen[k])return;seen[k]=1;out.push({t:t,city:p.city||p.county||'',cp:p.postcode||'',lat:+g[1],lng:+g[0],kind:'net'})});
+    var ex={};out.forEach(function(x){ex[nz(x.t)]=1});cb(out.concat(base.filter(function(x){return !ex[nz(x.t)]})))}).catch(function(){cb(base)})}
 /* --- liste déroulante --- */
 function position(){
   if(!BX||!CUR)return;var r=CUR.getBoundingClientRect(),vh=window.innerHeight,below=vh-r.bottom,h=Math.min(260,BX.scrollHeight);
@@ -2465,8 +2470,8 @@ function hide(){if(BX)BX.style.display='none';CUR=null}
 function show(el,items){
   if(!items.length){hide();return}
   if(!BX){BX=document.createElement('div');BX.className='sgb';BX.addEventListener('mousedown',function(ev){ev.preventDefault()});document.body.appendChild(BX)}
-  CUR=el;BX._it=items;
-  BX.innerHTML=items.map(function(it,i){return '<button type="button" class="sgi" data-sgi="'+i+'"><span>'+e(it.t)+'</span><small>'+(it.kind==='hist'?'déjà utilisée':it.kind==='net'?'📍 carte':it.kind==='type'?'type de voie':'ville')+'</small></button>'}).join('');
+  CUR=el;BX._it=items;BX._a=-1;
+  BX.innerHTML=items.map(function(it,i){return '<button type="button" class="sgi" data-sgi="'+i+'"><span>'+e(it.t)+'</span><small>'+(it.kind==='hist'?'déjà utilisée':it.kind==='net'?'📍 '+e([it.cp,it.city].filter(Boolean).join(' · ')||'carte'):it.kind==='type'?'type de voie':'ville')+'</small></button>'}).join('');
   BX.style.display='block';position()}
 function suggest(el,cityMode){
   clearTimeout(TM);var q=el.value.trim();if(q.length<2){hide();return}
@@ -2475,18 +2480,18 @@ function suggest(el,cityMode){
   TM=setTimeout(function(){remote(q,cityVal(el),cityMode,function(net){
     if(document.activeElement!==el)return;var seen={},all=[];
     loc.concat(net).forEach(function(it){var k=nz(it.t);if(seen[k])return;seen[k]=1;all.push(it)});show(el,all.slice(0,9))})},500)}
-function mark(el){var r=el.nextElementSibling;if(r&&r.className==='pinrow'){var s=r.querySelector('span');if(s)s.textContent=el.dataset.lat?'✅ Repère enregistré':''}}
+function mark(el){var r=el.nextElementSibling;if(r&&r.className==='pinrow'){var s=r.querySelector('span');if(s)s.textContent=el.dataset.lat?(/\d/.test(el.value)?'✅ Adresse vérifiée · repère GPS enregistré':'✅ Rue vérifiée · numéro non confirmé (affine avec « Situer sur la carte »)'):(el.value.trim().length>2?'⚠ Non vérifiée : choisis une suggestion ou place le repère':'')}}
 function pick(it){
   var el=CUR;if(!el)return;el.value=it.t;el.dataset.init='1';
   if(num(it.lat)&&num(it.lng)){el.dataset.lat=it.lat;el.dataset.lng=it.lng;el.dataset.pl=it.t}else{delete el.dataset.lat;delete el.dataset.lng;el.dataset.pl=it.t}
   if(el.getAttribute('data-vf')==='addr'){var v=vid(S.vsel);if(v){if(el.dataset.lat){v.lat=+el.dataset.lat;v.lng=+el.dataset.lng}else{delete v.lat;delete v.lng}}}
   if(it.city&&isAddr(el)){var c=CITYOF[el.id]?$(CITYOF[el.id]):document.querySelector('input[data-vf="city"]');if(c&&!c.value){c.value=it.city;c.dispatchEvent(new Event('change',{bubbles:true}))}}
-  el.dispatchEvent(new Event('change',{bubbles:true}));hide();mark(el)}
+  if(it.cp&&el.id==='pf-a'){var pz=$('pf-cp');if(pz&&!pz.value){pz.value=it.cp;pz.dispatchEvent(new Event('change',{bubbles:true}))}}el.dispatchEvent(new Event('change',{bubbles:true}));hide();mark(el)}
 /* --- initialisation des champs (repère existant + bouton carte) --- */
 function prep(el){
   el.dataset.init='1';var src=null;
   if(el.id==='e-a'){var b=el.closest('.card');b=b&&b.querySelector('[data-act="esave"]');src=b&&byId(b.getAttribute('data-id'))}
-  else if(el.getAttribute('data-vf')==='addr')src=vid(S.vsel);
+  else if(el.getAttribute('data-vf')==='addr')src=vid(S.vsel);else if(el.id==='pf-a')src={lat:DB.set.plat,lng:DB.set.plng};
   if(src&&num(src.lat)&&num(src.lng)){el.dataset.lat=src.lat;el.dataset.lng=src.lng}
   el.dataset.pl=el.value}
 function decorate(root){
@@ -2497,7 +2502,7 @@ function decorate(root){
     if(!el.dataset.init)prep(el);
     var nx=el.nextElementSibling;if(nx&&nx.className==='pinrow'){mark(el);continue}
     if(!el.id)el.id='pinadr';
-    var d=document.createElement('div');d.className='pinrow';d.innerHTML='<button type="button" class="b sm" data-pin="'+el.id+'">📍 Marquer le repère sur la carte</button><span class="mut"></span>';
+    var d=document.createElement('div');d.className='pinrow';d.innerHTML='<button type="button" class="b sm" data-pin="'+el.id+'">📍 Situer sur la carte</button><span class="mut"></span>';
     el.parentNode.insertBefore(d,el.nextSibling);mark(el)}}
 /* --- sélecteur de repère --- */
 function closePk(){if(PK){try{PK.map.remove()}catch(x){}PK.o.remove();PK=null}}
@@ -2526,7 +2531,7 @@ function pkOpen(el){
   if(!c0&&el.value.trim().length>3)pkFind()}
 function pkOk(){
   if(!PK||!PK.ll)return toast('Touche la carte pour placer le repère.');
-  var el=PK.el,ll=PK.ll;el.dataset.lat=ll[0];el.dataset.lng=ll[1];el.dataset.init='1';el.dataset.pl=el.value;
+  var el=PK.el,ll=PK.ll;if(ll[0]<20.5||ll[0]>36.2||ll[1]<-17.3||ll[1]>-0.9)return toast('Ce point est hors du Maroc : déplace le repère.');el.dataset.lat=ll[0];el.dataset.lng=ll[1];el.dataset.init='1';el.dataset.pl=el.value;
   if(el.getAttribute('data-vf')==='addr'){var v=vid(S.vsel);if(v){v.lat=ll[0];v.lng=ll[1];save()}}
   closePk();mark(el);
   if(!el.value.trim()){fetch('https://nominatim.openstreetmap.org/reverse?format=jsonv2&addressdetails=1&zoom=18&accept-language=fr&lat='+ll[0]+'&lon='+ll[1]).then(function(r){return r.json()}).then(function(r){
@@ -2536,6 +2541,11 @@ function pkOk(){
   else el.dispatchEvent(new Event('change',{bubbles:true}));
   toast('Repère enregistré 📍')}
 /* --- événements --- */
+document.addEventListener('keydown',function(ev){
+  if(!BX||BX.style.display!=='block'||!CUR||ev.target!==CUR)return;var n=(BX._it||[]).length,k=ev.key;
+  if(k==='ArrowDown'||k==='ArrowUp'){ev.preventDefault();BX._a=(BX._a+(k==='ArrowDown'?1:-1)+n)%n;var b=BX.children;for(var i=0;i<b.length;i++)b[i].classList.toggle('on',i===BX._a);if(b[BX._a])b[BX._a].scrollIntoView({block:'nearest'})}
+  else if(k==='Enter'&&BX._a>=0){ev.preventDefault();ev.stopPropagation();pick(BX._it[BX._a])}
+  else if(k==='Escape')hide()},true);
 document.addEventListener('input',function(ev){
   var el=ev.target;
   if(isAddr(el)){
@@ -2747,3 +2757,66 @@ async function cxXlsx(buf){
       row[ci]=val}
     rows.push(row)}
   return rows.map(function(r){var o=[];for(var k=0;k<r.length;k++){var x=r[k]==null?'':String(r[k]);o.push('"'+x.replace(/"/g,'""')+'"')}return o.join(',')}).join('\n')}
+
+/* ===== 9.1.0 : partage du profil, carrousel des boutiques, QR + GPS boutique, démo enrichie ===== */
+(function(){
+var SU=function(){return location.origin+location.pathname};
+function okc(la,ln){return la!=null&&la!==''&&ln!=null&&ln!==''&&isFinite(la)&&isFinite(ln)&&+la>20&&+la<36.5&&+ln>-17.5&&+ln<-0.5}
+function gmap(la,ln){return 'https://www.google.com/maps/dir/?api=1&destination='+la+','+ln}
+var OVS='position:fixed;top:0;right:0;bottom:0;left:0;z-index:100;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto';
+function pdata(){var s=DB.set,ok=okc(s.plat,s.plng);return{k:'p',n:(s.holder||'').trim(),r:[s.pt,s.pco].filter(Boolean).join(' · '),p:s.phone||'',e:s.pe||'',a:[s.pa,[s.pcp,s.pc].filter(Boolean).join(' ')].filter(Boolean).join(', '),la:ok?+s.plat:undefined,ln:ok?+s.plng:undefined,i:s.insta||''}}
+function cardUrl(d){return SU()+'?card='+encq(d)}
+function vc0(){var s=DB.set,p=s.pphoto;s.pphoto='';try{return vcard()}finally{s.pphoto=p}}
+var PO=null,PM='l';
+function pshow(){
+  if(PO)PO.remove();var http=/^http/.test(SU()),mode=(PM==='l'&&http)?'l':'c',svg=qrSvg(mode==='l'?cardUrl(pdata()):vc0()).replace('<svg ','<svg style="display:block;width:100%;height:auto" ');
+  PO=document.createElement('div');PO.setAttribute('role','dialog');PO.style.cssText=OVS;
+  PO.innerHTML='<div class="card" style="max-width:380px;width:100%;margin:0;text-align:center"><h2>Partager mon profil</h2><div class="btns"><button class="b sm'+(mode==='l'?' pri':'')+'" data-x9="pmode" data-k="l">QR lien</button><button class="b sm'+(mode==='c'?' pri':'')+'" data-x9="pmode" data-k="c">QR contact</button></div>'
+   +(svg.length>40?'<div style="background:#fff;padding:6px;border-radius:12px;width:min(68vw,260px);margin:10px auto">'+svg+'</div>':'<p class="mut">Trop long pour un QR code.</p>')
+   +'<p class="mut" style="font-size:12px">'+(mode==='l'?'Ouvre ta carte de visite en ligne.':'Ajoute directement le contact (fonctionne hors ligne).'+(http?'':' Ouvre l’appli depuis son adresse https pour le QR lien.'))+'</p>'
+   +'<div class="btns"><button class="b" data-x9="pcopy">Copier le lien</button><button class="b" data-x9="pshr">Partager…</button></div><div class="btns"><button class="b" data-x9="pnfc">NFC</button><button class="b" data-x9="pwa">WhatsApp</button><button class="b" data-x9="pvcf">Fiche .vcf</button></div><button class="b pri full" data-x9="pclose">Fermer</button></div>';
+  document.body.appendChild(PO)}
+window.__pshare=function(){if(!(DB.set.holder||'').trim()){mk('Renseigne d’abord ton nom.',1);render();return}pshow()};
+function drawCard(d){
+  var A=$('app');if(!A)return;var ini=(d.n||'?').split(/\s+/).map(function(w){return w.charAt(0)}).slice(0,2).join('').toUpperCase(),has=okc(d.la,d.ln);
+  var row=function(i,t,h){return t?'<a class="pfl" '+(h?'href="'+e(h)+'" target="_blank" rel="noopener"':'')+'>'+ico(i)+'<span>'+e(t)+'</span></a>':''};
+  A.innerHTML='<div class="pfc"><div class="pfa"><span>'+e(ini)+'</span></div><div class="pfn">'+e(d.n||'')+'</div>'+(d.r?'<div class="pfr">'+e(d.r)+'</div>':'')+'<div class="pfs">'
+   +row('phone',d.p,d.p?'tel:'+String(d.p).replace(/[^\d+]/g,''):'')+row('chat',d.p?'WhatsApp':'',d.p?'https://wa.me/'+waNum(d.p):'')+row('mail',d.e,d.e?'mailto:'+d.e:'')+row('pin',d.a,has?gmap(d.la,d.ln):'')
+   +(has?row('pin','Itinéraire GPS · '+(+d.la).toFixed(5)+', '+(+d.ln).toFixed(5),gmap(d.la,d.ln)):'')+row('link',d.i,d.i?instaUrl(d.i):'')+'</div></div><div class="btns"><button class="b pri" data-x9="cardvcf">Ajouter aux contacts</button></div>';
+  window.__cd=d}
+var _r9=render;render=function(){if(Q.get('card')){var d=decq('card');if(d){drawCard(d);return}}_r9()};
+function shopData(v){return{k:'s',n:v.name,r:v.cat||'',p:v.phone||'',e:v.email||'',a:[v.addr,v.city].filter(Boolean).join(', '),la:okc(v.lat,v.lng)?+v.lat:undefined,ln:okc(v.lat,v.lng)?+v.lng:undefined,i:v.insta||''}}
+function shopCard(v){var g=okc(v.lat,v.lng);
+  return '<div class="card"><h2>QR code &amp; position GPS</h2><p class="mut">'+(g?'📍 GPS enregistré : '+(+v.lat).toFixed(5)+', '+(+v.lng).toFixed(5)+'. Le QR ouvre la fiche de la boutique avec l’itinéraire.':'Aucune position GPS. Choisis une adresse dans les suggestions, place le repère sur la carte, ou utilise ta position (si tu es dans la boutique).')+'</p><div class="btns"><button class="b pri" data-x9="shqr" data-id="'+v.id+'">QR de la boutique</button><button class="b" data-x9="shgps" data-id="'+v.id+'">📍 Ma position = boutique</button>'+(g?'<a class="b" target="_blank" rel="noopener" href="'+gmap(v.lat,v.lng)+'">Itinéraire</a>':'')+'</div></div>'}
+var _fi=fiche;fiche=function(v){var h=_fi(v),i=h.indexOf('<div class="grid"');return i<0?h+shopCard(v):h.slice(0,i)+shopCard(v)+h.slice(i)};
+var CT=null,HOLD=0;
+window.homeShops=function(){
+  clearInterval(CT);var A=$('app');if(!A||$('shc'))return;var vs=DB.vend.filter(function(v){return v.name});if(!vs.length)return;
+  var c=document.createElement('div');c.id='shc';c.className='shc-w';
+  c.innerHTML='<div class="row"><h2 style="margin:0">Mes boutiques</h2><span class="mut">'+vs.length+'</span></div><div class="shc" id="shcs">'+vs.map(function(v){return '<div class="shi" data-x9="shop" data-id="'+v.id+'">'+avatar(v,56)+'<div class="si"><b>'+e(v.name)+(v.ver?' ✔':'')+'</b><div class="mut">'+e([v.cat,v.city].filter(Boolean).join(' · ')||v.phone||'')+'</div><div class="mut">'+(okc(v.lat,v.lng)?'📍 GPS':'—')+' · '+DB.orders.filter(function(o){return o.vendor===v.name}).length+' cmd</div></div><button class="b sm" style="flex:0 0 auto;min-width:0" data-x9="shqr" data-id="'+v.id+'">QR</button></div>'}).join('')+'</div>';
+  var g=A.querySelector('.grid');if(g&&g.parentNode===A)g.parentNode.insertBefore(c,g.nextSibling);else A.appendChild(c);
+  var s=$('shcs'),hold=function(){HOLD=Date.now()+7000};['touchstart','pointerdown','wheel','mouseenter'].forEach(function(t){s.addEventListener(t,hold,{passive:true})});
+  if(vs.length>1&&!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches))CT=setInterval(function(){var z=$('shcs');if(!z){clearInterval(CT);return}if(Date.now()<HOLD)return;var w=z.firstChild.offsetWidth+10;if(z.scrollLeft+z.clientWidth>=z.scrollWidth-4)z.scrollTo({left:0,behavior:'smooth'});else z.scrollBy({left:w,behavior:'smooth'})},3000)};
+window.__demoVend=function(){
+  var D=[['Boutique Atlas (démo)','Mode','Casablanca','Boulevard Zerktouni, Maârif',33.5866,-7.6326,'Sara Alaoui','0600000001'],['Maroc Gadgets (démo)','High-tech','Rabat','Avenue Mohammed V, Agdal',33.9929,-6.8498,'Youssef Bennani','0600000002'],['Riad Épices (démo)','Beauté','Marrakech','Rue Bab Agnaou, Médina',31.6258,-7.9891,'Imane Tazi','0600000004'],['Tanger Sneakers (démo)','Mode','Tanger','Boulevard Pasteur, Centre-ville',35.7673,-5.7998,'Omar El Fassi','0600000005'],['Atelier Fès (démo)','Artisanat','Fès','Talaa Kebira, Médina',34.0646,-4.9731,'Nadia Cherkaoui','0600000006']];
+  D.forEach(function(d,i){var v=DB.vend.filter(function(x){return x.name===d[0]})[0];if(!v){v={id:uid(),name:d[0],phone:d[7],city:d[2],insta:'',tiktok:'',fb:'',cat:d[1],notes:'',ver:false,fees:null,reg:0,arts:[],demo:1};DB.vend.push(v)}
+    v.cat=d[1];v.city=d[2];v.addr=d[3];v.lat=d[4];v.lng=d[5];v.resp=d[6];v.demo=1;v.ver=i<3;v.desc=v.desc||'Boutique de démonstration.'});return 1};
+document.addEventListener('click',function(ev){
+  var t=ev.target.closest&&ev.target.closest('[data-x9]');if(!t)return;var a=t.getAttribute('data-x9'),id=t.getAttribute('data-id');ev.preventDefault();ev.stopPropagation();
+  var v=id&&DB?vid(id):null;
+  if(a==='shop'&&v){S.tab='vend';S.vsel=id;S.vform=false;render()}
+  else if(a==='shqr'&&v){if(!/^http/.test(SU()))toast('Ouvre l’application depuis son adresse https pour créer ce code.');else qshow('Boutique : '+v.name,cardUrl(shopData(v)))}
+  else if(a==='shgps'&&v){if(!navigator.geolocation||!window.isSecureContext){toast('GPS indisponible ici.');return}toast('Localisation…');navigator.geolocation.getCurrentPosition(function(p){if(!okc(p.coords.latitude,p.coords.longitude)){toast('Position hors du Maroc : place le repère sur la carte.');return}v.lat=p.coords.latitude;v.lng=p.coords.longitude;save();render();toast('Position de la boutique enregistrée 📍')},function(){toast('Localisation refusée ou impossible.')},{enableHighAccuracy:true,timeout:15000})}
+  else if(a==='cardvcf'&&window.__cd){var d=window.__cd,p=String(d.n||'').split(/\s+/),q=function(x){return String(x||'').replace(/\\/g,'\\\\').replace(/\r?\n/g,'\\n').replace(/,/g,'\\,').replace(/;/g,'\\;')},L=['BEGIN:VCARD','VERSION:3.0','N:'+q(p.slice(1).join(' '))+';'+q(p[0])+';;;','FN:'+q(d.n)];if(d.p)L.push('TEL;TYPE=CELL:'+q(d.p));if(d.e)L.push('EMAIL:'+q(d.e));if(d.a)L.push('ADR;TYPE=WORK:;;'+q(d.a)+';;;;Maroc');if(okc(d.la,d.ln))L.push('GEO:'+d.la+';'+d.ln);L.push('END:VCARD');dl(new Blob([L.join('\r\n')+'\r\n'],{type:'text/vcard'}),(String(d.n||'contact').replace(/[^\w\-]+/g,'_'))+'.vcf')}
+  else if(a==='pmode'){PM=t.getAttribute('data-k');pshow()}
+  else if(a==='pclose'){if(PO){PO.remove();PO=null}}
+  else if(a==='pcopy'){var u=cardUrl(pdata());if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(u).then(function(){toast('Lien copié ✓')},function(){window.prompt('Copie ce lien :',u)});else window.prompt('Copie ce lien :',u)}
+  else if(a==='pshr'){var d2=pdata(),u2=cardUrl(d2);if(navigator.share)navigator.share({title:d2.n,text:d2.n+(d2.r?' · '+d2.r:''),url:u2}).catch(function(){});else toast('Partage indisponible : utilise « Copier le lien ».')}
+  else if(a==='pnfc'){nfcW(cardUrl(pdata()))}
+  else if(a==='pwa'){var d3=pdata();window.open('https://wa.me/?text='+encodeURIComponent(d3.n+' — '+cardUrl(d3)),'_blank')}
+  else if(a==='pvcf'){var nm=(DB.set.holder||'contact').trim().replace(/[^\w\-]+/g,'_'),f=null;try{f=new File([vcard()],nm+'.vcf',{type:'text/vcard'})}catch(x){}
+    if(f&&navigator.canShare&&navigator.canShare({files:[f]}))navigator.share({files:[f],title:DB.set.holder}).catch(function(){});else dl(new Blob([vcard()],{type:'text/vcard'}),nm+'.vcf')}
+},true);
+document.addEventListener('change',function(ev){var el=ev.target;if(!el||el.id!=='pf-a'||!DB)return;
+  if(okc(el.dataset.lat,el.dataset.lng)){DB.set.plat=+el.dataset.lat;DB.set.plng=+el.dataset.lng}else{delete DB.set.plat;delete DB.set.plng}save()},true);
+})();

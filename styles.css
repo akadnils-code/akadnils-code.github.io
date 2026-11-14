@@ -409,3 +409,9 @@ details.oc2>summary:after{content:"▾";margin-left:8px}
 details.oc2[open]>summary:after{content:"▴"}
 details.oc2[open]{padding-bottom:10px}
 
+
+.shc-w{margin:12px 0}.shc{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:8px 2px 4px}.shc::-webkit-scrollbar{display:none}
+.shi{flex:0 0 80%;max-width:290px;scroll-snap-align:start;display:flex;gap:10px;align-items:center;background:var(--card);border:1px solid var(--br);border-radius:16px;padding:10px;cursor:pointer}
+.shi .av{border-width:2px}.shi .si{min-width:0;flex:1}.shi b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sgi small{display:block}
+.sgi.on{background:var(--br)}
