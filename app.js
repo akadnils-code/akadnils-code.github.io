@@ -1,6 +1,7 @@
 /* All In One 8.3.0 - script principal
    Sections repérées : modules réintégrés de la v3 | v5 : code de livraison, avis, demandes, motifs livreur, sati | v6 : catalogue, créneaux, photo de preuve, notifications, da | v7 : automatisations | v7.2 : QR code + NFC (QR hors ligne, aucune dépendance résea | v7.4 : scanner QR (caméra), tags NFC associés, diagnostic */
-var CIT=200000,KEY='cod_v4',OLDKEY='cod_v1',VER='8.7.0',IT=200000;
+var CIT=200000,KEY='cod_v4',OLDKEY='cod_v1',VER='8.8.1',IT=200000;
+var OM={},CXS={l:null};
 var DEFTPL='Bonjour 👋 [boutique] a essayé de vous joindre pour confirmer votre commande de [produit]. Répondez OUI pour confirmer, ou dites-nous à quelle heure vous rappeler. Merci !';
 var DEFSCRIPT='1) Se présenter : « Bonjour, je vous appelle de la part de [boutique]. »\n2) Confirmer le produit, la quantité, le prix et la livraison.\n3) Confirmer la ville et l’adresse exacte (quartier, repère).\n4) Proposer un produit complémentaire ou un pack.\n5) Rappeler : paiement à la livraison, merci de préparer le montant.';
 var DEFSET={rc:0,db:'',tiles:'',ckey:'',net:[],deals:[],wallet:[],sim:{cpw:200,tc:70,td:80,nv:5,pa:60,pv:90,q:100},cf:5,bn:6,up:12,trial:30,dth:500,dpc:20,minc:100,phone:'',rib:'',holder:'',insta:'',pt:'',pco:'',pe:'',pc:'',pphoto:'',tpl:DEFTPL,script:DEFSCRIPT,lang:'fr',lastBackup:0};
@@ -267,7 +268,7 @@ function finv(){
    +(cn?'<div class="card"><h2>Par livreur</h2><div class="wrap"><table><tr><th>Livreur</th><th class="n">Cmd</th><th class="n">Livré</th><th class="n">Refusé</th><th class="n">Taux</th></tr>'+cn+'</table></div></div>':'')
    +'<div class="card"><h2>Export Excel</h2><div class="btns"><button class="b pri" data-act="xls">'+ico('dl','s')+' Excel (.xlsx)</button></div></div>';
 }
-function hdrAv(){var s=DB.set,nm=(s.holder||'').trim(),ini=(nm.split(/\s+/).map(function(w){return w.charAt(0)}).slice(0,2).join('')||'').toUpperCase();return '<span class="hav">'+(s.pphoto?'<img src="'+s.pphoto+'" alt="Mon profil">':(ini?'<b>'+e(ini)+'</b>':ico('user')))+'</span>'}
+function hdrAv(){var s=DB.set,nm=(s.holder||'').trim(),ini=(nm.split(/\s+/).map(function(w){return w.charAt(0)}).slice(0,2).join('')||'').toUpperCase();return '<span class="hav">'+(ini?'<b>'+e(ini)+'</b>':ico('user'))+'</span>'}
 function instaUrl(v){v=String(v||'').trim();if(!v)return '';if(/^https?:\/\//i.test(v))return v;return 'https://instagram.com/'+encodeURIComponent(v.replace(/^@/,''))}
 function vcard(){var s=DB.set,n=(s.holder||'').trim(),p=n.split(/\s+/),fn=p[0]||'',ln=p.slice(1).join(' ');
   var q=function(x){return String(x||'').replace(/\\/g,'\\\\').replace(/\r?\n/g,'\\n').replace(/,/g,'\\,').replace(/;/g,'\\;')};
@@ -290,7 +291,6 @@ function profv(){
    +'<button class="b pri full" data-act="psave">Enregistrer mon profil</button><p class="mut" style="margin-top:8px">Ces informations restent sur cet appareil et sont incluses dans ta sauvegarde. Ton téléphone sert aussi aux liens de commande des vendeurs.</p></div>';
 }
 function bioCard(){var on=!!localStorage.getItem('cod_bio');return '<div class="card" id="bio-card"><h2>Déverrouillage biométrique</h2><p class="mut">'+(on?'Activé : tu peux déverrouiller l’appli avec ton empreinte ou ton visage. Ton code reste valable.':'Déverrouille l’appli sans taper ton code. L’empreinte et le visage ne quittent jamais ton téléphone.')+'</p><button class="b'+(on?'':' pri')+' full" data-bio="'+(on?'off':'on')+'">'+(on?'Désactiver':'Activer')+'</button></div>'}
-function impCard(){var s=DB.set;if(!s.ikey){s.ikey=b64(rnd(18)).replace(/[^A-Za-z0-9]/g,'x');save()}return '<div class="card" id="imp-card"><h2>Import automatique des commandes</h2><p class="mut">Les commandes de tes boutiques (YouCan, Shopify, WooCommerce, Storeino…) arrivent toutes seules, via l’e-mail ou le webhook relié à ton Firebase.</p><label>Clé d’import (à copier dans le script)</label><input readonly value="'+e(s.ikey)+'" onclick="this.select()"><label>E-mail de réception des commandes</label><input id="iem" placeholder="à créer, ex. commandes@…" value="'+e(s.iemail||'')+'"><label>Boutique par défaut</label><input id="ivd" placeholder="Boutique" value="'+e(s.ivendor||'')+'"><button class="b pri full" style="margin-top:10px" data-imp="1">Importer maintenant</button></div>'}
 function setv(){
   var s=DB.set,sp=S.sp;if('pasc'.indexOf(sp||'x')<0||!sp)sp=S.sp='p';
   var f=function(k,l,t,x){return '<label>'+l+'</label><input '+(t==='n'?'type="number" min="0" step="0.5" inputmode="decimal"':'')+' data-set="'+k+'" value="'+e(s[k])+'" '+(x||'')+'>'};
@@ -512,7 +512,7 @@ function dbu(db,id){return db.replace(/\/$/,'')+'/track/'+id+'.json'}
 function fbp(db,id,b){try{fetch(dbu(db,id),{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}).catch(function(){})}catch(e){}}
 function fbg(db,id,cb){try{fetch(dbu(db,id)).then(function(r){return r.json()}).then(cb).catch(function(){})}catch(e){}}
 function pub(o){var sp=sec(o);var n=Date.now(),st=stage(o),b={v:o.vendor,vc:vcity(o),cc:o.city||'',p:o.product,s:st,bad:bad(o)?1:0,c:o.courier||'',ve:vehOf(o.courier),t:n};b['ev/e'+n]={t:n,x:bad(o)?'Commande annulée ou refusée':EVT[st]};if(st===3){b.dc=dcs(o);var db_=DB.set.db,id_=tid(o);sp.then(function(){fbp(db_,id_,b)})}else fbp(DB.set.db,tid(o),b)}
-function poll(){PT++;
+function poll(){if(document.hidden)return;PT++;
   if(!DB||!DB.set.db||S.locked||Q.get('t')||Q.get('l')||Q.get('v'))return;
   DB.orders.filter(function(o){return o.tid&&!bad(o)&&stage(o)>=1&&(stage(o)<3||(stage(o)===3&&!o.rt&&PT%12===0))}).slice(-25).forEach(function(o){fbg(DB.set.db,o.tid,function(r){
     if(!r)return;var ch=false;
@@ -613,13 +613,14 @@ function delv(){
   var card=function(o){
     var s=stage(o),c=DB.cour.filter(function(x){return x.name===o.courier})[0],csel=DB.cour.length?'<select data-cr="1" data-id="'+o.id+'"><option value="">Livreur : —</option>'+DB.cour.map(function(x){return '<option'+(o.courier===x.name?' selected':'')+'>'+e(x.name)+'</option>'}).join('')+'</select>':'';
     var mis='Mission de livraison : '+o.product+' pour '+o.name+'. Ouvre ce lien : '+tlink(o,'l')+'\n\nOu réponds par : SUIVI '+o.id+' Livré   /   SUIVI '+o.id+' Refusé';
+    var CL='<a class="b sm" data-act="pubo" data-id="'+o.id+'" target="_blank" rel="noopener" href="'+wa(o.phone,'Bonjour '+o.name+', suis ta commande « '+o.product+' » en direct : '+tlink(o,'t'))+'">'+ico('chat','s')+' Client</a>',LV='<a class="b sm" data-act="pubo" data-id="'+o.id+'" target="_blank" rel="noopener" href="'+wa(c?c.phone:'',mis)+'">'+ico('chat','s')+' Livreur</a>';
     return '<div class="card"><div class="row"><b>'+e(o.name)+'</b><span class="tag">'+STV[s]+'</span></div><div class="mut">'+e(o.product)+' · '+e(o.vendor)+(vcity(o)?' ('+e(vcity(o))+')':'')+' → '+e(o.city||'ville ?')+(o.amount?' · '+fm(o.amount)+' dh':'')+'</div>'+(o.rd===1&&stage(o)<3?'<div class="alert">Livraison signalée à distance : vérifie avec le livreur, puis valide. <button class="b ok sm" data-act="rdok" data-id="'+o.id+'">Valider</button> <button class="b sm" data-act="rdno" data-id="'+o.id+'">Ignorer</button></div>':'')+stepper(s)
      +'<div class="btns">'+(s===1?'<button class="b pri" data-act="adv" data-id="'+o.id+'">'+T('Remis au livreur')+'</button><button class="b ko" data-act="cx2" data-id="'+o.id+'">'+T('Annulé')+'</button>':'<button class="b ok" data-act="adv" data-id="'+o.id+'">'+T('Livré')+'</button><button class="b ko" data-act="rf" data-id="'+o.id+'">'+T('Refusé')+'</button>')+'</div>'+csel
-     +'<div class="btns"><button class="b sm" data-act="qrs" data-k="t" data-id="'+o.id+'">QR suivi</button><button class="b sm" data-act="qrs" data-k="l" data-id="'+o.id+'">QR colis</button><button class="b sm" data-act="tagp" data-t="or" data-id="'+o.id+'">Tag NFC</button><button class="b sm" data-act="trk" data-id="'+o.id+'">'+ico('pin','s')+' Carte</button><a class="b sm" data-act="pubo" data-id="'+o.id+'" target="_blank" rel="noopener" href="'+wa(o.phone,'Bonjour '+o.name+', suis ta commande « '+o.product+' » en direct : '+tlink(o,'t'))+'">'+ico('chat','s')+' Client</a><a class="b sm" data-act="pubo" data-id="'+o.id+'" target="_blank" rel="noopener" href="'+wa(c?c.phone:'',mis)+'">'+ico('chat','s')+' Livreur</a><a class="b sm" href="'+telh(o.phone)+'">'+ico('phone','s')+'</a></div>'+nbar(o)+'</div>'};
+     +'<div class="btns"><a class="b sm" href="'+telh(o.phone)+'">'+ico('phone','s')+' Appeler</a>'+CL+(s===1?LV:'')+'</div>'+'<details class="oc2" data-om="'+o.id+'"'+(OM[o.id]?' open':'')+'><summary>Plus d’actions</summary><div class="btns">'+(s===1?'':LV)+'<button class="b sm" data-act="qrs" data-k="t" data-id="'+o.id+'">QR suivi</button><button class="b sm" data-act="qrs" data-k="l" data-id="'+o.id+'">QR colis</button><button class="b sm" data-act="tagp" data-t="or" data-id="'+o.id+'">Tag NFC</button><button class="b sm" data-act="trk" data-id="'+o.id+'">'+ico('pin','s')+' Carte</button></div></details>'+nbar(o)+'</div>'};
   h+=act.length?act.map(card).join(''):'<p class="mut">Aucune livraison en cours.</p>';
-  h+='<div class="card"><h2>Statut reçu du livreur</h2><p class="mut">Le livreur t’envoie un message WhatsApp en un appui. Colle-le ici pour mettre la commande à jour.</p><textarea id="f-st" placeholder="SUIVI abc123 Livré"></textarea><button class="b pri full" data-act="applyst">Appliquer</button></div>';
+  h+='<details class="oc2" data-om="st"'+(OM.st?' open':'')+'><summary>Coller un statut reçu du livreur</summary><p class="mut">Le livreur t’envoie un message WhatsApp en un appui. Colle-le ici pour mettre la commande à jour.</p><textarea id="f-st" placeholder="SUIVI abc123 Livré"></textarea><button class="b pri full" data-act="applyst">Appliquer</button></details>';
   if(done.length)h+='<h2>Terminées récemment</h2>'+done.map(function(o){return '<div class="card"><div class="row"><b>'+e(o.name)+'</b><span class="s-'+(o.delivery==='Livré'?'Confirmé':'Refusé')+'">'+e(o.delivery)+'</span></div><div class="mut">'+e(o.product)+' · '+e(o.vendor)+'</div></div>'}).join('');
-  return h+'<p class="mut">Le suivi se partage par liens WhatsApp. Pour un suivi automatique en temps réel entre appareils, renseigne ta base Firebase dans Compte → Paramètres → Connexions.</p>';
+  return h+'<p class="mut">Suivi en temps réel entre appareils : Compte → Connexions.</p>';
 }
 function prov(){
   var O_=DB.orders,s=stats(O_),sum=function(f){return O_.filter(f).reduce(function(a,o){return a+(o.amount||0)},0)};
@@ -2263,7 +2264,7 @@ function bioUnlock(){var id=localStorage.getItem('cod_bio');if(!id||!ST)return;
 var IMPB=0;
 function impPull(man){var db=DB&&DB.set.db,k=DB&&DB.set.ikey;if(!db||!k||IMPB)return man&&toast('Renseigne d’abord le lien Firebase (Compte → Paramètres → Connexions).');IMPB=1;var u=db.replace(/\/$/,'')+'/import/'+k;
   fetch(u+'.json').then(function(r){return r.json()}).then(function(d){IMPB=0;if(!d||typeof d!=='object')return man&&toast('Aucune nouvelle commande.');var n=0,x=0;
-    Object.keys(d).slice(0,50).forEach(function(id){var o=d[id]||{},r=addOrder(String(o.vendor||DB.set.ivendor||'Boutique').slice(0,60),String(o.name||'').slice(0,80),String(o.phone||''),String(o.product||'').slice(0,120),String(o.address||'').slice(0,160),{city:String(o.city||'').slice(0,40),amount:+o.amount||0,channel:String(o.source||'Import').slice(0,30)});
+    Object.keys(d).slice(0,50).forEach(function(id){var o=cxIn(d[id]||{}),r=(o.xid&&xidHas(o.xid))?'dup':addOrder(String(o.vendor||DB.set.ivendor||'Boutique').slice(0,60),String(o.name||'').slice(0,80),String(o.phone||''),String(o.product||'').slice(0,120),String(o.address||'').slice(0,160),{city:String(o.city||'').slice(0,40),amount:+o.amount||0,channel:String(o.source||'Import').slice(0,30),xid:String(o.xid||'')});
       r==='ok'?n++:x++;fetch(u+'/'+encodeURIComponent(id)+'.json',{method:'DELETE'}).catch(function(){})});
     if(n){save();render();toast(n+' commande(s) importée(s) ✅')}else if(man)toast(x+' ignorée(s) (doublon ou numéro invalide).')}).catch(function(){IMPB=0;man&&toast('Import impossible : vérifie ta connexion.')})}
 var _ra=render;
@@ -2571,3 +2572,146 @@ window.__sugDecorate=decorate;
 var _rs=render;
 render=function(){hide();_rs();if(!DB||S.locked||Q.get('t')||Q.get('l'))return;try{decorate($('app'))}catch(x){}};
 })();
+
+/* ===== 8.7.1 : photo de profil en arrière-plan flouté (au lieu de l'en-tête) ===== */
+(function(){
+function bgp(){
+  var ph=(DB&&DB.set&&DB.set.pphoto)||'',el=document.getElementById('bgp');
+  if(!ph||S.locked||Q.get('t')||Q.get('l')||Q.get('v')){if(el)el.remove();return}
+  var k=ph.length+ph.slice(-24);
+  if(!el){el=document.createElement('div');el.id='bgp';el.setAttribute('aria-hidden','true');document.body.insertBefore(el,document.body.firstChild)}
+  if(el.getAttribute('data-k')!==k){el.style.backgroundImage='url("'+ph+'")';el.setAttribute('data-k',k)}
+}
+var _r71=render;
+render=function(){_r71();try{bgp()}catch(x){}};
+})();
+
+/* ===== 8.8.0 : toile de liaison — lecteur universel de commandes (CSV / JSON / webhook) ===== */
+var CX=(function(){
+  var nk=function(s){return String(s==null?'':s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,'')};
+  var SY={
+    name:['shippingname','billingname','fullname','customername','clientname','nomcomplet','nomclient','nomprenom','destinataire','recipient','client','customer','nom','name'],
+    first:['firstname','prenom','givenname'],
+    last:['lastname','surname','familyname'],
+    phone:['shippingphone','phone','telephone','tel','mobile','gsm','whatsapp','phonenumber','numerotelephone','numtel','telephoneclient','customerphone','billingphone','contact','numero'],
+    addr:['address1','shippingaddress1','billingaddress1','address','adresse','shippingaddress','adresselivraison','street','addressline1','firstline','rue'],
+    addr2:['address2','complement','addressline2','secondline'],
+    city:['city','shippingcity','ville','billingcity','town','localite','commune'],
+    amount:['totalprice','total','ordertotal','totalamount','grandtotal','montantcod','codamount','cod','montant','amount','prixtotal','totaldh','prix','price'],
+    vendor:['boutique','storename','store','shopname','shop','vendeur','vendor','seller','merchant'],
+    xid:['ordernumber','orderid','numerocommande','ordernum','orderref','reference','ref','number','commande','id'],
+    prod:['produit','product','productname','lineitemname','article','designation','titre','title','itemname','nomproduit','produits','products','items'],
+    qty:['lineitemquantity','quantity','qty','quantite','qte']
+  };
+  var PREF=['shipping','delivery','livraison','customer','client','billing'];
+  var BAD={
+    p:/line_?item|shipping_lines|item|product|variant|tax|discount|fulfil|carrier|courier|store|shop|merchant|vendor|seller|company/,
+    amount:/line_?item|shipping_lines|item|product|variant|tax|discount|fulfil|refund|shipping|delivery|livraison|money|_set/,
+    vendor:/line_?item|item|product|variant|customer|client|shipping|billing|address/,
+    xid:/customer|client|line_?item|item|product|variant|shipping|billing|address|tax|fulfil|store|shop|vendor/,
+    prod:/customer|client|shipping|billing|address|tax/,
+    qty:/line_items|items|customer|client|shipping|billing/
+  };
+  var BF={name:'p',first:'p',last:'p',phone:'p',addr:'p',addr2:'p',city:'p',amount:'amount',vendor:'vendor',xid:'xid',prod:'prod',qty:'qty'};
+  function flat(o,p,out,d){p=p||'';out=out||[];d=d||0;if(d>7)return out;
+    if(Array.isArray(o)){o.slice(0,60).forEach(function(v,i){flat(v,p+'.'+i,out,d+1)});return out}
+    if(o&&typeof o==='object'){Object.keys(o).forEach(function(k){flat(o[k],p?p+'.'+k:k,out,d+1)});return out}
+    if(o===null||o===undefined)return out;var v=String(o).trim();if(!v)return out;
+    var seg=p.split('.').filter(function(x){return !/^\d+$/.test(x)}),last=seg[seg.length-1]||'';
+    out.push({p:p.toLowerCase(),k:nk(last),v:v,dp:p.split('.').length});return out}
+  function cands(L,f,pref){var syn=SY[f],bad=BAD[BF[f]],pr=pref||PREF,r=[];
+    L.forEach(function(x){var i=syn.indexOf(x.k);if(i<0||bad.test(x.p))return;var pi=pr.length;for(var j=0;j<pr.length;j++)if(x.p.indexOf(pr[j])>=0){pi=j;break}
+      r.push({v:x.v,s:i*100+x.dp*10+pi})});
+    r.sort(function(a,b){return a.s-b.s});return r.map(function(x){return x.v})}
+  function num(v){var s=String(v).replace(/[^\d,.\-]/g,'');if(!s)return 0;var lc=s.lastIndexOf(','),ld=s.lastIndexOf('.');
+    if(lc>ld)s=s.replace(/\./g,'').replace(',','.');else s=s.replace(/,/g,'');return parseFloat(s)||0}
+  function fo(x,keys){var ks=Object.keys(x),i,j;for(i=0;i<keys.length;i++)for(j=0;j<ks.length;j++)if(nk(ks[j])===keys[i]){var v=x[ks[j]];if((typeof v==='string'||typeof v==='number')&&String(v).trim())return String(v).trim()}return ''}
+  function items(o,out,pk,d){if(d>6)return;
+    if(Array.isArray(o)){var ob=o.filter(function(x){return x&&typeof x==='object'&&!Array.isArray(x)});
+      if(ob.length&&/item|product|produit|article|cart|panier|variant|commande/.test(pk)){ob.slice(0,40).forEach(function(x){
+        var nm=fo(x,['name','productname','title','produit','nom','designation','label'])||(x.product&&typeof x.product==='object'?fo(x.product,['name','title']):''),q=+fo(x,['quantity','qty','quantite','qte']);
+        if(nm)out.push(nm+(q>1?' ×'+q:''))})}
+      else o.slice(0,40).forEach(function(x){items(x,out,pk,d+1)});return}
+    if(o&&typeof o==='object')Object.keys(o).forEach(function(k){items(o[k],out,k.toLowerCase(),d+1)})}
+  var KN={shopify:'Shopify',woocommerce:'WooCommerce',woo:'WooCommerce',youcan:'YouCan',storeino:'Storeino',lightfunnels:'LightFunnels',ecomanager:'Ecomanager',jumia:'Jumia',avito:'Avito',wix:'Wix',zid:'Zid'};
+  function detect(rec,hint,L){var h=nk(hint);if(h)return KN[h]||String(hint).slice(0,20);
+    if(rec&&rec.line_items&&rec.shipping_address&&rec.total_price!==undefined)return 'Shopify';
+    if(rec&&rec.line_items&&rec.billing&&rec.order_key!==undefined)return 'WooCommerce';
+    if(L.some(function(x){return x.k==='lineitemname'}))return 'Shopify';return 'Import'}
+  function one(rec,hint,dv){if(!rec||typeof rec!=='object')return null;var L=flat(rec);if(!L.length)return null;
+    var o={src:detect(rec,hint,L)},c;
+    c=cands(L,'name').filter(function(v){return /[A-Za-z\u00C0-\u024F\u0600-\u06FF]/.test(v)&&v.indexOf('@')<0});o.name=c[0]||'';
+    if(!o.name){var f=cands(L,'first')[0]||'',l=cands(L,'last')[0]||'';o.name=(f+' '+l).trim()}
+    o.phone=cands(L,'phone').filter(function(v){return mph(v)})[0]||cands(L,'phone')[0]||'';
+    var a1=cands(L,'addr').filter(function(v){return !/^\d+$/.test(v)})[0]||'',a2=cands(L,'addr2')[0]||'';o.address=(a1+(a2?', '+a2:'')).slice(0,160);
+    o.city=cands(L,'city')[0]||'';
+    o.amount=num(cands(L,'amount')[0]||0);
+    o.vendor=cands(L,'vendor')[0]||dv||'';
+    var it=[];items(rec,it,'',0);var pr=it.join(', ');
+    if(!pr){pr=cands(L,'prod')[0]||'';var q=+(cands(L,'qty')[0]||0);if(pr&&q>1)pr+=' ×'+q}
+    o.product=pr.slice(0,160);
+    var x=cands(L,'xid')[0]||'';if(!x){var t=L.filter(function(z){return z.k==='name'&&/^#\d+/.test(z.v)})[0];if(t)x=t.v}
+    o.xid=x?o.src+':'+x:'';
+    return o}
+  function csv(t){var f=t.split(/\r?\n/)[0]||'',cn={',':0,';':0,'\t':0},i;for(i=0;i<f.length;i++)if(cn[f[i]]!==undefined)cn[f[i]]++;
+    var dl=cn[';']>cn[',']&&cn[';']>=cn['\t']?';':(cn['\t']>cn[',']?'\t':',');
+    var rows=[],r=[],c='',q=false;
+    for(i=0;i<t.length;i++){var ch=t[i];
+      if(q){if(ch==='"'){if(t[i+1]==='"'){c+='"';i++}else q=false}else c+=ch}
+      else if(ch==='"')q=true;
+      else if(ch===dl){r.push(c);c=''}
+      else if(ch==='\n'){r.push(c);rows.push(r);r=[];c=''}
+      else if(ch!=='\r')c+=ch}
+    if(c!==''||r.length){r.push(c);rows.push(r)}
+    return rows.filter(function(x){return x.some(function(y){return String(y).trim()})})}
+  function unwrap(j){if(Array.isArray(j))return j;if(j&&typeof j==='object'){var ks=['orders','data','items','results','commandes'];for(var i=0;i<ks.length;i++)if(Array.isArray(j[ks[i]]))return j[ks[i]]}return [j]}
+  function recs(txt){txt=String(txt||'').replace(/^\uFEFF/,'').trim();if(!txt)return [];
+    if(txt[0]==='{'||txt[0]==='['){try{return unwrap(JSON.parse(txt))}catch(x){}}
+    var rows=csv(txt);if(!rows.length)return [];
+    var all={};Object.keys(SY).forEach(function(k){SY[k].forEach(function(s){all[s]=1})});
+    var isH=rows[0].map(nk).filter(function(h){return all[h]}).length>=2,
+        keys=isH?rows[0].map(function(h){return String(h).trim()}):['nom','telephone','produit','adresse','ville','montant'];
+    return rows.slice(isH?1:0).map(function(r){var o={};keys.forEach(function(k,i){if(k&&r[i]!==undefined&&(o[k]===undefined||o[k]===''))o[k]=r[i]});return o})}
+  function list(rs,hint,dv){var out=[];rs.forEach(function(r){var o=one(r,hint,dv);if(!o)return;var p=out[out.length-1];
+    if(p&&o.xid&&o.xid===p.xid&&!o.name&&!o.phone){if(o.product&&p.product.indexOf(o.product)<0)p.product=(p.product+', '+o.product).slice(0,160);return}
+    out.push(o)});return out}
+  return {parse:function(txt,hint,dv){return list(recs(txt),hint,dv)},fromRaw:function(raw,hint,dv){return list(unwrap(raw),hint,dv)[0]||null},num:num};
+})();
+
+/* ----- interface des connecteurs (Compte → Connexions) ----- */
+function xidHas(x){return !!x&&DB.orders.some(function(q){return q.xid===x})}
+function cxIn(o){if(o&&o._raw){var m=CX.fromRaw(o._raw,o._src,DB.set.ivendor);return m?{vendor:m.vendor,name:m.name,phone:m.phone,product:m.product,address:m.address,city:m.city,amount:m.amount,source:m.src,xid:m.xid}:{}}return o}
+function cxAdd(o){if(xidHas(o.xid))return 'dup';return addOrder(String(o.vendor||DB.set.ivendor||'Boutique').slice(0,60),String(o.name||'').slice(0,80),o.phone,String(o.product||'').slice(0,120),String(o.address||'').slice(0,160),{city:String(o.city||'').slice(0,40),amount:o.amount||0,channel:String(o.src||'Import').slice(0,30),xid:o.xid||''})}
+function cxOk(o){return !!(o.name&&mph(o.phone))}
+function cxAnalyse(txt){var l=CX.parse(txt,'',DB.set.ivendor);if(!l.length){toast('Aucune commande reconnue dans ce contenu.');return}CXS.l=l;render()}
+function impCard(){var s=DB.set;if(!s.ikey){s.ikey=b64(rnd(18)).replace(/[^A-Za-z0-9]/g,'x');save()}
+  var L=CXS.l,pv='';
+  if(L){var ok=L.filter(cxOk),dp=ok.filter(function(o){return xidHas(o.xid)}).length;
+    pv='<div class="alert">'+L.length+' commande(s) lue(s) · '+ok.length+' valide(s)'+(L.length-ok.length?' · '+(L.length-ok.length)+' ignorée(s) (nom ou numéro manquant)':'')+(dp?' · '+dp+' déjà importée(s)':'')+'</div>'
+     +L.slice(0,5).map(function(o){return '<div class="mut">• '+e(o.name||'?')+' · '+e(o.phone||'n° ?')+' · '+e((o.product||'').slice(0,40))+(o.city?' · '+e(o.city):'')+(o.amount?' · '+fm(o.amount)+' dh':'')+' <i>('+e(o.src)+')</i></div>'}).join('')
+     +(L.length>5?'<div class="mut">… et '+(L.length-5)+' autre(s)</div>':'')
+     +'<div class="btns"><button class="b pri" data-cx="go">Importer '+ok.length+'</button><button class="b" data-cx="no">Annuler</button></div>'}
+  var wk=(window.cloudWebhookUrl&&s.whk===s.ikey&&s.whv===(s.ivendor||''))?cloudWebhookUrl(s.ikey):'';
+  return '<div class="card" id="imp-card"><h2>Connecteurs boutiques</h2><p class="mut">Importe les commandes de n’importe quelle boutique (YouCan, Shopify, WooCommerce, Storeino, LightFunnels…). Les colonnes nom, téléphone, ville, produit et montant sont reconnues automatiquement ; tu vérifies l’aperçu avant d’importer, les doublons sont ignorés.</p>'
+   +'<label>Boutique par défaut</label><input id="ivd" placeholder="Boutique" value="'+e(s.ivendor||'')+'">'
+   +'<details class="oc2"'+(L?' open':'')+'><summary>Importer un fichier ou coller des commandes</summary>'
+   +'<label class="b full" style="margin-top:8px">'+ico('dl','s')+' Choisir un fichier (CSV ou JSON)<input type="file" accept=".csv,.tsv,.txt,.json,text/csv,application/json" data-cx-file hidden></label>'
+   +'<textarea id="cx-t" placeholder="…ou colle ici un export CSV / JSON de commandes"></textarea><p class="mut">Fichier Excel ? Enregistre-le d’abord en CSV.</p>'
+   +'<button class="b pri full" data-cx="an">Analyser</button></details>'+pv
+   +'<details class="oc2"><summary>Réception automatique (webhook)</summary><p class="mut">Les commandes de ta boutique arrivent toutes seules dans l’appli (synchronisation cloud activée). Dans ta boutique, ajoute un webhook « commande créée » vers l’adresse ci-dessous, terminée par ?s=youcan (ou storeino, lightfunnels, shopify…) pour indiquer la plateforme.</p>'
+   +(window.cloudWebhook?'':'<div class="msg err">Module cloud indisponible.</div>')
+   +(wk?'<label>Adresse du webhook</label><input readonly value="'+e(wk)+'" onclick="this.select()">':'')
+   +'<button class="b pri full" style="margin-top:10px" data-cx="wh">'+(wk?'Mettre à jour':'Activer la réception automatique')+'</button>'
+   +(s.db?'<button class="b full" style="margin-top:6px" data-imp="1">Vérifier les nouvelles commandes (Firebase)</button>':'')+'</details></div>'}
+document.addEventListener('click',function(ev){var t=ev.target.closest&&ev.target.closest('[data-cx]');if(!t||!DB)return;var a=t.getAttribute('data-cx');
+  if(a==='an'){var x=$('cx-t');cxAnalyse(x?x.value:'')}
+  else if(a==='no'){CXS.l=null;render()}
+  else if(a==='wh'){if(!window.cloudWebhook)return toast('Module cloud indisponible.');var s=DB.set,k=s.ikey,v=s.ivendor||'';cloudWebhook(k,v).then(function(){s.whk=k;s.whv=v;save();render();toast('Réception automatique activée ✅')}).catch(function(x){toast(x&&x.message?x.message:'Activation impossible.')})}
+  else if(a==='go'&&CXS.l){var ok=CXS.l.filter(cxOk),sk=CXS.l.length-ok.length,res=ok.map(cxAdd);CXS.l=null;save();render();toast(report(res)+(sk?' '+sk+' ignorée(s) (nom ou numéro manquant).':''))}},true);
+document.addEventListener('change',function(ev){var t=ev.target;if(!DB||!t||!t.hasAttribute)return;
+  if(t.hasAttribute('data-cx-file')){var f=t.files&&t.files[0];if(!f)return;if(f.size>3e6){toast('Fichier trop lourd (3 Mo maximum).');t.value='';return}
+    var r=new FileReader();r.onload=function(){cxAnalyse(String(r.result||''))};r.onerror=function(){toast('Lecture du fichier impossible.')};r.readAsText(f);t.value=''}},true);
+document.addEventListener('toggle',function(ev){var d=ev.target;if(d&&d.getAttribute&&d.getAttribute('data-om'))OM[d.getAttribute('data-om')]=d.open},true);
+/* ----- commandes reçues par webhook : crée le vendeur s'il n'existe pas encore ----- */
+var CXN=-1,_rcx=render;
+render=function(){_rcx();try{if(DB&&!S.locked&&DB.orders.length!==CXN){CXN=DB.orders.length;var ch=false;DB.orders.forEach(function(o){if(o&&o.vendor&&!vget(o.vendor)){ensureV(o.vendor);ch=true}});if(ch)save()}}catch(x){}};

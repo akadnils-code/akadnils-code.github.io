@@ -395,3 +395,17 @@ nav button.on .i{color:#ff7900!important;filter:none}
 .pkc{background:var(--card);color:var(--tx);border-radius:16px;padding:12px;width:100%;max-width:520px;max-height:100%;overflow:auto}
 .pkm{height:320px;height:min(50vh,400px);border-radius:12px;overflow:hidden;margin-bottom:8px;position:relative;z-index:0;isolation:isolate}
 .pkpin{font-size:28px;line-height:1;background:none;border:0;filter:drop-shadow(0 2px 2px rgba(0,0,0,.4))}
+
+/* ===== 8.7.1 : fond = photo de profil floutée, bouton profil compact ===== */
+#bgp{position:fixed;top:0;right:0;bottom:0;left:0;z-index:-1;pointer-events:none;background-size:cover;background-position:center;background-repeat:no-repeat;-webkit-filter:blur(5px);filter:blur(5px);transform:scale(1.1);opacity:.45}
+header #hs{flex:none;width:40px;height:40px;min-width:40px}
+header #hs .hav{min-width:0;min-height:0}
+
+/* ===== 8.8.0 : blocs repliables (livraison épurée, connecteurs) ===== */
+details.oc2{margin-top:8px;border:1px solid var(--br);border-radius:12px;padding:0 10px}
+details.oc2>summary{cursor:pointer;font-weight:600;font-size:13.5px;min-height:40px;display:flex;align-items:center;justify-content:space-between;list-style:none;color:var(--mut)}
+details.oc2>summary::-webkit-details-marker{display:none}
+details.oc2>summary:after{content:"▾";margin-left:8px}
+details.oc2[open]>summary:after{content:"▴"}
+details.oc2[open]{padding-bottom:10px}
+

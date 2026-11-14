@@ -77,7 +77,15 @@
     });
     var cur = lsGet(TK);
     if (!CL.tenants.some(function (t) { return t.id === cur; })) lsSet(TK, CL.tenants.length ? CL.tenants[0].id : null);
+    var ct = curTenant();
+    lsSet('aio_role', ct ? { tenant: ct.id, role: ct.role } : null);
   }
+  // Rôle de la personne connectée (gardé en mémoire pour fonctionner hors ligne)
+  window.cloudRole = function () {
+    if (!sess()) return null;
+    var r = lsGet('aio_role');
+    return r && r.tenant === lsGet(TK) ? r.role : null;
+  };
   function curTenant() {
     var id = lsGet(TK);
     return (CL.tenants || []).filter(function (t) { return t.id === id; })[0] || null;
@@ -298,6 +306,17 @@
   }
   window.cloudSync = function () { return sync(true); };
 
+  // Webhook universel (étape 2d) : enregistre la clé d'import de l'entreprise courante
+  window.cloudWebhookUrl = function (key) { return URL_ + '/functions/v1/webhook/' + key; };
+  window.cloudWebhook = async function (key, vendor) {
+    try {
+      if (!CL.tenants) await loadTenants();
+      var ct = curTenant();
+      if (!ct) throw new Error('Crée d’abord ton entreprise (Compte → Connexions).');
+      await api('/rest/v1/rpc/register_webhook_key', { method: 'POST', body: JSON.stringify({ p_tenant: ct.id, p_key: key, p_vendor: vendor || '' }) });
+    } catch (x) { throw new Error(tr(x.message)); }
+  };
+
   function schedulePush() {
     var st = yGet();
     if (!st || !st.on) return;
@@ -318,6 +337,7 @@
   if (typeof setInterval === 'function') setInterval(auto, 120000);
   document.addEventListener('visibilitychange', function () { if (!document.hidden) auto(); });
   if (typeof setTimeout === 'function') setTimeout(auto, 3000);
+  if (sess()) loadTenants().then(redraw).catch(function () {});
 
   async function run(fn) {
     CL.busy = true; CL.msg = ''; CL.err = false;
@@ -350,7 +370,7 @@
       run(async function () {
         var tk = null;
         try { tk = await token(); if (tk) await raw('/auth/v1/logout', { method: 'POST' }, tk); } catch (x) {}
-        lsSet(SK, null); CL.tenants = null; CL.tried = false; CL.msg = 'Déconnecté.';
+        lsSet(SK, null); lsSet('aio_role', null); CL.tenants = null; CL.tried = false; CL.msg = 'Déconnecté.';
       });
     } else if (a === 'reload') {
       CL.tenants = null; CL.tried = false; CL.msg = ''; redraw();
