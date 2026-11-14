@@ -1,6 +1,6 @@
 /* All In One 8.3.0 - script principal
    Sections repérées : modules réintégrés de la v3 | v5 : code de livraison, avis, demandes, motifs livreur, sati | v6 : catalogue, créneaux, photo de preuve, notifications, da | v7 : automatisations | v7.2 : QR code + NFC (QR hors ligne, aucune dépendance résea | v7.4 : scanner QR (caméra), tags NFC associés, diagnostic */
-var CIT=200000,KEY='cod_v4',OLDKEY='cod_v1',VER='9.1.0',IT=200000;
+var CIT=200000,KEY='cod_v4',OLDKEY='cod_v1',VER='9.2.0',IT=200000;
 var OM={},CXS={l:null};
 var DEFTPL='Bonjour 👋 [boutique] a essayé de vous joindre pour confirmer votre commande de [produit]. Répondez OUI pour confirmer, ou dites-nous à quelle heure vous rappeler. Merci !';
 var DEFSCRIPT='1) Se présenter : « Bonjour, je vous appelle de la part de [boutique]. »\n2) Confirmer le produit, la quantité, le prix et la livraison.\n3) Confirmer la ville et l’adresse exacte (quartier, repère).\n4) Proposer un produit complémentaire ou un pack.\n5) Rappeler : paiement à la livraison, merci de préparer le montant.';
@@ -2819,4 +2819,68 @@ document.addEventListener('click',function(ev){
 },true);
 document.addEventListener('change',function(ev){var el=ev.target;if(!el||el.id!=='pf-a'||!DB)return;
   if(okc(el.dataset.lat,el.dataset.lng)){DB.set.plat=+el.dataset.lat;DB.set.plng=+el.dataset.lng}else{delete DB.set.plat;delete DB.set.plng}save()},true);
+})();
+
+/* ===== 9.2.0 : confirmation par le client, score de risque, impact « refus évités » ===== */
+(function(){
+var SU=function(){return location.origin+location.pathname};
+function okc(la,ln){return la!=null&&la!==''&&ln!=null&&ln!==''&&isFinite(la)&&isFinite(ln)&&+la>20&&+la<36.5&&+ln>-17.5&&+ln<-0.5}
+function oid(id){return DB.orders.filter(function(x){return x.id===id})[0]}
+/* 1. score de risque 0-100 (s'ajoute à la logique existante) */
+var _rk=risk;
+risk=function(o){
+  var b=_rk(o),n=b.l==='high'?70:b.l==='mid'?35:0,t=b.t.slice(),done=function(x){return x.delivery==='Livré'||x.delivery==='Refusé'};
+  var rate=function(f){var l=DB.orders.filter(function(x){return x.id!==o.id&&done(x)&&f(x)});return l.length>=5?l.filter(function(x){return x.delivery==='Refusé'}).length/l.length:0};
+  var rc=o.city?rate(function(x){return x.city===o.city}):0,rv=rate(function(x){return x.vendor===o.vendor}),am=DB.orders.filter(function(x){return +x.amount>0}),av=am.length>=5?am.reduce(function(a,x){return a+(+x.amount)},0)/am.length:0;
+  if(rc>=.25){n+=15;t.push('ville à '+Math.round(rc*100)+' % de refus')}
+  if(rv>=.25){n+=15;t.push('boutique à '+Math.round(rv*100)+' % de refus')}
+  if(av&&+o.amount>2*av){n+=10;t.push('montant élevé')}
+  if((o.address||o.city)&&!okc(o.lat,o.lng)){n+=10;t.push('adresse non vérifiée GPS')}
+  if(o.byClient)n-=30;
+  n=Math.max(0,Math.min(100,n));b.n=n;b.t=t;b.l=n>=60?'high':n>=30?'mid':'';return b};
+var _oh=ordHead;
+ordHead=function(o,x){var h=_oh(o,x);if(o.status!=='En attente')return h;var r=risk(o);
+  return h+'<div class="btns" style="margin:4px 0;align-items:center"><button class="b sm" data-x9="cf" data-id="'+o.id+'">📲 Lien de confirmation client</button><span class="mut">Score '+r.n+'/100'+(o.byClient?' · confirmé par le client':'')+'</span></div>'};
+/* 2. page client : confirmer, corriger l'adresse (suggestions + GPS), annuler */
+var CP={lat:null,lng:null},CS=[],TM=null;
+function cfPage(d){
+  document.getElementById('nav').style.display='none';document.querySelector('header').style.display='none';window.__cf=d;
+  $('app').innerHTML='<div class="card" style="max-width:480px;margin:12px auto"><h1>Bonjour '+e(d.n||'')+'</h1><p class="mut">'+e(d.b||'Ta boutique')+' te demande de confirmer ta commande avant l’expédition.</p><div class="card"><b>'+e(d.pr||'Commande')+'</b><div class="mut">Total à payer à la livraison : <b>'+e(String(d.t||0))+' dh</b></div></div>'
+   +'<label>Adresse de livraison (rue, quartier, ville)</label><input id="cf-a" autocomplete="off" value="'+e([d.a,d.c].filter(Boolean).join(', '))+'"><div id="cf-s"></div><button class="b full" style="margin-top:8px" data-x9="cfgps">📍 Utiliser ma position actuelle</button><p class="mut" id="cf-m">Choisis ton adresse dans la liste pour qu’elle soit vérifiée.</p>'
+   +'<button class="b pri full" data-x9="cfok">✅ Je confirme ma commande</button><button class="b full" style="margin-top:8px" data-x9="cfno">❌ J’annule</button><p class="mut">Ton choix est envoyé par WhatsApp à la boutique.</p></div>'}
+var _r2=render;render=function(){if(Q.get('cf')){var d=decq('cf');if(d){cfPage(d);return}}_r2()};
+function cfMsg(t){var m=document.getElementById('cf-m');if(m)m.textContent=t}
+function cfSug(q){fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=6&countrycodes=ma&accept-language=fr&q='+encodeURIComponent(q)).then(function(r){return r.json()}).then(function(j){
+  CS=(j||[]).map(function(r){var a=r.address||{},st=[a.house_number,a.road||a.pedestrian||a.neighbourhood||a.suburb].filter(Boolean).join(' '),ct=a.city||a.town||a.village||a.county||'';return{t:[st,a.suburb&&a.suburb!==st?a.suburb:'',ct].filter(Boolean).join(', ')||r.display_name,lat:+r.lat,lng:+r.lon}});
+  var b=document.getElementById('cf-s');if(b)b.innerHTML=CS.map(function(x,i){return '<button class="b full" style="margin-top:4px;text-align:left" data-x9="cfpick" data-id="'+i+'">'+e(x.t)+'</button>'}).join('')}).catch(function(){})}
+document.addEventListener('input',function(ev){if(ev.target.id!=='cf-a')return;CP.lat=CP.lng=null;cfMsg('Choisis ton adresse dans la liste pour qu’elle soit vérifiée.');clearTimeout(TM);var q=ev.target.value.trim();if(q.length<4){document.getElementById('cf-s').innerHTML='';return}TM=setTimeout(function(){cfSug(q)},450)},true);
+function cfSend(ok){var d=window.__cf,a=(document.getElementById('cf-a')||{}).value||'';if(!d||!d.w){alert('Contact de la boutique introuvable.');return}
+  if(ok&&!a.trim()){cfMsg('Écris ton adresse avant de confirmer.');return}
+  var rep=SU()+'?rep='+encq({i:d.i,s:ok?'ok':'x',a:a.trim(),la:CP.lat,ln:CP.lng}),m=(ok?'✅ Commande confirmée':'❌ Commande annulée')+' · '+(d.pr||'')+'\n'+(ok?'Adresse : '+a.trim()+(CP.lat?' (vérifiée GPS)\nhttps://maps.google.com/?q='+CP.lat+','+CP.lng:' (non vérifiée)')+'\n':'')+'\nOuvrir dans mon appli : '+rep;
+  location.href='https://wa.me/'+waNum(d.w)+'?text='+encodeURIComponent(m)}
+/* 3. retour du client : applique la réponse dans l'appli du propriétaire */
+function applyRep(r){var o=oid(r.i);Q.delete('rep');try{history.replaceState(null,'',location.pathname)}catch(x){}
+  if(!o){toast('Commande introuvable dans cette appli.');return}if(o.byClient||o.status!=='En attente'){toast('Cette réponse est déjà traitée.');return}
+  if(r.s==='ok'){if(r.a)o.address=r.a;if(okc(r.la,r.ln)){o.lat=+r.la;o.lng=+r.ln}o.byClient=1;setStatus(o,'Confirmé');toast('✅ '+o.name+' a confirmé'+(okc(r.la,r.ln)?' (adresse vérifiée GPS)':''))}
+  else{o.byClient=1;o.reason='Annulé par le client';setStatus(o,'Annulé');toast('❌ '+o.name+' a annulé')}
+  save()}
+var _r3=render;render=function(){if(DB&&Q.get('rep')){var r=decq('rep');if(r&&r.i)applyRep(r);else Q.delete('rep')}_r3()};
+/* 4. accueil : impact du mois + commandes à surveiller */
+var _hs=window.homeShops;
+window.homeShops=function(){_hs();var A=$('app');if(!A||$('imp'))return;
+  var mo=today().slice(0,7),om=DB.orders.filter(function(x){return (x.date||'').slice(0,7)===mo}),an=om.filter(function(x){return x.status==='Annulé'}),val=an.reduce(function(a,x){return a+(+x.amount||0)},0),
+  cc=om.filter(function(x){return x.byClient}).length,s=stats(om),rf=+DB.set.rfee||0,pe=DB.orders.filter(function(x){return x.status==='En attente'}).map(function(x){return{o:x,r:risk(x)}}).filter(function(z){return z.r.n>=30}).sort(function(a,b){return b.r.n-a.r.n}).slice(0,3);
+  var c=document.createElement('div');c.id='imp';
+  c.innerHTML='<div class="card" style="margin-top:12px"><h2>Impact ce mois-ci</h2><div class="grid">'+kp('Colis non expédiés (annulés)',an.length)+kp('Valeur évitée',fm(val)+' dh','g')+kp('Confirmés par le client',cc)+kp('Refus après livraison',pct(s.ref,s.liv+s.ref))+'</div><label>Coût d’un retour (dh), pour estimer l’économie</label><input type="number" min="0" inputmode="decimal" data-set="rfee" value="'+e(DB.set.rfee||'')+'">'+(rf&&an.length?'<p class="mut">Économie estimée : <b>'+fm(an.length*rf)+' dh</b> de frais de retour.</p>':'')+'</div>'
+   +(pe.length?'<div class="card"><h2>À surveiller en priorité</h2>'+pe.map(function(z){return '<div class="row"><span><b>'+e(z.o.name)+'</b><div class="mut">'+e(z.r.t.join(', '))+'</div></span><span class="tag '+(z.r.l==='high'?'ko':'')+'">'+z.r.n+'/100</span></div>'}).join('')+'<button class="b pri full" style="margin-top:8px" data-act="goto" data-v="calls">Appeler maintenant</button></div>':'');
+  var g=A.querySelector('.grid');if(g&&g.parentNode===A)g.parentNode.insertBefore(c,g.nextSibling);else A.appendChild(c)};
+/* événements */
+document.addEventListener('click',function(ev){var t=ev.target.closest&&ev.target.closest('[data-x9]');if(!t)return;var a=t.getAttribute('data-x9'),id=t.getAttribute('data-id');
+  if(a==='cf'){ev.preventDefault();var o=oid(id);if(!o)return;if(!DB.set.phone){toast('Renseigne d’abord ton numéro dans ton profil.');return}if(!/^http/.test(SU())){toast('Ouvre l’application depuis son adresse https.');return}
+    var d={i:o.id,n:String(o.name||'').split(' ')[0],pr:o.product||'',t:(+o.amount||0),a:o.address||'',c:o.city||'',w:DB.set.phone,b:DB.set.pco||DB.set.holder||''};
+    window.open(wa(o.phone,'Bonjour '+d.n+', ici '+(d.b||'votre boutique')+'. Merci de confirmer votre commande ('+d.pr+') et de vérifier votre adresse en 1 clic : '+SU()+'?cf='+encq(d)),'_blank')}
+  else if(a==='cfpick'){var x=CS[+id];if(!x)return;document.getElementById('cf-a').value=x.t;CP.lat=x.lat;CP.lng=x.lng;document.getElementById('cf-s').innerHTML='';cfMsg('✅ Adresse vérifiée · position enregistrée')}
+  else if(a==='cfgps'){if(!navigator.geolocation){cfMsg('Position indisponible sur cet appareil.');return}cfMsg('Localisation…');navigator.geolocation.getCurrentPosition(function(p){CP.lat=p.coords.latitude;CP.lng=p.coords.longitude;
+      fetch('https://nominatim.openstreetmap.org/reverse?format=jsonv2&accept-language=fr&zoom=18&lat='+CP.lat+'&lon='+CP.lng).then(function(r){return r.json()}).then(function(j){if(j&&j.display_name)document.getElementById('cf-a').value=j.display_name.split(', ').slice(0,3).join(', ');cfMsg('✅ Position enregistrée')}).catch(function(){cfMsg('✅ Position enregistrée')})},function(){cfMsg('Localisation refusée.')},{enableHighAccuracy:true,timeout:15000})}
+  else if(a==='cfok')cfSend(true);else if(a==='cfno')cfSend(false)},true);
 })();
