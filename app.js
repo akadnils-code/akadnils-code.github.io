@@ -1,6 +1,6 @@
 /* All In One 8.3.0 - script principal
    Sections repérées : modules réintégrés de la v3 | v5 : code de livraison, avis, demandes, motifs livreur, sati | v6 : catalogue, créneaux, photo de preuve, notifications, da | v7 : automatisations | v7.2 : QR code + NFC (QR hors ligne, aucune dépendance résea | v7.4 : scanner QR (caméra), tags NFC associés, diagnostic */
-var CIT=200000,KEY='cod_v4',OLDKEY='cod_v1',VER='8.8.1',IT=200000;
+var CIT=200000,KEY='cod_v4',OLDKEY='cod_v1',VER='9.0.0',IT=200000;
 var OM={},CXS={l:null};
 var DEFTPL='Bonjour 👋 [boutique] a essayé de vous joindre pour confirmer votre commande de [produit]. Répondez OUI pour confirmer, ou dites-nous à quelle heure vous rappeler. Merci !';
 var DEFSCRIPT='1) Se présenter : « Bonjour, je vous appelle de la part de [boutique]. »\n2) Confirmer le produit, la quantité, le prix et la livraison.\n3) Confirmer la ville et l’adresse exacte (quartier, repère).\n4) Proposer un produit complémentaire ou un pack.\n5) Rappeler : paiement à la livraison, merci de préparer le montant.';
@@ -616,7 +616,7 @@ function delv(){
     var CL='<a class="b sm" data-act="pubo" data-id="'+o.id+'" target="_blank" rel="noopener" href="'+wa(o.phone,'Bonjour '+o.name+', suis ta commande « '+o.product+' » en direct : '+tlink(o,'t'))+'">'+ico('chat','s')+' Client</a>',LV='<a class="b sm" data-act="pubo" data-id="'+o.id+'" target="_blank" rel="noopener" href="'+wa(c?c.phone:'',mis)+'">'+ico('chat','s')+' Livreur</a>';
     return '<div class="card"><div class="row"><b>'+e(o.name)+'</b><span class="tag">'+STV[s]+'</span></div><div class="mut">'+e(o.product)+' · '+e(o.vendor)+(vcity(o)?' ('+e(vcity(o))+')':'')+' → '+e(o.city||'ville ?')+(o.amount?' · '+fm(o.amount)+' dh':'')+'</div>'+(o.rd===1&&stage(o)<3?'<div class="alert">Livraison signalée à distance : vérifie avec le livreur, puis valide. <button class="b ok sm" data-act="rdok" data-id="'+o.id+'">Valider</button> <button class="b sm" data-act="rdno" data-id="'+o.id+'">Ignorer</button></div>':'')+stepper(s)
      +'<div class="btns">'+(s===1?'<button class="b pri" data-act="adv" data-id="'+o.id+'">'+T('Remis au livreur')+'</button><button class="b ko" data-act="cx2" data-id="'+o.id+'">'+T('Annulé')+'</button>':'<button class="b ok" data-act="adv" data-id="'+o.id+'">'+T('Livré')+'</button><button class="b ko" data-act="rf" data-id="'+o.id+'">'+T('Refusé')+'</button>')+'</div>'+csel
-     +'<div class="btns"><a class="b sm" href="'+telh(o.phone)+'">'+ico('phone','s')+' Appeler</a>'+CL+(s===1?LV:'')+'</div>'+'<details class="oc2" data-om="'+o.id+'"'+(OM[o.id]?' open':'')+'><summary>Plus d’actions</summary><div class="btns">'+(s===1?'':LV)+'<button class="b sm" data-act="qrs" data-k="t" data-id="'+o.id+'">QR suivi</button><button class="b sm" data-act="qrs" data-k="l" data-id="'+o.id+'">QR colis</button><button class="b sm" data-act="tagp" data-t="or" data-id="'+o.id+'">Tag NFC</button><button class="b sm" data-act="trk" data-id="'+o.id+'">'+ico('pin','s')+' Carte</button></div></details>'+nbar(o)+'</div>'};
+     +'<div class="btns"><a class="b sm" href="'+telh(o.phone)+'">'+ico('phone','s')+' Appeler</a>'+CL+(s===1?LV:'')+'</div>'+'<details class="oc2" data-om="'+o.id+'"'+(OM[o.id]?' open':'')+'><summary>Plus d’actions</summary><div class="btns">'+(s===1?'':LV)+'<button class="b sm" data-act="qrs" data-k="t" data-id="'+o.id+'">QR suivi</button><button class="b sm" data-act="qrs" data-k="l" data-id="'+o.id+'">QR colis</button><button class="b sm" data-act="tagp" data-t="or" data-id="'+o.id+'">Tag NFC</button><button class="b sm" data-act="trk" data-id="'+o.id+'">'+ico('pin','s')+' Carte</button></div>'+nbar(o)+'</details></div>'};
   h+=act.length?act.map(card).join(''):'<p class="mut">Aucune livraison en cours.</p>';
   h+='<details class="oc2" data-om="st"'+(OM.st?' open':'')+'><summary>Coller un statut reçu du livreur</summary><p class="mut">Le livreur t’envoie un message WhatsApp en un appui. Colle-le ici pour mettre la commande à jour.</p><textarea id="f-st" placeholder="SUIVI abc123 Livré"></textarea><button class="b pri full" data-act="applyst">Appliquer</button></details>';
   if(done.length)h+='<h2>Terminées récemment</h2>'+done.map(function(o){return '<div class="card"><div class="row"><b>'+e(o.name)+'</b><span class="s-'+(o.delivery==='Livré'?'Confirmé':'Refusé')+'">'+e(o.delivery)+'</span></div><div class="mut">'+e(o.product)+' · '+e(o.vendor)+'</div></div>'}).join('');
@@ -2633,7 +2633,7 @@ var CX=(function(){
         if(nm)out.push(nm+(q>1?' ×'+q:''))})}
       else o.slice(0,40).forEach(function(x){items(x,out,pk,d+1)});return}
     if(o&&typeof o==='object')Object.keys(o).forEach(function(k){items(o[k],out,k.toLowerCase(),d+1)})}
-  var KN={shopify:'Shopify',woocommerce:'WooCommerce',woo:'WooCommerce',youcan:'YouCan',storeino:'Storeino',lightfunnels:'LightFunnels',ecomanager:'Ecomanager',jumia:'Jumia',avito:'Avito',wix:'Wix',zid:'Zid'};
+  var KN={shopify:'Shopify',woocommerce:'WooCommerce',woo:'WooCommerce',youcan:'YouCan',storeino:'Storeino',lightfunnels:'LightFunnels',ecomanager:'Ecomanager',jumia:'Jumia',avito:'Avito',marjanemall:'Marjane Mall',marjane:'Marjane Mall',wix:'Wix',zid:'Zid'};
   function detect(rec,hint,L){var h=nk(hint);if(h)return KN[h]||String(hint).slice(0,20);
     if(rec&&rec.line_items&&rec.shipping_address&&rec.total_price!==undefined)return 'Shopify';
     if(rec&&rec.line_items&&rec.billing&&rec.order_key!==undefined)return 'WooCommerce';
@@ -2683,7 +2683,7 @@ function xidHas(x){return !!x&&DB.orders.some(function(q){return q.xid===x})}
 function cxIn(o){if(o&&o._raw){var m=CX.fromRaw(o._raw,o._src,DB.set.ivendor);return m?{vendor:m.vendor,name:m.name,phone:m.phone,product:m.product,address:m.address,city:m.city,amount:m.amount,source:m.src,xid:m.xid}:{}}return o}
 function cxAdd(o){if(xidHas(o.xid))return 'dup';return addOrder(String(o.vendor||DB.set.ivendor||'Boutique').slice(0,60),String(o.name||'').slice(0,80),o.phone,String(o.product||'').slice(0,120),String(o.address||'').slice(0,160),{city:String(o.city||'').slice(0,40),amount:o.amount||0,channel:String(o.src||'Import').slice(0,30),xid:o.xid||''})}
 function cxOk(o){return !!(o.name&&mph(o.phone))}
-function cxAnalyse(txt){var l=CX.parse(txt,'',DB.set.ivendor);if(!l.length){toast('Aucune commande reconnue dans ce contenu.');return}CXS.l=l;render()}
+function cxAnalyse(txt){var sl=$('cx-s'),l=CX.parse(txt,sl?sl.value:'',DB.set.ivendor);if(!l.length){toast('Aucune commande reconnue dans ce contenu.');return}CXS.l=l;render()}
 function impCard(){var s=DB.set;if(!s.ikey){s.ikey=b64(rnd(18)).replace(/[^A-Za-z0-9]/g,'x');save()}
   var L=CXS.l,pv='';
   if(L){var ok=L.filter(cxOk),dp=ok.filter(function(o){return xidHas(o.xid)}).length;
@@ -2695,8 +2695,9 @@ function impCard(){var s=DB.set;if(!s.ikey){s.ikey=b64(rnd(18)).replace(/[^A-Za-
   return '<div class="card" id="imp-card"><h2>Connecteurs boutiques</h2><p class="mut">Importe les commandes de n’importe quelle boutique (YouCan, Shopify, WooCommerce, Storeino, LightFunnels…). Les colonnes nom, téléphone, ville, produit et montant sont reconnues automatiquement ; tu vérifies l’aperçu avant d’importer, les doublons sont ignorés.</p>'
    +'<label>Boutique par défaut</label><input id="ivd" placeholder="Boutique" value="'+e(s.ivendor||'')+'">'
    +'<details class="oc2"'+(L?' open':'')+'><summary>Importer un fichier ou coller des commandes</summary>'
-   +'<label class="b full" style="margin-top:8px">'+ico('dl','s')+' Choisir un fichier (CSV ou JSON)<input type="file" accept=".csv,.tsv,.txt,.json,text/csv,application/json" data-cx-file hidden></label>'
-   +'<textarea id="cx-t" placeholder="…ou colle ici un export CSV / JSON de commandes"></textarea><p class="mut">Fichier Excel ? Enregistre-le d’abord en CSV.</p>'
+   +'<label>Plateforme d’origine</label><select id="cx-s"><option value="">Détection automatique</option><option>Jumia</option><option>Marjane Mall</option><option>Avito</option><option>YouCan</option><option>Shopify</option><option>WooCommerce</option><option>Storeino</option><option>LightFunnels</option><option>Ecomanager</option></select>'
+   +'<label class="b full" style="margin-top:8px">'+ico('dl','s')+' Choisir un fichier (Excel, CSV ou JSON)<input type="file" accept=".xlsx,.csv,.tsv,.txt,.json,text/csv,application/json,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" data-cx-file hidden></label>'
+   +'<textarea id="cx-t" placeholder="…ou colle ici un export CSV / JSON de commandes"></textarea><p class="mut">Jumia, Marjane Mall : la plateforme livre et encaisse elle-même. Importe ces commandes seulement pour les suivre, pas pour les confirmer ni les livrer.</p>'
    +'<button class="b pri full" data-cx="an">Analyser</button></details>'+pv
    +'<details class="oc2"><summary>Réception automatique (webhook)</summary><p class="mut">Les commandes de ta boutique arrivent toutes seules dans l’appli (synchronisation cloud activée). Dans ta boutique, ajoute un webhook « commande créée » vers l’adresse ci-dessous, terminée par ?s=youcan (ou storeino, lightfunnels, shopify…) pour indiquer la plateforme.</p>'
    +(window.cloudWebhook?'':'<div class="msg err">Module cloud indisponible.</div>')
@@ -2710,8 +2711,39 @@ document.addEventListener('click',function(ev){var t=ev.target.closest&&ev.targe
   else if(a==='go'&&CXS.l){var ok=CXS.l.filter(cxOk),sk=CXS.l.length-ok.length,res=ok.map(cxAdd);CXS.l=null;save();render();toast(report(res)+(sk?' '+sk+' ignorée(s) (nom ou numéro manquant).':''))}},true);
 document.addEventListener('change',function(ev){var t=ev.target;if(!DB||!t||!t.hasAttribute)return;
   if(t.hasAttribute('data-cx-file')){var f=t.files&&t.files[0];if(!f)return;if(f.size>3e6){toast('Fichier trop lourd (3 Mo maximum).');t.value='';return}
-    var r=new FileReader();r.onload=function(){cxAnalyse(String(r.result||''))};r.onerror=function(){toast('Lecture du fichier impossible.')};r.readAsText(f);t.value=''}},true);
+    var xl=/\.xlsx$/i.test(f.name),r=new FileReader();
+    r.onload=function(){if(xl)cxXlsx(r.result).then(cxAnalyse).catch(function(x){toast(x&&x.message?x.message:'Fichier Excel illisible.')});else cxAnalyse(String(r.result||''))};
+    r.onerror=function(){toast('Lecture du fichier impossible.')};if(xl)r.readAsArrayBuffer(f);else r.readAsText(f);t.value=''}},true);
 document.addEventListener('toggle',function(ev){var d=ev.target;if(d&&d.getAttribute&&d.getAttribute('data-om'))OM[d.getAttribute('data-om')]=d.open},true);
 /* ----- commandes reçues par webhook : crée le vendeur s'il n'existe pas encore ----- */
 var CXN=-1,_rcx=render;
 render=function(){_rcx();try{if(DB&&!S.locked&&DB.orders.length!==CXN){CXN=DB.orders.length;var ch=false;DB.orders.forEach(function(o){if(o&&o.vendor&&!vget(o.vendor)){ensureV(o.vendor);ch=true}});if(ch)save()}}catch(x){}};
+
+/* ----- lecture des fichiers Excel (.xlsx) sans bibliothèque ----- */
+function cxUnesc(s){return String(s).replace(/&#x([0-9a-f]+);/gi,function(_,h){return String.fromCharCode(parseInt(h,16))}).replace(/&#(\d+);/g,function(_,d){return String.fromCharCode(+d)}).replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&apos;/g,"'").replace(/&amp;/g,'&')}
+function cxTexts(x){var t='',m,re=/<t\b[^>]*>([\s\S]*?)<\/t>/g;x=String(x).replace(/<rPh\b[\s\S]*?<\/rPh>/g,'');while((m=re.exec(x)))t+=m[1];return cxUnesc(t)}
+async function cxXlsx(buf){
+  if(typeof DecompressionStream==='undefined')throw new Error('Ce navigateur ne lit pas les fichiers Excel : enregistre le fichier en CSV.');
+  var u=new Uint8Array(buf),dv=new DataView(buf),i,eo=-1,files={};
+  for(i=u.length-22;i>=Math.max(0,u.length-65600);i--)if(dv.getUint32(i,true)===0x06054b50){eo=i;break}
+  if(eo<0)throw new Error('Fichier Excel illisible.');
+  var n=dv.getUint16(eo+10,true),p=dv.getUint32(eo+16,true);
+  for(i=0;i<n;i++){if(dv.getUint32(p,true)!==0x02014b50)break;
+    var m=dv.getUint16(p+10,true),cs=dv.getUint32(p+20,true),nl=dv.getUint16(p+28,true),el=dv.getUint16(p+30,true),cl=dv.getUint16(p+32,true),lo=dv.getUint32(p+42,true);
+    files[new TextDecoder().decode(u.subarray(p+46,p+46+nl))]={m:m,cs:cs,lo:lo};p+=46+nl+el+cl}
+  async function rd(nm){var f=files[nm];if(!f)return null;var ds=f.lo+30+dv.getUint16(f.lo+26,true)+dv.getUint16(f.lo+28,true),d=u.subarray(ds,ds+f.cs);
+    if(f.m===0)return new TextDecoder().decode(d);
+    return new TextDecoder().decode(await new Response(new Blob([d]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer())}
+  var sh=Object.keys(files).filter(function(k){return /^xl\/worksheets\/sheet\d+\.xml$/.test(k)}).sort(function(a,b){return parseInt(a.replace(/\D/g,''),10)-parseInt(b.replace(/\D/g,''),10)})[0];
+  if(!sh)throw new Error('Aucune feuille trouvée dans ce fichier Excel.');
+  var ss=[],sx=await rd('xl/sharedStrings.xml'),mm,re=/<si\b[^>]*>([\s\S]*?)<\/si>/g;
+  if(sx)while((mm=re.exec(sx)))ss.push(cxTexts(mm[1]));
+  var xml=await rd(sh),rows=[],rr=/<row\b[^>]*>([\s\S]*?)<\/row>/g,rm;
+  while((rm=rr.exec(xml))&&rows.length<5001){var row=[],cr=/<c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g,cm;
+    while((cm=cr.exec(rm[1]))){var at=cm[1]||'',body=cm[2]||'',ref=(/\br="([A-Z]+)\d+"/.exec(at)||[])[1]||'',t=(/\bt="(\w+)"/.exec(at)||[])[1]||'',ci=0,k;
+      for(k=0;k<ref.length;k++)ci=ci*26+ref.charCodeAt(k)-64;ci=ci?ci-1:row.length;
+      var v=/<v>([\s\S]*?)<\/v>/.exec(body),val='';
+      if(t==='inlineStr')val=cxTexts(body);else if(v)val=t==='s'?(ss[+v[1]]||''):cxUnesc(v[1]);
+      row[ci]=val}
+    rows.push(row)}
+  return rows.map(function(r){var o=[];for(var k=0;k<r.length;k++){var x=r[k]==null?'':String(r[k]);o.push('"'+x.replace(/"/g,'""')+'"')}return o.join(',')}).join('\n')}
